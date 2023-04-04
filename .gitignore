@@ -2,4 +2,4 @@
 .gitignore 
 /node_modules
 temp.csv
-.env
+.env.local
