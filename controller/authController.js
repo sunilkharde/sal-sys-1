@@ -73,7 +73,7 @@ class authController {
 
         // Insert new user into database
         await conn.beginTransaction();
-        var status_new = user_status !== null && user_status !== undefined ? user_status : 'A';
+        var status_new = user_status !== null && user_status !== undefined ? user_status : 'I';
         var userRoll_new = user_role !== null && user_role !== undefined ? user_role : 'User';
         var sqlStr = "INSERT INTO users (user_id,username,password,first_name,middle_name,last_name,user_role,email_id,mobile_no,status,c_at,c_by)" +
           " VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),1)"

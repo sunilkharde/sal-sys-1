@@ -15,6 +15,11 @@ import productRoute from "./routes/productRoutes.js";
 import customerRoute from "./routes/customerRoutes.js";
 import poRoute from "./routes/poRoutes.js";
 
+//import csvtojson from 'csvtojson';
+import ftp from 'basic-ftp';
+import fs from 'fs';
+import schedule from 'node-schedule';
+
 
 //import axios from 'axios';
 //import hbs from 'hbs';
@@ -54,6 +59,14 @@ const momentDMY_HBS = function (date, format) {
     //return moment(date, format.toString()).format('YYYY-MM-DD');
   } else {
     return moment(date).format('DD-MM-YYYY');
+  }
+};
+const momentDMYHm_HBS = function (date, format) {
+  if (typeof format === 'string') {
+    return moment(date, format).format('DD-MM-YYYY HH:mm');
+    //return moment(date, format.toString()).format('YYYY-MM-DD');
+  } else {
+    return moment(date).format('DD-MM-YYYY HH:mm');
   }
 };
 const momentYMD_HBS = function (date, format) {
@@ -106,8 +119,9 @@ app.engine('hbs', exphbs.engine({
     eq: eqHBS,
     includes: includesHBS,
     isArray: isArrayHBS,
-    momentDMY:momentDMY_HBS,
-    momentYMD:momentYMD_HBS
+    momentDMY: momentDMY_HBS,
+    momentYMD: momentYMD_HBS,
+    momentDMYHm: momentDMYHm_HBS
   }
 }));
 
@@ -182,14 +196,81 @@ app.get('/lov', async (req, res) => {
 
 
 
-
-
-
-
+//**************************************//
 app.all('*', (req, res) => {
   res.status(404).send("<h1>Page not found!!!</h1>");
 });
+//
 
+//**************************************//
+//****Upload data on FTP***//
+//**************************************//
+const uploadToFTP = async (csvData) => {
+  const client = new ftp.Client();
+  client.ftp.verbose = true;
+  try {
+    await client.access({
+      host: process.env.ftp_host,
+      user: process.env.ftp_user,
+      password: process.env.ftp_password,
+      port: process.env.ftp_port
+    });
+    //
+    const tempFile = join(process.cwd(), 'temp.csv');
+    fs.writeFileSync(tempFile, csvData);
+    await client.uploadFrom(tempFile, 'my_file.csv'); ///yashm24.sg-host.com/order_data/my_file.csv  //csvData //join(process.cwd(), 'tempKP.csv')
+    console.log('File uploaded successfully');
+  } catch (error) {
+    console.error(error);
+  } finally {
+    client.close();
+  }
+};
+const convertToCsv = (data) => {
+  const header = Object.keys(data[0]).join(',');
+  const rows = data.map((row) => Object.values(row).join(','));
+  return `${header}\n${rows.join('\n')}`;
+};
+const selectAndUploadData = async () => {
+  try {
+    const sqlStr = "Select a.po_no_new as Sr,'ZSOR' as Doc_Type, e.bu_code as Sales_Org,'20' as Distr_Channel,'10' as Division," +
+      " Null as Sales_office, Null as Sales_Group, Null as Inco_T1, Null as  Inco_T2,a.po_no_new as Customer_Reference," +
+      " DATE_FORMAT(a.po_date,'%d.%m.%Y') as Valid_From,DATE_FORMAT(a.po_date,'%d.%m.%Y') as Valid_To,c.ext_code as Sold_To_Party,d.ext_code as Material,b.qty as Target_Qty," +
+      " Null as Plant,b.sr_no as Line_Item,DATE_FORMAT(a.exp_date,'%d.%m.%Y') as Delivery_Date,b.qty as Order_Qty,c.customer_name as BP_Name,DATE_FORMAT(a.exp_date,'%d.%m.%Y') as ExpectedDeliveryDate" +
+      " FROM po_hd as a, po_dt as b,customers as c, products as d, business_units as e" +
+      " Where a.po_date=b.po_date and a.po_no=b.po_no" +
+      " and a.customer_id=c.customer_id and b.product_id=d.product_id and a.bu_id=e.bu_id" +
+      " and a.ftp_date IS NULL and a.po_date = CURRENT_DATE()"; //Between ? and ?
+    //const params = [po_date, po_no];
+    const [results] = await conn.query(sqlStr)//, params);
+    if (results.length > 0) {
+      const csvData = convertToCsv(results);
+      await uploadToFTP(csvData);
+      //
+      await conn.beginTransaction();
+      const sqlStr = "UPDATE po_hd as a Set a.ftp_date=CURRENT_TIMESTAMP" +
+        " WHERE a.ftp_date IS NULL and a.po_date = CURRENT_DATE()"
+      //const params = [customer_id, bu_id_hdn, exp_date, status_new, u_by, po_date, po_no];
+      await conn.query(sqlStr); //, params);
+      await conn.commit();
+
+    } else {
+      console.log('No data found for uploade');
+    }
+  } catch (error) {
+    console.error(error);
+    conn.release();
+  } finally {
+    conn.release();
+  }
+};
+//setInterval(selectAndUploadData, 1 * 60 * 1000); // schedule job every hour
+const times = [[9, 30], [10, 0], [10, 30], [11, 0], [11, 30], [12, 0], [12, 30], [13, 0], [13, 30], [14, 0], [14, 30],
+[15, 0], [15, 30], [16, 0], [16, 30], [17, 0], [17, 30], [18, 0], [18, 30], [19, 0], [19, 30], [20, 0], [20, 30],
+[21, 0], [21, 30], [22, 0], [22, 30], [23, 0], [23, 30], [17, 12]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
+times.forEach((time) => {
+  schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
+});
 
 //**************************************//
 app.set('port', process.env.PORT || 3000);

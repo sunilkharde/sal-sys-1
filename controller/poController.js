@@ -6,15 +6,16 @@ class poController {
     static getData = async (req, user) => {
         try {
             var user_role = user.user_role !== null && user.user_role !== undefined ? user.user_role : 'User';
-            let sqlCust = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area,a.customer_type" +
+            var sqlCust = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area,a.customer_type" +
                 " from customers as a, market_area as b " +
                 " Where a.market_area_id=b.market_area_id and a.status='A'"
-            if (!user_role == 'Admin') {
-                sqlCust = sqlCust + ` and a.user_id=${res.locals.user.user_id}`;
+            if (user_role !== "Admin") {
+                sqlCust = sqlCust + ` and a.user_id=${user.user_id}`;
             }
             const [customer_list] = await conn.query(sqlCust);
             const [bu_list] = await conn.query("SELECT bu_id, CONCAT(bu_code,' | ',bu_short) as bu_name FROM business_units Where status='A'")
             //const [product_list] = await conn.query("SELECT * FROM products as a Where a.status='A'");
+
             return [customer_list, bu_list];
         } catch (error) {
             console.error(error);
@@ -45,7 +46,7 @@ class poController {
     static viewBlank = async (req, res) => {
         //const [customer_list, bu_list] = await this.getData(req, res.locals.user);
         const [customer_list, bu_list] = await this.getData(req, res.locals.user);
-        //const conn = await pool.getConnection();
+
         try {
             const [row] = await conn.query("SELECT DATE_FORMAT(CURRENT_DATE(),'%d-%m-%Y') as po_date;")
             const data = { po_date: row[0].po_date, po_no: '*****' };
@@ -60,7 +61,7 @@ class poController {
     }
 
     static create = async (req, res) => {
-        const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, htp_date, status, 'sr_no[]': sr_no, 'bu_ids[]': bu_ids, 'bu_names[]': bu_names, 'product_id[]': product_id, 'product_name[]': product_name, 'qty[]': qty, 'rate[]': rate, 'amount[]': amount } = req.body;
+        const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, ftp_date, status, 'sr_no[]': sr_no, 'bu_ids[]': bu_ids, 'bu_names[]': bu_names, 'product_id[]': product_id, 'product_name[]': product_name, 'qty[]': qty, 'rate[]': rate, 'amount[]': amount } = req.body;
         const data = req.body  //po_date, po_no, po_no_new, 
         const [customer_list, bu_list] = await this.getData(req, res.locals.user);
 
@@ -96,14 +97,15 @@ class poController {
             // Genrate max Customer id
             const [rows1] = await conn.query(`SELECT Max(po_no) AS maxNumber FROM po_hd Where po_date='${curDate}'`);
             var nextPoNo = rows1[0].maxNumber + 1;
+            var poNoNew = 'NJ' + curDate.replace(/-/g, '') + nextPoNo.toString().padStart(3, '0');
 
             // Insert new record into database
             await conn.beginTransaction();
             var status_new = status !== null && status !== undefined ? status : 'A';
             var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const sqlStr = "INSERT INTO po_hd (po_date,po_no,po_no_new,customer_id,exp_date,bu_id,posted,htp_date,status,c_at,c_by)" +
+            const sqlStr = "INSERT INTO po_hd (po_date,po_no,po_no_new,customer_id,exp_date,bu_id,posted,ftp_date,status,c_at,c_by)" +
                 " VALUES (?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
-            const params = [curDate, nextPoNo, nextPoNo, customer_id, exp_date, bu_id_hdn, 'Y', htp_date, status_new, c_by];
+            const params = [curDate, nextPoNo, poNoNew, customer_id, exp_date, bu_id_hdn, 'Y', ftp_date, status_new, c_by];
             const [result] = await conn.query(sqlStr, params);
             //await conn.commit();
 
@@ -124,7 +126,7 @@ class poController {
 
             // Insert new records into po_dt
             for (let i = 0; i < product_id.length; i++) {
-                const sr_no_val = sr_no[i] //(i + 1) * 10;
+                const sr_no_val = (i + 1) * 10;
                 //const bu_ids_val = bu_ids[i];
                 const product_id_val = product_id[i];
                 const qty_val = qty[i];
@@ -157,10 +159,12 @@ class poController {
         // retrieve the alert message from the query parameters
         const alert = req.query.alert;
         try {//DATE_FORMAT(a.po_date,'%d-%m-%Y') as po_date2, DATE_FORMAT(a.exp_date,'%d-%m-%Y') as exp_date
-            const sqlStr = "Select a.po_date, a.po_no,a.po_no_new,b.customer_name,a.exp_date,CONCAT(c.bu_code,' | ',c.bu_short) as bu_name,a.posted,a.htp_date,a.status" +
+            const sqlStr = "Select a.po_date, a.po_no,a.po_no_new,b.customer_name,a.exp_date,CONCAT(c.bu_code,' | ',c.bu_short) as bu_name,a.posted,a.ftp_date,a.status" +
                 " FROM po_hd as a, customers as b, business_units as c" +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id Order By a.po_date desc, a.po_no desc";
-            const [results] = await conn.query(sqlStr)//, params);
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.c_by=?" +
+                " Order By a.po_date desc, a.po_no desc";
+            const params = [res.locals.user.user_id];
+            const [results] = await conn.query(sqlStr, params);
             res.render('po/po-view', { po: results, alert });
 
         } catch (error) {
@@ -203,7 +207,7 @@ class poController {
 
     static update = async (req, res) => {
         const { po_date, po_no } = req.params;
-        const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, htp_date, status, 'sr_no[]': sr_no, 'bu_ids[]': bu_ids, 'bu_names[]': bu_names, 'product_id[]': product_id, 'product_name[]': product_name, 'qty[]': qty, 'rate[]': rate, 'amount[]': amount } = req.body;
+        const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, ftp_date, status, 'sr_no[]': sr_no, 'bu_ids[]': bu_ids, 'bu_names[]': bu_names, 'product_id[]': product_id, 'product_name[]': product_name, 'qty[]': qty, 'rate[]': rate, 'amount[]': amount } = req.body;
         const data = req.body  //po_date, po_no, po_no_new, 
         const [customer_list, bu_list] = await this.getData(req, res.locals.user);
 

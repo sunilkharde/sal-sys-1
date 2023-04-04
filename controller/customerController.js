@@ -2,8 +2,8 @@ import pool from '../db.js';
 
 const conn = await pool.getConnection();
 class customerController {
+    
     static getData = async () => {
-        //const conn = await pool.getConnection();
         try {
             const [cities_list] = await conn.query("SELECT * FROM cities");
             const [users_list] = await conn.query("SELECT a.*, CONCAT(a.username, ' [', a.email_id,']') as map_user FROM users as a Where a.status='A'");
@@ -112,12 +112,12 @@ class customerController {
 
     static edit = async (req, res) => {
         const { id } = req.params;
-        //const conn = await pool.getConnection();
         try {
             const [cities_list, users_list, market_area_list] = await this.getData();
             const sqlStr = "Select a.*,CONCAT(b.username,' [', b.email_id,']') as username,c.market_area" +
-                " from customers as a, users as b, market_area as c" +
-                " Where a.user_id=b.user_id and a.market_area_id=c.market_area_id and a.customer_id= ?";
+                " From customers as a LEFT JOIN users as b ON (a.user_id=b.user_id)" +
+                " LEFT JOIN market_area as c ON (a.market_area_id=c.market_area_id)" +
+                " Where a.customer_id= ?";
             const params = [id];
             const [results] = await conn.query(sqlStr, params);
             //

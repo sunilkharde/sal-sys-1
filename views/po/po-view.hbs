@@ -13,6 +13,7 @@
                 <th>Exp Date</th>
                 <th>Business Unit</th>
                 <th>Post</th>
+                <th>Sync Date</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -25,11 +26,12 @@
                 <td>{{momentDMY this.exp_date}}</td>
                 <td>{{this.bu_name}}</td>
                 <td>{{this.posted}}</td>
+                <td>{{#if this.ftp_date}}{{momentDMYHm this.ftp_date}}{{else}}Syncing....{{/if}}</td>
                 <td>
                     <!-- <a href="/customer/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">
                         <i class="bi bi-eye"></i>
                     </a> -->
-                    {{#if this.htp_date}}
+                    {{#if this.ftp_date}}
                     <a href="#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
                         <i class="bi bi-pencil"></i>
                     </a>
