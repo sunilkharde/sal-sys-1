@@ -57,9 +57,11 @@
     <script>
         $(document).ready(function () {
             $('#poTable').dataTable({
-                pageLength: 10
+                pageLength: 10,
+                "order": [[0, "desc"], [1, "desc"]]
             });
         });
     </script>
+    
 
 </div>

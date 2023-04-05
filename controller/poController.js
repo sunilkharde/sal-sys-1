@@ -161,8 +161,8 @@ class poController {
         try {//DATE_FORMAT(a.po_date,'%d-%m-%Y') as po_date2, DATE_FORMAT(a.exp_date,'%d-%m-%Y') as exp_date
             const sqlStr = "Select a.po_date, a.po_no,a.po_no_new,b.customer_name,a.exp_date,CONCAT(c.bu_code,' | ',c.bu_short) as bu_name,a.posted,a.ftp_date,a.status" +
                 " FROM po_hd as a, customers as b, business_units as c" +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.c_by=?" +
-                " Order By a.po_date desc, a.po_no desc";
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.c_by=?" //+
+                //" Order By a.po_date desc, a.po_no desc";
             const params = [res.locals.user.user_id];
             const [results] = await conn.query(sqlStr, params);
             res.render('po/po-view', { po: results, alert });

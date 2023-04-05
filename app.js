@@ -267,7 +267,7 @@ const selectAndUploadData = async () => {
 //setInterval(selectAndUploadData, 1 * 60 * 1000); // schedule job every hour
 const times = [[9, 30], [10, 0], [10, 30], [11, 0], [11, 30], [12, 0], [12, 30], [13, 0], [13, 30], [14, 0], [14, 30],
 [15, 0], [15, 30], [16, 0], [16, 30], [17, 0], [17, 30], [18, 0], [18, 30], [19, 0], [19, 30], [20, 0], [20, 30],
-[21, 0], [21, 30], [22, 0], [22, 30], [23, 0], [23, 30], [17, 12]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
+[21, 0], [21, 30], [22, 0], [22, 30], [23, 0], [23, 30], [18, 28]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
 times.forEach((time) => {
   schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
 });

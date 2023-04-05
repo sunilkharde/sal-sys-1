@@ -64,10 +64,10 @@
                         <thead>
                             <tr>
                                 <th class="col-1">Sr</th>
-                                <th class="col-5">Product</th>
+                                <th class="col-8">Product</th>
                                 <th>Qty</th>
-                                <th>Rate</th>
-                                <th>Amount</th>
+                                <th hidden>Rate</th>
+                                <th hidden>Amount</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -90,9 +90,9 @@
                                 <td><input type="number" class="form-control text-end" id="qty" name="qty[]" min="1"
                                         value="{{this.qty}}" required>
                                 </td>
-                                <td><input type="number" class="form-control text-end" id="rate" name="rate[]" min="0"
+                                <td hidden><input type="number" class="form-control text-end" id="rate" name="rate[]" min="0"
                                         step="1.00" value="{{this.rate}}" required></td>
-                                <td><input readonly type="number" class="form-control text-end" id="amount"
+                                <td hidden><input readonly type="number" class="form-control text-end" id="amount"
                                         name="amount[]" min="1" value="{{this.amount}}" required></td>
                                 <td>
                                     <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"

@@ -26,7 +26,15 @@
     });
 </script>
 
-{{!-- <script>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('../../sw.js');
+    }
+</script>
+
+
+{{!--
+<script>
     // Activate current page in navbar
     /*$(document).ready(function () {
         // Get current URL path
