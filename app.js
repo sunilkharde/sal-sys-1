@@ -14,8 +14,8 @@ import authController from "./controller/authController.js";
 import productRoute from "./routes/productRoutes.js";
 import customerRoute from "./routes/customerRoutes.js";
 import poRoute from "./routes/poRoutes.js";
+import dealerPayRoute from "./routes/dealerPayRoutes.js";
 
-//import csvtojson from 'csvtojson';
 import ftp from 'basic-ftp';
 import fs from 'fs';
 import schedule from 'node-schedule';
@@ -132,6 +132,7 @@ app.use('/', authController.checkToken); //chekToken applicable all follwoing ro
 app.use('/product', productRoute);
 app.use('/customer', customerRoute);
 app.use('/po', poRoute);
+app.use('/dealerPay', dealerPayRoute);
 
 // Log incoming requests
 /*app.use((req, res, next) => {
@@ -210,9 +211,9 @@ const uploadToFTP = async (csvData) => {
   client.ftp.verbose = true;
   try {
     await client.access({
-      host: process.env.ftp_host,
-      user: process.env.ftp_user,
-      password: process.env.ftp_password,
+      host: process.env.ftp_host_temp,
+      user: process.env.ftp_user_temp,
+      password: process.env.ftp_password_temp,
       port: process.env.ftp_port
     });
     //

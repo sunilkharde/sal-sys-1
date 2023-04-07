@@ -1,0 +1,68 @@
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style=" margin-bottom: 20px;">Dealer Payment History...</h4>
+        <a href="/dealerPay/create" class="btn btn-success">Create New</a>
+    </div>
+
+    <table class="table" id="dealerPayTable">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Doc No</th>
+                <th>Customer</th>
+                <th>Business Unit</th>
+                <th>Payment Mode</th>
+                <th>Ref Data</th>
+                <th>Ref No</th>
+                <th>Narration</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each dealerPayments}}
+            <tr>
+                <td>{{momentDMY this.doc_date}}</td>
+                <td>{{this.doc_no_new}}</td>
+                <td>{{this.customer_name}}</td>
+                <td>{{this.bu_code}}</td>
+                <td>{{this.pay_mode}}</td>
+                <td>{{momentDMY this.ref_date}}</td>
+                <td>{{this.ref_no}}</td>
+                <td>{{this.ref_desc}}</td>
+                <td>
+                    <!-- <a href="/dealerPay/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-eye"></i>
+                    </a> -->
+                    <a href="/dealerPay/update/{{momentYMD this.doc_date}}/{{this.doc_no}}"
+                        class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    {{#isEqual ../user.user_role "Admin"}}
+                    <a href="/dealerPay/delete/{{momentYMD this.doc_date}}/{{this.doc_no}}"
+                        class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                    {{/isEqual}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <div class="mt-3">
+        <button id="export-excel" class="btn btn-success"  onclick="window.location.href='/dealerPay/export-excel'">Export to Excel</button>
+        <button id="export-csv" class="btn btn-warning"  onclick="window.location.href='/dealerPay/export-csv'">Export to CSV</button>
+        <button id="export-pdf" class="btn btn-danger" onclick="window.location.href='/dealerPay/export-pdf'">Export to PDF</button>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#dealerPayTable').dataTable({
+                pageLength: 10,
+                "order": [[0, "desc"], [1, "desc"]]
+            });
+        });
+    </script>
+
+    
+</div>

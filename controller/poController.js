@@ -44,7 +44,6 @@ class poController {
     }
 
     static viewBlank = async (req, res) => {
-        //const [customer_list, bu_list] = await this.getData(req, res.locals.user);
         const [customer_list, bu_list] = await this.getData(req, res.locals.user);
 
         try {
@@ -159,7 +158,7 @@ class poController {
         // retrieve the alert message from the query parameters
         const alert = req.query.alert;
         try {//DATE_FORMAT(a.po_date,'%d-%m-%Y') as po_date2, DATE_FORMAT(a.exp_date,'%d-%m-%Y') as exp_date
-            const sqlStr = "Select a.po_date, a.po_no,a.po_no_new,b.customer_name,a.exp_date,CONCAT(c.bu_code,' | ',c.bu_short) as bu_name,a.posted,a.ftp_date,a.status" +
+            const sqlStr = "Select a.po_date,a.po_no,a.po_no_new,b.customer_name,a.exp_date,CONCAT(c.bu_code,' | ',c.bu_short) as bu_name,a.posted,a.ftp_date,a.status" +
                 " FROM po_hd as a, customers as b, business_units as c" +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.c_by=?" //+
                 //" Order By a.po_date desc, a.po_no desc";

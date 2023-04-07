@@ -1,7 +1,8 @@
-
 .gitignore
+.env
 /node_modules
 temp.csv
-.env
+BalData.csv
+
  
  

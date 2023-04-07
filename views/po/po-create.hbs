@@ -34,7 +34,8 @@
                 <div class="form-group row mb-3">
                     <label for="exp_date" class="col-sm-2 col-form-label">Expected Delivery</label>
                     <div class="col-sm-4">
-                        <input type="date" class="form-control" id="exp_date" name="exp_date" value="{{data.exp_date}}" required>
+                        <input type="date" class="form-control" id="exp_date" name="exp_date" value="{{data.exp_date}}"
+                            required>
                     </div>
                     <label for="bu_id" class="col-sm-2 col-form-label">Business Unit</label>
                     <div class="col-sm-4">
@@ -74,8 +75,8 @@
                                 <td><input type="number" class="form-control text-end" id="qty" name="qty[]" min="1"
                                         required>
                                 </td>
-                                <td hidden><input type="number" class="form-control text-end" id="rate" name="rate[]" min="0"
-                                        step="1.00" value="1" required></td>
+                                <td hidden><input type="number" class="form-control text-end" id="rate" name="rate[]"
+                                        min="0" step="1.00" value="1" required></td>
                                 <td hidden><input readonly type="number" class="form-control text-end" id="amount"
                                         name="amount[]" min="1" required></td>
                                 <td>
@@ -181,7 +182,7 @@
         // Get the newly added rate field
         const qtyInpute = newRow.querySelector('#rate');
         qtyInpute.value = 1;
-        
+
         // Append the new row to the table body
         orderItemsBody.appendChild(newRow);
     });
