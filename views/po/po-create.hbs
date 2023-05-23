@@ -17,7 +17,7 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="customer_id" class="col-sm-2 col-form-label">Customer</label>
+                    <label for="customer_id" class="col-sm-2 col-form-label">Dealer Name</label>
                     <div class="col-sm-10">
                         <div class="input-group">
                             <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
@@ -37,12 +37,12 @@
                         <input type="date" class="form-control" id="exp_date" name="exp_date" value="{{data.exp_date}}"
                             required>
                     </div>
-                    <label for="bu_id" class="col-sm-2 col-form-label">Business Unit</label>
+                    <label for="bu_id" class="col-sm-2 col-form-label">SAP Business Unit Code</label>
                     <div class="col-sm-4">
                         <input hidden type="text" class="form-control" id="bu_id_hdn" name="bu_id_hdn"
                             value="{{data.bu_id}}">
                         <select class="form-select" id="bu_id" name="bu_id" aria-label=".form-select-sm example">
-                            <option value="" selected>Select Business Unit</option>
+                            <option value="" selected>Select SAP Business Unit</option>
                             {{#each bu_list}}
                             <option value="{{bu_id}}" {{#isEqual ../data.bu_id bu_id }}selected{{/isEqual}}>
                                 {{bu_name}}

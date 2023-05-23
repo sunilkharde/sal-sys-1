@@ -1,7 +1,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-6 border p-4">
-            <h2 class="mb-4">User Registration</h2>
+            <h2 class="mb-4">MALPANI Dealer Registration</h2>
             <!--
             {{#if alert}}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -12,11 +12,11 @@
             -->
             <form action="/auth/register" method="post">
                 <div class="mb-3">
-                    <label for="name" class="form-label">Username</label>
+                    <label for="name" class="form-label">Display Name</label>
                     <input type="text" class="form-control" id="username" name="username" value="{{data.username}}"
-                        required placeholder="Enter your username" pattern="[A-Za-z0-9._]{1,20}" maxlength="20"
+                        required placeholder="Enter your Display Name" pattern="[A-Za-z0-9._]{1,20}" maxlength="20"
                         aria-describedby="usernameHelp">
-                    <div id="usernameHelp" class="form-text">Username can only contain alphabets, numbers, underscore
+                    <div id="usernameHelp" class="form-text">Display name can only contain alphabets, numbers, underscore
                         (_) and dot (.) and cannot exceed 20 characters.</div>
                 </div>
                 <div class="mb-3">
@@ -121,13 +121,13 @@
                     </div>
                 </div>
                 {{/isEqual}}
-
-                </b>
+                
                 <button type="submit" class="btn btn-primary">Register</button>
-                </b>
+                
             </form>
 
-            <p>Register user!... <a href="/auth/login">Signin</a></p>
+            <br />
+            <p>If already registered... <a href="/auth/login">Sign In</a></p>
 
         </div>
     </div>

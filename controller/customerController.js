@@ -2,7 +2,7 @@ import pool from '../db.js';
 
 const conn = await pool.getConnection();
 class customerController {
-    
+
     static getData = async () => {
         try {
             const [cities_list] = await conn.query("SELECT * FROM cities");
@@ -112,6 +112,7 @@ class customerController {
 
     static edit = async (req, res) => {
         const { id } = req.params;
+
         try {
             const [cities_list, users_list, market_area_list] = await this.getData();
             const sqlStr = "Select a.*,CONCAT(b.username,' [', b.email_id,']') as username,c.market_area" +
@@ -132,7 +133,7 @@ class customerController {
 
     static update = async (req, res) => {
         const { id } = req.params;
-        const { customer_name, nick_name, add1, add2, add3, city, pin_code, district, state, market_area_id, user_id, ext_code, geo_location, customer_type, status } = req.body;
+        const {customer_name, nick_name, add1, add2, add3, city, pin_code, district, state, market_area_id, user_id, ext_code, geo_location, customer_type, status } = req.body;
         const data = req.body
         const [cities_list, users_list, market_area_list] = await this.getData();
         //const conn = await pool.getConnection();
@@ -140,34 +141,34 @@ class customerController {
         var errors = [];
         // Validate input || customer_name.trim().length === 0
         if (!customer_name) {
-            errors.push({ message: 'Customer name is required' });
+            errors.push({ message: 'Dealer name is required' });
         }
         if (!nick_name) {
-            errors.push({ message: 'Enter nick name of customer' });
+            errors.push({ message: 'Enter nick name of dealer' });
         }
         if (!city) {
-            errors.push({ message: 'Select customer city from list' });
+            errors.push({ message: 'Select dealer city from list' });
         }
         if (!market_area_id) {
-            errors.push({ message: "Select customer's market area" });
+            errors.push({ message: "Select dealer's market area" });
         }
         if (!user_id) {
-            errors.push({ message: "Select login details for customer" });
+            errors.push({ message: "Select login details for dealer" });
         }
         if (!ext_code) {
-            errors.push({ message: "Select external code for customer" });
+            errors.push({ message: "Select SAP code for dealer" });
         }
         // if (isNaN(rate) || rate <= 0) {
         //     errors.push({ message: 'Price must be a number' });
         // }
         const [rows] = await conn.query('SELECT * FROM customers WHERE customer_name=? and customer_id<>?', [customer_name, id]);
         if (rows.length > 0) {
-            errors.push({ message: 'Customer with this name is already exists' });
+            errors.push({ message: 'Dealer with this name is already exists' });
         }
         if (errors.length) {
             res.render('customers/customer-edit', { errors, data, cities_list, users_list, market_area_list });
             return;
-        }
+          }
 
         try {
             // Update record into database using customer_id
@@ -187,7 +188,7 @@ class customerController {
             await conn.rollback();
             conn.release();
             console.error(err);
-            return res.render('customers/customer-view', { alert: `Internal server error` });
+            return res.render('customer/customer-view', { alert: `Internal server error` });
         } finally {
             conn.release();
         }

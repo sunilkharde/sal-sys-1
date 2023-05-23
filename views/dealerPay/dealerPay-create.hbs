@@ -5,12 +5,12 @@
 
             <form id="dealerPayForm" action="/dealerPay/create" method="post">
                 <div class="form-group row mb-3">
-                    <label for="doc_date" class="col-sm-2 col-form-label">Doc Date</label>
+                    <label for="doc_date" class="col-sm-2 col-form-label">Entry Date</label>
                     <div class="col-sm-4">
                         <input readonly type="text" class="form-control" id="doc_date" name="doc_date"
                             value="{{data.doc_date}}">
                     </div>
-                    <label for="doc_no" class="col-sm-2 col-form-label">Doc No</label>
+                    <label for="doc_no" class="col-sm-2 col-form-label">Entry No</label>
                     <div class="col-sm-4">
                         <input readonly type="doc_no" class="form-control" id="doc_no" name="doc_no"
                             value="{{data.doc_no}}">
@@ -18,7 +18,7 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="customer_id" class="col-sm-2 col-form-label">Customer</label>
+                    <label for="customer_id" class="col-sm-2 col-form-label">Dealer</label>
                     <div class="col-sm-10">
                         <div class="input-group">
                             <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
@@ -33,7 +33,7 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="bu_id" class="col-sm-2 col-form-label">Business Unit</label>
+                    <label for="bu_id" class="col-sm-2 col-form-label">SAP Business Unit</label>
                     <div class="col-sm-10">
                         <div class="input-group">
                             {{!-- <input hidden type="text" class="form-control" id="bu_id_hdn" name="bu_id_hdn"
@@ -71,12 +71,12 @@
                 </div>
 
                 <div class="form-group row mb-3">
-                    <label for="ref_no" class="col-sm-2 col-form-label">Ref No</label>
+                    <label for="ref_no" class="col-sm-2 col-form-label">Pay Ref No</label>
                     <div class="col-sm-4">
                         <input type="text" class="form-control" id="ref_no" name="ref_no" value="{{data.ref_no}}"
                             minlength="1" maxlength="50" required>
                     </div>
-                    <label for="ref_date" class="col-sm-2 col-form-label">Ref Date</label>
+                    <label for="ref_date" class="col-sm-2 col-form-label">Pay Ref Date</label>
                     <div class="col-sm-4">
                         <input type="date" class="form-control" id="ref_date" name="ref_date" value="{{data.ref_date}}"
                             required>
@@ -84,7 +84,7 @@
                 </div>
 
                 <div class="form-group row mb-3">
-                    <label for="ref_branch" class="col-sm-2 col-form-label">Ref Branch</label>
+                    <label for="ref_branch" class="col-sm-2 col-form-label">Pay Ref Branch</label>
                     <div class="col-sm-4">
                         <input type="text" class="form-control" id="ref_branch" name="ref_branch"
                             value="{{data.ref_branch}}" minlength="1" maxlength="50" required>
@@ -97,7 +97,7 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="remark" class="col-sm-2 col-form-label">Remark</label>
+                    <label for="remark" class="col-sm-2 col-form-label">Remarks if any</label>
                     <div class="col-sm-10">
                         <textarea class="form-control" id="remark" name="remark" rows="3" maxlength="100"
                             placeholder="Enter remark" aria-describedby="remarkHelp">{{data.remark}}</textarea>

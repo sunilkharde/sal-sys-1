@@ -1,7 +1,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-6 border p-4">
-            <h2 class="mb-4">User Login</h2>
+            <h2 class="mb-4">MALPANI Dealer Portal Login</h2>
 
             {{#if alert}}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -13,10 +13,10 @@
 
             <form action="/auth/login" method="post">
                 <div class="mb-3">
-                    <label for="email_id" class="form-label">Email address</label>
+                    <label for="email_id" class="form-label">Email Address</label>
                     <input type="email_id" class="form-control" id="email_id" name="email_id"
                         aria-describedby="emailHelp" placeholder="Enter your email">
-                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                    {{!-- <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div> --}}
                 </div>
                 
                 <div class="mb-3">
@@ -28,19 +28,21 @@
                     </div>
                 </div>
 
-                <div class="mb-3 form-check">
+                {{!-- <div class="mb-3 form-check">
                     <input type="checkbox" class="form-check-input" id="exampleCheck1">
-                    <label class="form-check-label" for="exampleCheck1">Remember met</label>
-                </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
+                    <label class="form-check-label" for="exampleCheck1">Remember me</label>
+                </div> --}}
 
+                </b>
+                <button type="submit" class="btn btn-primary">Submit</button>
                 </b>
                 <div class="mb-3 form-check">
                 </div>
 
             </form>
-
-            <p>Not register? <a href="/auth/register">Register</a></p>
+            
+</b>
+            <p>If not Registered ? <a href="/auth/register">Register</a></p>
 
         </div>
     </div>

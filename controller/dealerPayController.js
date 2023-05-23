@@ -106,7 +106,7 @@ class dealerPayController {
         // retrieve the alert message from the query parameters
         const alert = req.query.alert;
         try {
-            const sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
+            const sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,CONCAT(c.bu_code,' | ',c.bu_short) as bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id";
             const [results] = await conn.query(sqlStr)//, params);
