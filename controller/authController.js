@@ -9,7 +9,7 @@ const conn = await pool.getConnection();
 class authController {
 
   static getData = async () => {
-    //const conn = await pool.getConnection();
+    const conn = await pool.getConnection();
     try {
       const [rows1] = await conn.query("SELECT role_id,role_name FROM roles Order By role_name");
       return [rows1];
@@ -30,7 +30,6 @@ class authController {
     const { username, password, confPassword, first_name, middle_name, last_name, user_role, email_id, mobile_no, user_status } = req.body;
     const data = { username, password, confPassword, first_name, middle_name, last_name, user_role, email_id, mobile_no, user_status }
     const [role_list] = await this.getData();
-    //const conn = await pool.getConnection();
 
     if (username && password && email_id & mobile_no) {
       //return res.status(400).json({ message: 'Enter all required fields' });
@@ -105,8 +104,9 @@ class authController {
   };
 
   static login = async (req, res) => {
+    const conn = await pool.getConnection();
     const { email_id, password } = req.body;
-    //const conn = await pool.getConnection();
+    
     try {
       const [rows] = await conn.query("SELECT * FROM users WHERE email_id = ? and status='A'", [email_id]);
       const user = rows[0];
@@ -167,7 +167,7 @@ class authController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Internal server error.' });
-    } finally{
+    } finally {
       conn.release
     }
 
@@ -194,7 +194,7 @@ class authController {
     } catch (error) {
       console.error(error);
       res.redirect('/');
-    } finally{
+    } finally {
       conn.release
     }
   }

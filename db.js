@@ -13,6 +13,20 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+
+// async function checkConnectionState() {
+//   try {
+//     const connection = await pool.getConnection();
+//     await connection.ping();
+//     console.log('Connection state: connected');
+//     connection.release();
+//   } catch (error) {
+//     console.error('Connection state: disconnected');
+//   }
+// }
+// checkConnectionState();
+
+
 // middleware function to get a connection from the pool and attach it to the request object
 /*const getConnection = async (req, res, next) => {
   try {
