@@ -5,7 +5,8 @@
 
             <form id="cityForm" action="/customer/create" method="post">
                 <div class="row mb-3">
-                    <label for="customer_name" class="col-sm-2 col-form-label">Dealer Name<span style="color: red;">*</span>
+                    <label for="customer_name" class="col-sm-2 col-form-label">Dealer Name<span
+                            style="color: red;">*</span>
                     </label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="customer_name" name="customer_name"
@@ -96,7 +97,8 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="market_area_id" class="col-sm-2 col-form-label">Market Area<span style="color: red;">*</span>
+                    <label for="market_area_id" class="col-sm-2 col-form-label">Market Area<span
+                            style="color: red;">*</span>
                     </label>
                     <div class="col-sm-10">
                         <div class="input-group">
@@ -113,7 +115,8 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="user_id" class="col-sm-2 col-form-label">Map with Profile<span style="color: red;">*</span>
+                    <label for="user_id" class="col-sm-2 col-form-label">Map with Profile<span
+                            style="color: red;">*</span>
                     </label>
                     <div class="col-sm-10">
                         <div class="input-group">
@@ -129,7 +132,8 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="ext_code" class="col-sm-2 col-form-label">Dealer SAP Code<span style="color: red;">*</span>
+                    <label for="ext_code" class="col-sm-2 col-form-label">Dealer SAP Code<span
+                            style="color: red;">*</span>
                     </label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="ext_code" name="ext_code" value="{{data.ext_code}}"
@@ -138,10 +142,30 @@
                 </div>
 
                 <div class="row mb-3">
+                    <label for="bu_id" class="col-sm-2 col-form-label">Business Units<span
+                            style="color: red;">*</span></label>
+                            <div class="col-sm-10">
+                    <select id="bu_id" name="bu_id[]" class="col-sm-10" multiple>
+                        {{#if (isArray bu_list)}}
+                        {{#each bu_list}}
+                        <option value="{{this.bu_id}}" {{#if (includes ../selectedBu_list this.bu_id)}}selected{{/if}}>
+                            {{this.bu_name}}</option>
+                        {{/each}}
+                        {{else}}
+                        <option value="{{bu_list.bu_id}}" {{#if (includes ../selectedBu_list
+                            bu_list.bu_id)}}selected{{/if}}>
+                            {{bu_list.bu_name}}</option>
+                        {{/if}}
+                    </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
                     <label for="geo_location" class="col-sm-2 col-form-label">Geo-Location</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="geo_location" name="geo_location"
-                            value="{{data.geo_location}}" placeholder="Customers geographic location (latitude and longitude)">
+                            value="{{data.geo_location}}"
+                            placeholder="Customers geographic location (latitude and longitude)">
                     </div>
                 </div>
 

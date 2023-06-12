@@ -1,35 +1,41 @@
-import pool from '../db.js';
+import { executeQuery } from '../db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
-const conn = await pool.getConnection();
+//const conn = await pool.getConnection();
 class authController {
 
   static getData = async () => {
-    const conn = await pool.getConnection();
     try {
-      const [rows1] = await conn.query("SELECT role_id,role_name FROM roles Order By role_name");
-      return [rows1];
+      //const conn = await pool.getConnection();
+      const rows1 = await executeQuery("SELECT role_id,role_name FROM roles Order By role_name", []);
+      //conn.release
+      return rows1;
     } catch (error) {
       console.error(error);
       // Handle the error
     } finally {
-      conn.release();
+      //conn.release();
     }
   }
 
   static register_user = async (req, res) => {
-    const [role_list] = await this.getData();
-    res.render('auth/register', { title: 'Register User', layout: 'global', role_list });
+    const role_list = await this.getData();
+    //res.locals.user = 'undefined'  Needs to check
+    if (res.locals.user !== null && res.locals.user !== undefined && user.user_role == 'Admin') {
+      res.render('auth/register', { title: 'Register User', role_list });
+    } else {
+      res.render('auth/register', { title: 'Register User', layout: 'global', role_list });
+    }
   }
 
   static register = async (req, res) => {
     const { username, password, confPassword, first_name, middle_name, last_name, user_role, email_id, mobile_no, user_status } = req.body;
     const data = { username, password, confPassword, first_name, middle_name, last_name, user_role, email_id, mobile_no, user_status }
-    const [role_list] = await this.getData();
+    const role_list = await this.getData();
 
     if (username && password && email_id & mobile_no) {
       //return res.status(400).json({ message: 'Enter all required fields' });
@@ -53,14 +59,18 @@ class authController {
     }
 
     // Check if user with same user and email already exists
-    const [rows, fields] = await conn.query('SELECT * FROM users WHERE (username=? or email_id=?)', [username, email_id]);
+    //const conn = await pool.getConnection();
+    const rows = await executeQuery('SELECT * FROM users WHERE (username=? or email_id=?)', [username, email_id]);
+    //conn.release
     if (rows.length > 0) {
       //return res.status(400).json({ message: 'User with same email already exists' });
       return res.render('auth/register', { alert: `User with same username or email already exists`, data, role_list });
     } else {
       try {
         // Genrate max user id
-        const [rows1] = await conn.query('SELECT Max(user_id) AS maxNumber FROM users');
+        //const conn1 = await pool.getConnection();
+        const rows1 = await executeQuery('SELECT Max(user_id) AS maxNumber FROM users');
+        //conn1.release
         var nextUserID = rows1[0].maxNumber + 1;
         //res.status(400).json({ message: 'Next user id is ' + nextUserID });
 
@@ -71,14 +81,16 @@ class authController {
         //var c_by =1; //Created by 
 
         // Insert new user into database
-        await conn.beginTransaction();
+        //const conn = await pool.getConnection();
+        // await conn.beginTransaction();
         var status_new = user_status !== null && user_status !== undefined ? user_status : 'A';
         var userRoll_new = user_role !== null && user_role !== undefined ? user_role : 'Dealer';
         var sqlStr = "INSERT INTO users (user_id,username,password,first_name,middle_name,last_name,user_role,email_id,mobile_no,status,c_at,c_by)" +
           " VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),1)"
-        const [result] = await conn.query(sqlStr,
+        await executeQuery(sqlStr,
           [nextUserID, username, hashedPassword, first_name, middle_name, last_name, userRoll_new, email_id, mobile_no, status_new]) //, c_at, c_by
-        await conn.commit();
+        // await conn.commit();
+        //conn.release
         //res.status(201).json({ message: 'User registered successfully', user_id: result.user_id });
 
         // Generate JWT and return to client
@@ -91,28 +103,29 @@ class authController {
         //res.redirect('/');
 
       } catch (err) {
-        await conn.rollback();
-        conn.release();
+        // await conn.rollback();
+        //conn.release();
 
         console.error(err);
         //res.status(500).json({ message: 'Internal server error' });
         return res.render('auth/register', { title: 'Register User', layout: 'global', alert: `Internal server error` });
       } finally {
-        conn.release();
+        //conn.release();
       }
     }
   };
 
   static login = async (req, res) => {
-    const conn = await pool.getConnection();
     const { email_id, password } = req.body;
-    
+
     try {
-      const [rows] = await conn.query("SELECT * FROM users WHERE email_id = ? and status='A'", [email_id]);
+      //const conn = await pool.getConnection();
+      const rows = await executeQuery("SELECT * FROM users WHERE email_id = ? and status='A'", [email_id]);
+      //conn.release
       const user = rows[0];
       if (!user) {
         //return res.status(401).json({ message: 'Authentication failed. User not found.' });
-        return res.render('auth/login', { title: 'Register User', layout: 'global', alert: `Login failed. Invalid credentials or user is not active.` });
+        return res.render('auth/login', { email_id, password, title: 'Register User', layout: 'global', alert: `Login failed. Invalid credentials or user is not active.` });
       } else {
         //return res.status(401).json({ message: 'found.' + rows[0] });
         console.log(`User found ${user.username}`);
@@ -121,7 +134,7 @@ class authController {
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
         //return res.status(401).json({ message: 'Authentication failed. Wrong password.' });
-        return res.render('auth/login', { title: 'Register User', layout: 'global', alert: `Login failed. Invalid credentials.` });
+        return res.render('auth/login', { email_id, password, title: 'Register User', layout: 'global', alert: `Login failed. Invalid credentials.` });
       }
 
       // Generate JWT and return to client
@@ -137,7 +150,7 @@ class authController {
       //res.status(500).json({ message: 'Internal server error.' });
       return res.render('auth/login', { title: 'Register User', layout: 'global', alert: `Authentication failed. Internal server error.` });
     } finally {
-      conn.release
+      //conn.release
     }
   }
 
@@ -150,7 +163,9 @@ class authController {
   static resetPassword = async (req, res) => {
     const { email_id, password } = req.body;
     try {
-      const [rows] = await conn.query('SELECT * FROM users WHERE email_id = ?', [email_id]);
+      //const conn1 = await pool.getConnection();
+      const rows = await executeQuery('SELECT * FROM users WHERE email_id = ?', [email_id]);
+      //conn1.release
       const user = rows[0];
       if (!user) {
         //return res.status(404).json({ message: 'User not found.' });
@@ -159,7 +174,9 @@ class authController {
 
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(password, salt);
-      await conn.query('UPDATE users SET password = ? WHERE user_id = ?', [hashedPassword, user.user_id]);
+      //const conn = await pool.getConnection();
+      await executeQuery('UPDATE users SET password = ? WHERE user_id = ?', [hashedPassword, user.user_id]);
+      //conn.release
       //res.json({ message: 'Password reset successful.' });
       //return res.render('home', { alert: `Password change successfully. User can login with new password` });
       return res.redirect('/');
@@ -168,7 +185,7 @@ class authController {
       console.error(error);
       res.status(500).json({ message: 'Internal server error.' });
     } finally {
-      conn.release
+      //conn.release
     }
 
   }
@@ -182,25 +199,27 @@ class authController {
     }
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const [rows] = await conn.query('SELECT * FROM users WHERE user_id = ?', [decoded.id]);
+      //const conn = await pool.getConnection();
+      const rows = await executeQuery('SELECT * FROM users WHERE user_id = ?', [decoded.id]);
+      //conn.release
       const user = rows[0];
+
       if (!user) {
-        return res.redirect('/');
+        // return res.redirect('/');
+        return res.render('auth/login', { title: 'Register User', layout: 'global' });
       }
       res.locals.user = user;
-      //console.log('User checked..................')
       //console.log(res.locals.user.user_role)
+
       next();
     } catch (error) {
       console.error(error);
       res.redirect('/');
     } finally {
-      conn.release
+      //conn.release
     }
   }
 
 };
 
 export default authController
-
-

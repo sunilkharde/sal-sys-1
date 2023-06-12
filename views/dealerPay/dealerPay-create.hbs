@@ -8,7 +8,7 @@
                     <label for="doc_date" class="col-sm-2 col-form-label">Entry Date</label>
                     <div class="col-sm-4">
                         <input readonly type="text" class="form-control" id="doc_date" name="doc_date"
-                            value="{{data.doc_date}}">
+                            value="{{momentDMY data.doc_date}}">
                     </div>
                     <label for="doc_no" class="col-sm-2 col-form-label">Entry No</label>
                     <div class="col-sm-4">
@@ -18,7 +18,8 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="customer_id" class="col-sm-2 col-form-label">Dealer</label>
+                    <label for="customer_id" class="col-sm-2 col-form-label">Dealer<span
+                            style="color: red;">*</span></label>
                     <div class="col-sm-10">
                         <div class="input-group">
                             <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
@@ -33,28 +34,22 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="bu_id" class="col-sm-2 col-form-label">SAP Business Unit</label>
-                    <div class="col-sm-10">
-                        <div class="input-group">
-                            {{!-- <input hidden type="text" class="form-control" id="bu_id_hdn" name="bu_id_hdn"
-                                value="{{data.bu_id}}"> --}}
-                            <select class="form-select" id="bu_id" name="bu_id" aria-label=".form-select-sm example" required>
-                                {{!-- <option value="" selected>Select Business Unit</option> --}}
-                                {{#each bu_list}}
-                                <option value="{{bu_id}}" {{#if (eq bu_id ../data.bu_id)}}selected{{/if}}>
-                                    {{bu_name}}
-                                </option>
-                                {{/each}}
-                                 {{!-- {{#isEqual ../data.bu_id bu_id }}selected{{/isEqual}} --}}
-                            </select>
-                        </div>
+                    <label for="bu_id" class="col-sm-2 col-form-label">Business Unit<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input hidden type="text" class="form-control" id="bu_id_hdn" name="bu_id_hdn"
+                            value="{{data.bu_id}}">
+                        <input disabled type="text" class="form-control" id="bu_name" name="bu_name"
+                            value="{{data.bu_name}}">
                     </div>
                 </div>
 
                 <div class="form-group row mb-3">
-                    <label for="pay_mode" class="col-sm-2 col-form-label">Pay Mode</label>
+                    <label for="pay_mode" class="col-sm-2 col-form-label">Pay Mode<span
+                            style="color: red;">*</span></label>
                     <div class="col-sm-4">
-                        <select class="form-select" id="pay_mode" name="pay_mode" aria-label=".form-select-sm example" required>
+                        <select class="form-select" id="pay_mode" name="pay_mode" aria-label=".form-select-sm example"
+                            required>
                             {{!-- <option value="" selected>Select Payment Mode</option> --}}
                             {{#each pay_mode_list}}
                             <option value="{{pay_mode}}" {{#if (eq pay_mode ../data.pay_mode)}}selected{{/if}}>
@@ -63,20 +58,22 @@
                             {{/each}}
                         </select>
                     </div>
-                    <label for="amount" class="col-sm-2 col-form-label">Amount</label>
+                    <label for="amount" class="col-sm-2 col-form-label">Amount<span style="color: red;">*</span></label>
                     <div class="col-sm-4">
-                        <input type="number" class="form-control text-end" id="amount" name="amount" 
-                        min="0" step="1" value="{{data.amount}}" required>
+                        <input type="number" class="form-control text-end" id="amount" name="amount" min="0" step="1"
+                            value="{{data.amount}}" required>
                     </div>
                 </div>
 
                 <div class="form-group row mb-3">
-                    <label for="ref_no" class="col-sm-2 col-form-label">Pay Ref No</label>
+                    <label for="ref_no" class="col-sm-2 col-form-label">Pay Ref No<span
+                            style="color: red;">*</span></label>
                     <div class="col-sm-4">
                         <input type="text" class="form-control" id="ref_no" name="ref_no" value="{{data.ref_no}}"
                             minlength="1" maxlength="50" required>
                     </div>
-                    <label for="ref_date" class="col-sm-2 col-form-label">Pay Ref Date</label>
+                    <label for="ref_date" class="col-sm-2 col-form-label">Pay Ref Date<span
+                            style="color: red;">*</span></label>
                     <div class="col-sm-4">
                         <input type="date" class="form-control" id="ref_date" name="ref_date" value="{{data.ref_date}}"
                             required>
@@ -84,7 +81,8 @@
                 </div>
 
                 <div class="form-group row mb-3">
-                    <label for="ref_branch" class="col-sm-2 col-form-label">Pay Ref Branch</label>
+                    <label for="ref_branch" class="col-sm-2 col-form-label">Pay Ref Branch<span
+                            style="color: red;">*</span></label>
                     <div class="col-sm-4">
                         <input type="text" class="form-control" id="ref_branch" name="ref_branch"
                             value="{{data.ref_branch}}" minlength="1" maxlength="50" required>

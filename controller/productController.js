@@ -1,4 +1,4 @@
-import pool from '../db.js';
+import { executeQuery } from '../db.js';
 
 /*const unit_list = [
     { key: '1', value: 'Nos' },
@@ -13,35 +13,43 @@ const category_list = [
     { key: '4', value: 'Category 4' }
 ]*/
 /*const getData = async () => {
-    //const conn = await pool.getConnection();
+    ////const conn = await pool.getConnection();
     try {
-        const [rows1] = await conn.query("SELECT unit_id,unit_name FROM units Where status='A'");
-        const [rows2] = await conn.query("SELECT category_id,category_name FROM categories Where status='A'");
+        const [rows1] = await executeQuery("SELECT unit_id,unit_name FROM units Where status='A'");
+        const [rows2] = await executeQuery("SELECT category_id,category_name FROM categories Where status='A'");
         return [rows1, rows2];
     } catch (error) {
         console.error(error);
         // Handle the error
     } finally {
-        conn.release();
+        //conn.release();
     }
 }*/
 
-const conn = await pool.getConnection();
+//const conn = await pool.getConnection();
 class productController {
 
     static getData = async (req) => {
-        //const conn = await pool.getConnection();
         try {
-            const [rows1] = await conn.query("SELECT unit_id,unit_name FROM units Where status='A'");
-            const [rows2] = await conn.query("SELECT category_id,category_name FROM categories Where status='A'");
-            const [rows3] = await conn.query("SELECT bu_id, CONCAT(bu_code,' | ',bu_short) as bu_name FROM business_units Where status='A'")
+            //const conn = await pool.getConnection();
+            const rows1 = await executeQuery("SELECT unit_id,unit_name FROM units Where status='A'");
+            //conn.release
+
+            // const conn2 = await pool.getConnection();
+            const rows2 = await executeQuery("SELECT category_id,category_name FROM categories Where status='A'");
+            // conn2.release
+
+            // const conn3 = await pool.getConnection();
+            const rows3 = await executeQuery("SELECT bu_id, CONCAT(bu_code,' | ',bu_name) as bu_name FROM business_units Where status='A'")
+            // conn3.release
+
             //CONCAT('X',bu_code) as bu_code
             return [rows1, rows2, rows3];
         } catch (error) {
             console.error(error);
             // Handle the error
         } finally {
-            conn.release();
+            //conn.release();
         }
     }
 
@@ -58,19 +66,19 @@ class productController {
     }
 
     static create = async (req, res) => {
-        const { product_name, description, unit_id, category_id, rate, ext_code, status } = req.body;
+        const { product_name, description, unit_id, category_id, rate, ext_code, status, bu_id } = req.body;
         const data = req.body
         const [unit_list, category_list, bu_list] = await this.getData();
-        //const conn = await pool.getConnection();
 
-        let selectedBu_list = [];
-        if (req.body['bu_id[]']) {
-            if (Array.isArray(req.body['bu_id[]'])) {
-                selectedBu_list = req.body['bu_id[]'].map(Number);
-            } else {
-                selectedBu_list = req.body['bu_id[]'].split(',').map(Number);
-            }
-        }
+        // let selectedBu_list = [];
+        // if (req.body['bu_id[]']) {
+        //     if (Array.isArray(req.body['bu_id[]'])) {
+        //         selectedBu_list = req.body['bu_id[]'].map(Number);
+        //     } else {
+        //         selectedBu_list = req.body['bu_id[]'].split(',').map(Number);
+        //     }
+        // }
+        let selectedBu_list = Array.isArray(bu_id) ? bu_id : [bu_id];
 
         var errors = [];
         // Validate input || product_name.trim().length === 0
@@ -86,7 +94,12 @@ class productController {
         if (isNaN(rate) || rate <= 0) {
             errors.push({ message: 'Price must be a number' });
         }
-        const [rows] = await conn.query('SELECT * FROM products WHERE product_name=?', [product_name]);
+        if (bu_id === undefined) {
+            errors.push({ message: 'Select business unit' });
+        }
+        //const conn = await pool.getConnection();
+        const rows = await executeQuery('SELECT * FROM products WHERE product_name=?', [product_name]);
+        //conn.release
         if (rows.length > 0) {
             errors.push({ message: 'Product with this name is already exists' });
         }
@@ -97,101 +110,106 @@ class productController {
 
         try {
             // Genrate max product id
-            const [rows1] = await conn.query('SELECT Max(product_id) AS maxNumber FROM products');
+            // const conn1 = await pool.getConnection();
+            const rows1 = await executeQuery('SELECT Max(product_id) AS maxNumber FROM products');
+            // conn1.release
             var nextProductID = rows1[0].maxNumber + 1;
 
             // Insert new record into database
-            await conn.beginTransaction();
+            // const conn2 = await pool.getConnection();
+            // await conn2.beginTransaction();
             var status_new = status !== null && status !== undefined ? status : 'A';
             var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
             const sqlStr = "INSERT INTO products (product_id,product_name,description,unit_id,category_id,rate,ext_code,status,c_at,c_by)" +
                 " VALUES (?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
             const params = [nextProductID, product_name, description, unit_id, category_id, rate, ext_code, status_new, c_by];
-            const [result] = await conn.query(sqlStr, params);
-            await conn.commit();
+            await executeQuery(sqlStr, params);
+            // await conn2.commit();
+            // conn2.release
 
-            // Insert new record into 'products_bu'
-            await conn.beginTransaction();
-            for (const bu_id of selectedBu_list) {
-                const sqlStr = "INSERT INTO products_bu (product_id,bu_id,c_at,c_by)" +
-                    " VALUES (?,?,CURRENT_TIMESTAMP( ),?)"
-                const params = [nextProductID, bu_id, c_by];
-                const [result2] = await conn.query(sqlStr, params);
+            if (bu_id !== undefined) {
+                for (const bu_id of selectedBu_list) {
+                    const sqlStr = "INSERT INTO products_bu (product_id,bu_id,c_at,c_by)" +
+                        " VALUES (?,?,CURRENT_TIMESTAMP( ),?)"
+                    const params = [nextProductID, bu_id, c_by];
+                    await executeQuery(sqlStr, params);
+                }
             }
-            await conn.commit();
 
             //return res.render('products/product-view', { alert: `Save product successfully` });
             res.redirect('/product/view');
             //res.redirect('/');
 
         } catch (err) {
-            await conn.rollback();
-            conn.release();
-
             console.error(err);
             return res.render('products/product-view', { alert: `Internal server error` });
         } finally {
-            conn.release();
+            //conn.release();
         }
     };
 
     static viewAll = async (req, res) => {
-        //const conn = await pool.getConnection();
         // retrieve the alert message from the query parameters
         const alert = req.query.alert;
         try {
-            const sqlStr = "Select a.product_id,a.product_name,a.description,b.unit_name,c.category_name" +
+            //const conn = await pool.getConnection();
+            const sqlStr = "Select a.product_id,a.product_name,a.ext_code,b.unit_name,c.category_name" +
                 " from products as a, units as b, categories as c " +
                 " Where a.unit_id=b.unit_id and a.category_id=c.category_id";
-            const [results] = await conn.query(sqlStr)//, params);
+            const results = await executeQuery(sqlStr)//, params);
+            //conn.release
             res.render('products/product-view', { products: results, alert });
 
         } catch (error) {
             console.error(error);
             // Handle the error
         } finally {
-            conn.release();
+            //conn.release();
         }
     }
 
     static edit = async (req, res) => {
         const { id } = req.params;
-        //const conn = await pool.getConnection();
         try {
             //get selected bu for product
-            const [rows1] = await conn.query(`SELECT bu_id FROM products_bu Where product_id=${id}`);
+            //const conn = await pool.getConnection();
+            const rows1 = await executeQuery(`SELECT bu_id FROM products_bu Where product_id=${id}`);
+            //conn.release
             //const selectedBu_list = rows1;
             const selectedBu_list = rows1.map(row => row.bu_id); //store result as array 
+
             //
             const [unit_list, category_list, bu_list] = await this.getData();
+            // const conn1 = await pool.getConnection();
             const sqlStr = "Select * from products Where product_id= ?";
             const params = [id];
-            const [results] = await conn.query(sqlStr, params);
+            const results = await executeQuery(sqlStr, params);
+            // conn1.release
             //
             res.render('products/product-edit', { data: results[0], unit_list, category_list, bu_list, selectedBu_list });
         } catch (error) {
             console.error(error);
             // Handle the error
         } finally {
-            conn.release();
+            //conn.release();
         }
     }
 
     static update = async (req, res) => {
         const { id } = req.params;
-        const { product_name, description, unit_id, category_id, rate, ext_code, status } = req.body;
+        const { product_name, description, unit_id, category_id, rate, ext_code, status, bu_id } = req.body;
         const data = req.body
         const [unit_list, category_list, bu_list] = await this.getData();
-        //const conn = await pool.getConnection();
 
-        let selectedBu_list = [];
-        if (req.body['bu_id[]']) {
-            if (Array.isArray(req.body['bu_id[]'])) {
-                selectedBu_list = req.body['bu_id[]'].map(Number);
-            } else {
-                selectedBu_list = req.body['bu_id[]'].split(',').map(Number);
-            }
-        }
+        // let selectedBu_list = [];
+        // if (req.body['bu_id[]']) {
+        //     if (Array.isArray(req.body['bu_id[]'])) {
+        //         selectedBu_list = req.body['bu_id[]'].map(Number);
+        //     } else {
+        //         selectedBu_list = req.body['bu_id[]'].split(',').map(Number);
+        //     }
+        // }
+        let selectedBu_list = Array.isArray(bu_id) ? bu_id : [bu_id];
 
         var errors = [];
         // Validate input || product_name.trim().length === 0
@@ -207,7 +225,12 @@ class productController {
         if (isNaN(rate) || rate <= 0) {
             errors.push({ message: 'Price must be a number' });
         }
-        const [rows] = await conn.query('SELECT * FROM products WHERE product_name=? and product_id<>?', [product_name, id]);
+        if (bu_id === undefined) {
+            errors.push({ message: 'Select business unit' });
+        }
+        //const conn = await pool.getConnection();
+        const rows = await executeQuery('SELECT * FROM products WHERE product_name=? and product_id<>?', [product_name, id]);
+        //conn.release
         if (rows.length > 0) {
             errors.push({ message: 'Product with this name is already exists' });
         }
@@ -218,55 +241,61 @@ class productController {
 
         try {
             // Update record into database using product_id
-            await conn.beginTransaction();
+            // const conn1 = await pool.getConnection();
+            // await conn1.beginTransaction();
             var status_new = status !== null && status !== undefined ? status : 'A';
             var u_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
             const sqlStr = "UPDATE products Set product_name=?,description=?,unit_id=?,category_id=?,rate=?,ext_code=?,status=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
                 " WHERE product_id=?"
             const params = [product_name, description, unit_id, category_id, rate, ext_code, status_new, u_by, id];
-            const [result] = await conn.query(sqlStr, params);
-            await conn.commit();
+            await executeQuery(sqlStr, params);
+            // await conn1.commit();
+            // conn1.release
 
             // Delete record from 'products_bu'
-            await conn.beginTransaction();
+            // const conn2 = await pool.getConnection();
+            // await conn2.beginTransaction();
             const sqlStr2 = `Delete from products_bu Where product_id=${id}`
-            const [result2] = await conn.query(sqlStr2);
-            await conn.commit();
+            await executeQuery(sqlStr2);
+            // await conn2.commit();
+            // conn2.release
             // Insert new record into 'products_bu'
-            await conn.beginTransaction();
-            for (const bu_id of selectedBu_list) {
-                const sqlStr = "INSERT INTO products_bu (product_id,bu_id,u_at,u_by)" +
-                    " VALUES (?,?,CURRENT_TIMESTAMP( ),?)"
-                const params = [id, bu_id, u_by];
-                const [result3] = await conn.query(sqlStr, params);
+            // const conn3 = await pool.getConnection();
+            // await conn3.beginTransaction();
+            
+            if (bu_id !== undefined) {
+                for (const bu_id of selectedBu_list) {
+                    const sqlStr = "INSERT INTO products_bu (product_id,bu_id,u_at,u_by)" +
+                        " VALUES (?,?,CURRENT_TIMESTAMP( ),?)"
+                    const params = [id, bu_id, u_by];
+                    await executeQuery(sqlStr, params);
+                }
             }
-            await conn.commit();
 
             //res.redirect('/product/view');
             res.redirect('/product/view?alert=Update+product+successfully');
 
         } catch (err) {
-            await conn.rollback();
-            conn.release();
             console.error(err);
             return res.render('products/product-view', { alert: `Internal server error` });
         } finally {
-            conn.release();
+            //conn.release();
         }
     };
 
     static delete = async (req, res) => {
         const { id } = req.params;
-        //const conn = await pool.getConnection();
+
         try {
             var errors = [];
+            //const conn = await pool.getConnection();
             const sqlStr3 = "Select * from products_bu Where product_id=?"
             const params3 = [id];
-            const [rows] = await conn.query(sqlStr3, params3);
+            const rows = await executeQuery(sqlStr3, params3);
+            //conn.release
             if (rows.length > 0) {
                 errors.push({ message: "Reference exist, master entry can't delete" });
             }
-            conn.release;
             //            
             if (errors.length) {
                 res.redirect(`/product/view?${errors.map(error => `alert=${error.message}`).join('&')}`);
@@ -274,26 +303,27 @@ class productController {
             }
             //
             //
-            await conn.beginTransaction();
+            // const conn1 = await pool.getConnection();
+            // await conn1.beginTransaction();
             const sqlStr = "Delete from products WHERE product_id=?"
             const params = [id];
-            const [result] = await conn.query(sqlStr, params);
-            await conn.commit();
+            await executeQuery(sqlStr, params);
+            // await conn1.commit();
             // Delete record from 'products_bu'
-            await conn.beginTransaction();
+            // const conn2 = await pool.getConnection();
+            // await conn2.beginTransaction();
             const sqlStr2 = `Delete from products_bu Where product_id=${id}`
-            const [result2] = await conn.query(sqlStr2);
-            await conn.commit();
+            await executeQuery(sqlStr2);
+            // await conn2.commit();
+            // conn2.release
             //
             //res.redirect('/product/view');
             res.redirect('/product/view?alert=Product+deleted+successfully');
         } catch (err) {
-            await conn.rollback();
-            conn.release();
             console.error(err);
             return res.render('products/product-view', { alert: `Internal server error` });
         } finally {
-            conn.release();
+            //conn.release();
         }
     };
 

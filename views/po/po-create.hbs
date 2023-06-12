@@ -7,7 +7,7 @@
                     <label for="po_date" class="col-sm-2 col-form-label">PO Date</label>
                     <div class="col-sm-4">
                         <input readonly type="text" class="form-control" id="po_date" name="po_date"
-                            value="{{data.po_date}}">
+                            value="{{momentDMY data.po_date}}">
                     </div>
                     <label for="po_no" class="col-sm-2 col-form-label">PO No</label>
                     <div class="col-sm-4">
@@ -17,7 +17,8 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="customer_id" class="col-sm-2 col-form-label">Dealer Name</label>
+                    <label for="customer_id" class="col-sm-2 col-form-label">Dealer Name<span
+                            style="color: red;">*</span></label>
                     <div class="col-sm-10">
                         <div class="input-group">
                             <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
@@ -32,23 +33,30 @@
                 </div>
 
                 <div class="form-group row mb-3">
-                    <label for="exp_date" class="col-sm-2 col-form-label">Expected Delivery</label>
-                    <div class="col-sm-4">
-                        <input type="date" class="form-control" id="exp_date" name="exp_date" value="{{data.exp_date}}"
-                            required>
-                    </div>
-                    <label for="bu_id" class="col-sm-2 col-form-label">SAP Business Unit Code</label>
+                    <label for="bu_id" class="col-sm-2 col-form-label">Business Unit<span
+                            style="color: red;">*</span></label>
                     <div class="col-sm-4">
                         <input hidden type="text" class="form-control" id="bu_id_hdn" name="bu_id_hdn"
                             value="{{data.bu_id}}">
-                        <select class="form-select" id="bu_id" name="bu_id" aria-label=".form-select-sm example">
-                            <option value="" selected>Select SAP Business Unit</option>
+                        <input disabled type="text" class="form-control" id="bu_name" name="bu_name"
+                            value="{{data.bu_name}}">
+
+                        {{!-- <select class="form-select" id="bu_id" name="bu_id" aria-label=".form-select-sm example">
+                            <option value="" selected>Select Business Unit</option>
                             {{#each bu_list}}
                             <option value="{{bu_id}}" {{#isEqual ../data.bu_id bu_id }}selected{{/isEqual}}>
                                 {{bu_name}}
                             </option>
                             {{/each}}
-                        </select>
+                        </select> --}}
+                    </div>
+
+                    <label for="exp_date" class="col-sm-2 col-form-label">Expected Delivery<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input type="date" class="form-control" id="exp_date" name="exp_date"
+                            value="{{momentYMD data.exp_date}}" min="{{momentYMD data.minDate}}"
+                            max="{{momentYMD data.maxDate}}" required>
                     </div>
                 </div>
 
@@ -69,16 +77,16 @@
                             <tr>
                                 <td><input readonly type="text" class="form-control text-end" id="sr_no" name="sr_no[]"
                                         required value="10"></td>
-                                <td><select class="form-control" id="product_id" name="product_id[]" disabled>
-                                        <option value="">(Select a value)</option>
+                                <td><select class="form-select" id="product_id" name="product_id[]"> {{!-- disabled --}}
+                                        {{!-- <option value="">(Select a value)</option> --}}
                                 </td>
                                 <td><input type="number" class="form-control text-end" id="qty" name="qty[]" min="1"
-                                        required>
+                                        step="1" value="1" required>
                                 </td>
                                 <td hidden><input type="number" class="form-control text-end" id="rate" name="rate[]"
-                                        min="0" step="1.00" value="1" required></td>
+                                        min="0" step="1" value="1" required></td>
                                 <td hidden><input readonly type="number" class="form-control text-end" id="amount"
-                                        name="amount[]" min="1" required></td>
+                                        name="amount[]" min="0" step="1" required></td>
                                 <td>
                                     <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
                                         class="btn btn-danger">
@@ -102,7 +110,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="col-md-3"> {{!--d-flex justify-content-between"> --}}
@@ -117,53 +124,49 @@
 </div>
 
 <script>
-    var xhr;
-    $(document).ready(function () {
-        $('#bu_id').change(function () {
-            if (xhr && xhr.readyState !== 4) {
-                xhr.abort();
-            }
-            var bu_id = $(this).val();
-            if (bu_id) {
-                $('#product_id').attr('disabled', true);
-                xhr = $.ajax({
-                    url: '/po/products-list',
-                    type: 'get',
-                    data: { bu_id: bu_id },
-                    success: function (response) {
-                        $('#product_id').empty();
-                        $('#product_id').append($('<option>', {
-                            value: '',
-                            text: '(Select Product)'
-                        }));
-                        $.each(response.products_list, function (key, value) {
-                            //console.log('Product ID: ' + value.product_id);
-                            //console.log('Product Name: ' + value.product_name);
-                            $('#product_id').append($('<option>', {
-                                value: value.product_id,
-                                text: value.product_name
-                            }));
-                        });
-                        $('#product_id').attr('disabled', false);
-                    }
-                });
-            } else {
-                $('#product_id').empty();
-                $('#product_id').attr('disabled', true);
-            }
-        });
+    const dropdownProductID = document.getElementById('product_id');
+    dropdownProductID.addEventListener("click", async function () {
+        await fillDropdownList(dropdownProductID);
     });
 
+    async function fillDropdownList(dropdownList) {
+        const bu_id = document.getElementById("bu_id_hdn");
+        try {
+            const response = await fetch(`/po/products-list?bu_id=${bu_id.value}`);
+            const data = await response.json();
+            const items = data.products_list;
+            if (!Array.isArray(items)) {
+                throw new Error('Unexpected response format');
+            }
+            dropdownList.innerHTML = '';
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.product_id;
+                option.textContent = item.product_name;
+                dropdownList.appendChild(option);
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
 </script>
 
 <script>
-    // Get the table body element
+    const btnCustomer = document.getElementById("btnCustomer");
     const orderItemsBody = document.getElementById("orderItemsBody");
     const addItemBtn = document.getElementById("addItemBtn");
-    const bu_idDropdown = document.getElementById("bu_id");
 
     // Add an event listener to the button to handle clicks
     addItemBtn.addEventListener("click", function () {
+
+        if (dropdownProductID.options.length < 1) {
+            alert("There are no available products in the list. Please select firs row product fist.");
+            return; 
+        }
+
+        btnCustomer.disabled = true;
+        btnCustomer.className = "btn btn-outline-secondary";
+
         // Get the last row in the table body
         const lastRow = orderItemsBody.lastElementChild;
         // Clone the last row
@@ -180,8 +183,8 @@
         srNoInput.value = srNoValue + 10;
 
         // Get the newly added rate field
-        const qtyInpute = newRow.querySelector('#rate');
-        qtyInpute.value = 1;
+        const rateInpute = newRow.querySelector('#rate');
+        rateInpute.value = 1;
 
         // Append the new row to the table body
         orderItemsBody.appendChild(newRow);
@@ -208,17 +211,8 @@
         }
     });
 
-    // Disable the Business Unit dropdown when the Add Item button is clicked
-    addItemBtn.addEventListener("click", () => {
-        document.querySelector("#bu_id_hdn").value = document.querySelector("#bu_id").value;
-        document.querySelector("#bu_id").disabled = true;
-    });
-    bu_idDropdown.addEventListener("change", (event) => {
-        document.querySelector("#bu_id_hdn").value = document.querySelector("#bu_id").value;
-        document.querySelector("#bu_id").disabled = true;
-    });
-
     function removeSelectedItem(element) {
+
         // Remove the row from the table
         const row = element.closest("tr");
         if (row.rowIndex === 1) {
@@ -236,5 +230,6 @@
     }
 
 </script>
+
 
 {{> _lov-customers}}

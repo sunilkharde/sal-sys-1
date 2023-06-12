@@ -7,6 +7,7 @@
     <table class="table" id="poTable">
         <thead>
             <tr>
+                <th hidden>Order Date1</th>
                 <th>Order Date</th>
                 <th>Order No</th>
                 <th>Dealer Name</th>
@@ -20,6 +21,7 @@
         <tbody>
             {{#each po}}
             <tr>
+                <td hidden>{{momentYMD this.po_date}}</td>
                 <td>{{momentDMY this.po_date}}</td>
                 <td>{{this.po_no_new}}</td>
                 <td>{{this.customer_name}}</td>
@@ -58,7 +60,8 @@
         $(document).ready(function () {
             $('#poTable').dataTable({
                 pageLength: 10,
-                "order": [[0, "desc"], [1, "desc"]]
+                "order": [[0, "desc"], [2, "desc"]]
+                
             });
         });
     </script>

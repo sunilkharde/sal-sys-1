@@ -2,6 +2,7 @@ import express from "express";
 const router = express.Router();
 import poController from "../controller/poController.js"
 
+router.get('/bu-list', poController.getBuList);
 router.get('/products-list', poController.getProductList);
 router.get('/create', poController.viewBlank);
 router.post('/create', poController.create);

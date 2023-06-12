@@ -1,4 +1,4 @@
-import pool from '../db.js';
+import { executeQuery } from '../db.js';
 import xlsx from 'xlsx';
 import csv from 'fast-csv';
 
@@ -7,38 +7,61 @@ import ftp from 'basic-ftp';
 import { join } from 'path';
 // import fs from 'fs';
 
-
-const conn = await pool.getConnection();
+//const conn = await pool.getConnection();
 class dealerPayController {
 
     static getData = async (req, user) => {
         try {
             var user_role = user.user_role !== null && user.user_role !== undefined ? user.user_role : 'User';
-            var sqlCust = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area,a.customer_type" +
-                " from customers as a, market_area as b " +
-                " Where a.market_area_id=b.market_area_id and a.status='A'"
+
+            //const conn = await pool.getConnection();
+            var sqlCust = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area,c.bu_id,CONCAT(d.bu_code,' | ',d.bu_name) as bu_name" +
+                " from customers as a, market_area as b, customers_bu as c, business_units as d " +
+                " Where a.market_area_id=b.market_area_id and a.status='A'" +
+                " and a.customer_id=c.customer_id and c.bu_id=d.bu_id"
             if (user_role !== "Admin") {
                 sqlCust = sqlCust + ` and a.user_id=${user.user_id}`;
             }
-            const [customer_list] = await conn.query(sqlCust);
-            const [pay_mode_list] = await conn.query("SELECT * FROM pay_modes Where status='A'");
-            const [bu_list] = await conn.query("SELECT bu_id, CONCAT(bu_code,' | ',bu_short) as bu_name FROM business_units Where status='A'")
+            const customer_list = await executeQuery(sqlCust);
+            //conn.release
+
+            // const conn1 = await pool.getConnection();
+            const pay_mode_list = await executeQuery("SELECT * FROM pay_modes Where status='A'");
+            //conn1.release
+
+            // const conn2 = await pool.getConnection();
+            const bu_list = await executeQuery("SELECT bu_id, CONCAT(bu_code,' | ',bu_name) as bu_name FROM business_units Where status='A'")
+            //conn2.release
+
             return [customer_list, pay_mode_list, bu_list];
         } catch (error) {
             console.error(error);
             // Handle the error
         } finally {
-            conn.release();
+            //conn.release();
         }
     }
 
     static viewBlank = async (req, res) => {
         const [customer_list, pay_mode_list, bu_list] = await this.getData(req, res.locals.user);
-        res.render('dealerPay/dealerPay-create', { customer_list, pay_mode_list, bu_list });
+
+        try {
+            //const conn = await pool.getConnection();
+            const row = await executeQuery("SELECT CURRENT_DATE() as doc_date;")
+            //conn.release
+            const data = { doc_date: row[0].doc_date, doc_no: '*****' };
+            res.render('dealerPay/dealerPay-create', { customer_list, pay_mode_list, bu_list, data });
+        } catch (err) {
+            //conn.release();
+            console.error(err);
+            return res.render('dealerPay/dealerPay-create', { alert: `Internal server error` });
+        } finally {
+            //conn.release();
+        }
     }
 
     static create = async (req, res) => {
-        const { customer_id, bu_id, pay_mode, amount, ref_date, ref_no, ref_branch, ref_desc, remark } = req.body;
+        const { customer_id, bu_id_hdn, pay_mode, amount, ref_date, ref_no, ref_branch, ref_desc, remark } = req.body;
         const data = req.body
         const [customer_list, pay_mode_list, bu_list] = await this.getData(req, res.locals.user);
 
@@ -46,7 +69,7 @@ class dealerPayController {
         if (!customer_id) {
             errors.push({ message: 'Customer name is required' });
         }
-        if (!bu_id) {
+        if (!bu_id_hdn) {
             errors.push({ message: "Select business unit" });
         }
         if (!pay_mode) {
@@ -61,7 +84,7 @@ class dealerPayController {
         if (!ref_no) {
             errors.push({ message: 'Enter transaction reference number' });
         }
-        // const [rows] = await conn.query('SELECT * FROM customers WHERE customer_name=?', [customer_name]);
+        // const [rows] = await executeQuery('SELECT * FROM customers WHERE customer_name=?', [customer_name]);
         // if (rows.length > 0) {
         //     errors.push({ message: 'Customer with this name is already exists' });
         // }
@@ -72,33 +95,36 @@ class dealerPayController {
 
         try {
             // Get CURRENT_DATE
-            const [row] = await conn.query("SELECT DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d') as doc_date;")
+            //const conn = await pool.getConnection();
+            const row = await executeQuery("SELECT DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d') as doc_date;")
+            //conn.release
             const curDate = row[0].doc_date;
             // Genrate max documnet id
-            const [rows1] = await conn.query(`SELECT Max(doc_no) AS maxNumber FROM dealer_payment Where doc_date='${curDate}'`);
+            // const conn1 = await pool.getConnection();
+            const rows1 = await executeQuery(`SELECT Max(doc_no) AS maxNumber FROM dealer_payment Where doc_date='${curDate}'`);
+            //conn1.release
             var nextDocNo = rows1[0].maxNumber + 1;
             var docNoNew = 'PM' + curDate.replace(/-/g, '') + nextDocNo.toString().padStart(3, '0');
 
             // Insert new record into database
-            await conn.beginTransaction();
+            // const conn2 = await pool.getConnection();
+            // await conn2.beginTransaction();
             var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
             const sqlStr = "INSERT INTO dealer_payment (doc_date,doc_no,doc_no_new,customer_id,bu_id,pay_mode,amount,ref_date,ref_no,ref_branch,ref_desc,remark,c_at,c_by)" +
                 " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
-            const paramsDP = [curDate, nextDocNo, docNoNew, customer_id, bu_id, pay_mode, amount, ref_date, ref_no, ref_branch, ref_desc, remark, c_by];
-            await conn.query(sqlStr, paramsDP);
-            await conn.commit();
+            const paramsDP = [curDate, nextDocNo, docNoNew, customer_id, bu_id_hdn, pay_mode, amount, ref_date, ref_no, ref_branch, ref_desc, remark, c_by];
+            await executeQuery(sqlStr, paramsDP);
+            // await conn2.commit();
+            //conn2.release
 
             res.redirect('/dealerPay/view?alert=Payment+entry+save+successfully');
 
 
         } catch (err) {
-            await conn.rollback();
-            conn.release();
-
             console.error(err);
             return res.render('dealerPay/dealerPay-view', { alert: `Internal server error` });
         } finally {
-            conn.release();
+            //conn.release();
         }
     };
 
@@ -106,18 +132,22 @@ class dealerPayController {
         // retrieve the alert message from the query parameters
         const alert = req.query.alert;
         try {
+            //const conn = await pool.getConnection();
             const sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,CONCAT(c.bu_code,' | ',c.bu_short) as bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id";
-            const [results] = await conn.query(sqlStr)//, params);
-
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id ";
+            if (res.locals.user.user_role !== "Admin") {
+                sqlStr = sqlStr + ` and a.c_by==${res.locals.user.user_id}`;
+            }
+            const results = await executeQuery(sqlStr);
+            //conn.release
             res.render('dealerPay/dealerPay-view', { dealerPayments: results, alert });
 
         } catch (error) {
             console.error(error);
             // Handle the error
         } finally {
-            conn.release();
+            //conn.release();
         }
     }
 
@@ -125,24 +155,26 @@ class dealerPayController {
         const { doc_date, doc_no } = req.params;
         try {
             const [customer_list, pay_mode_list, bu_list] = await this.getData(req, res.locals.user);
-            const sqlStr = "Select a.*,b.customer_name,c.bu_code" +
+            //const conn = await pool.getConnection();
+            const sqlStr = "Select a.*,b.customer_name,c.bu_code, CONCAT(bu_code,' | ',bu_name) as bu_name" +
                 " from dealer_payment as a, customers as b, business_units as c " +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.doc_date=? and a.doc_no=?";
             const params = [doc_date, doc_no];
-            const [results] = await conn.query(sqlStr, params);
+            const results = await executeQuery(sqlStr, params);
+            //conn.release
             //
             res.render('dealerPay/dealerPay-edit', { data: results[0], customer_list, pay_mode_list, bu_list });
         } catch (error) {
             console.error(error);
             // Handle the error
         } finally {
-            conn.release();
+            //conn.release();
         }
     }
 
     static update = async (req, res) => {
         const { doc_date, doc_no } = req.params;
-        const { customer_id, bu_id, pay_mode, amount, ref_date, ref_no, ref_branch, ref_desc, remark } = req.body;
+        const { customer_id, bu_id_hdn, pay_mode, amount, ref_date, ref_no, ref_branch, ref_desc, remark } = req.body;
         const data = req.body
         const [customer_list, pay_mode_list, bu_list] = await this.getData(req, res.locals.user);
 
@@ -150,7 +182,7 @@ class dealerPayController {
         if (!customer_id) {
             errors.push({ message: 'Customer name is required' });
         }
-        if (!bu_id) {
+        if (!bu_id_hdn) {
             errors.push({ message: "Select business unit" });
         }
         if (!pay_mode) {
@@ -165,7 +197,7 @@ class dealerPayController {
         if (!ref_no) {
             errors.push({ message: 'Enter transaction number' });
         }
-        // const [rows] = await conn.query('SELECT * FROM dealer_payment WHERE doc_date=? and doc_no<>?', [doc_date, doc_no]);
+        // const [rows] = await executeQuery('SELECT * FROM dealer_payment WHERE doc_date=? and doc_no<>?', [doc_date, doc_no]);
         // if (rows.length > 0) {
         //     errors.push({ message: 'Customer with this name is already exists' });
         // }
@@ -176,24 +208,26 @@ class dealerPayController {
 
         try {
             // Update record into database
-            await conn.beginTransaction();
+            //const conn = await pool.getConnection();
+            // await conn.beginTransaction();
             var u_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
             const sqlStr = "UPDATE dealer_payment Set customer_id=?,bu_id=?,pay_mode=?,amount=?,ref_date=?,ref_no=?,ref_branch=?,ref_desc=?,remark=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
                 " WHERE doc_date=? and doc_no=?"
-            const params = [customer_id, bu_id, pay_mode, amount, ref_date, ref_no, ref_branch, ref_desc, remark, u_by, doc_date, doc_no];
-            await conn.query(sqlStr, params);
-            await conn.commit();
+            const params = [customer_id, bu_id_hdn, pay_mode, amount, ref_date, ref_no, ref_branch, ref_desc, remark, u_by, doc_date, doc_no];
+            await executeQuery(sqlStr, params);
+            // await conn.commit();
+            //conn.release
 
             //res.redirect('/dealerPay/view');
             res.redirect('/dealerPay/view?alert=Update+payment+entry+successfully');
 
         } catch (err) {
-            await conn.rollback();
-            conn.release();
+            // await conn.rollback();
+            //conn.release();
             console.error(err);
             return res.render('dealerPay/dealerPay-view', { alert: `Internal server error` });
         } finally {
-            conn.release();
+            //conn.release();
         }
     };
 
@@ -201,13 +235,14 @@ class dealerPayController {
         const { doc_date, doc_no } = req.params;
         try {
             var errors = [];
+            //const conn = await pool.getConnection();
             const sqlStr3 = "Select * from dealer_payment Where doc_date=? and doc_no=?"
             const params3 = [doc_date, doc_no];
-            const [rows] = await conn.query(sqlStr3, params3);
+            const rows = await executeQuery(sqlStr3, params3);
+            //conn.release
             if (rows.length > 0) {
                 errors.push({ message: "Reference exist, payment entry can't delete" });
             }
-            conn.release;
             //            
             if (errors.length) {
                 res.redirect(`/dealerPay/view?${errors.map(error => `alert=${error.message}`).join('&')}`);
@@ -215,31 +250,33 @@ class dealerPayController {
             }
             //
             //
-            await conn.beginTransaction();
+            // const conn1 = await pool.getConnection();
+            // await conn1.beginTransaction();
             const sqlStr = "Delete from dealer_payment Where doc_date=? and doc_no=?"
             const params = [doc_date, doc_no];
-            await conn.query(sqlStr, params);
-            await conn.commit();
+            await executeQuery(sqlStr, params);
+            // await conn1.commit();
+            //conn1.release
             //
             //res.redirect('/dealerPay/view');
             res.redirect('/dealerPay/view?alert=Payment+entry+deleted+successfully');
         } catch (err) {
-            await conn.rollback();
-            conn.release();
             console.error(err);
             return res.render('dealerPay/dealerPay-view', { alert: `Internal server error` });
         } finally {
-            conn.release();
+            //conn.release();
         }
     };
 
     static exportExcel = async (req, res) => {
         try {
+            //const conn = await pool.getConnection();
             const sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id";
             //const params = [ doc_date, doc_no];
-            const [rows] = await conn.query(sqlStr)//, params);
+            const rows = await executeQuery(sqlStr)//, params);
+            //conn.release
 
             const header = Object.keys(rows[0]);
             const data = [header, ...rows.map(row => Object.values(row))];
@@ -254,17 +291,19 @@ class dealerPayController {
             console.error(error);
             res.status(500).send('Internal server error');
         } finally {
-            conn.release
+            //conn.release
         }
     };
 
     static exportCSV = async (req, res) => {
         try {
-            const sqlStr = "Select DATE_FORMAT(a.doc_date,'%d-%m-%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d-%m-%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
+            //const conn = await pool.getConnection();
+            const sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id";
             //const params = [ doc_date, doc_no];
-            const [rows] = await conn.query(sqlStr)//, params);
+            const rows = await executeQuery(sqlStr)//, params);
+            //conn.release
 
             const csvStream = csv.format({ headers: true });
             res.setHeader('Content-disposition', 'attachment; filename=DealerPayment.csv'); // Replace "users.csv" with your desired filename
@@ -277,17 +316,19 @@ class dealerPayController {
         } catch (err) {
             console.error(err);
         } finally {
-            conn.release
+            //conn.release
         }
     };
 
     static exportPdf = async (req, res) => {
         try {
-            const sqlStr = "Select DATE_FORMAT(a.doc_date,'%d-%m-%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d-%m-%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
+            //const conn = await pool.getConnection();
+            const sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id";
             //const params = [ doc_date, doc_no];
-            const [rows] = await conn.query(sqlStr)//, params);
+            const rows = await executeQuery(sqlStr)//, params);
+            //conn.release
 
             let doc = new PDFDocument({ margin: 20, size: 'A4' });
 
@@ -328,16 +369,18 @@ class dealerPayController {
             console.error(err);
             res.status(500).send('Server error');
         } finally {
-            conn.release
+            //conn.release
         }
     };
 
     static viewBalance = async (req, res) => {
         try {
+            //const conn = await pool.getConnection();
             const sqlStr = "SELECT a.ext_code FROM customers AS a, users AS b" +
                 " WHERE a.user_id = b.user_id and b.user_id=?";
             const params = [res.locals.user.user_id];
-            const [rows] = await conn.query(sqlStr, params);
+            const rows = await executeQuery(sqlStr, params);
+            //conn.release
             const filterValues = rows.map(row => row.ext_code);
             //
             const client = new ftp.Client();

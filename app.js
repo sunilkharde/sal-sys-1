@@ -1,6 +1,6 @@
 import express from "express";
-import pool from './db.js';
-const conn = await pool.getConnection();
+import { executeQuery } from './db.js';
+// const conn = await pool.getConnection();
 
 import cookieParser from "cookie-parser";
 import { join } from 'path';
@@ -40,7 +40,7 @@ app.use(favicon(join(process.cwd(), 'public/favicon.ico')));
 
 //app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));  // app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(join(process.cwd(), 'public')));
 
@@ -55,18 +55,18 @@ app.use('/api', function (req, res, next) {
 //start-define custome helpers //Use === value match, == string match
 const momentDMY_HBS = function (date, format) {
   if (typeof format === 'string') {
-    return moment(date, format).format('DD-MM-YYYY');
+    return moment(date, format).format('DD/MM/YYYY');
     //return moment(date, format.toString()).format('YYYY-MM-DD');
   } else {
-    return moment(date).format('DD-MM-YYYY');
+    return moment(date).format('DD/MM/YYYY');
   }
 };
 const momentDMYHm_HBS = function (date, format) {
   if (typeof format === 'string') {
-    return moment(date, format).format('DD-MM-YYYY HH:mm');
+    return moment(date, format).format('DD/MM/YYYY HH:mm');
     //return moment(date, format.toString()).format('YYYY-MM-DD');
   } else {
-    return moment(date).format('DD-MM-YYYY HH:mm');
+    return moment(date).format('DD/MM/YYYY HH:mm');
   }
 };
 const momentYMD_HBS = function (date, format) {
@@ -163,14 +163,14 @@ app.post('/', async (req, res) => {
 
     if (lat) {
       //add to database
-      //const conn = await pool.getConnection();
-      await conn.beginTransaction();
+      // const conn = await pool.getConnection();
+      // await conn.beginTransaction();
       const sqlStr = "INSERT INTO locations (name,address,lat,lng)" +
         " VALUES ('Sunil','Sunil Add',?,?)"
       const params = [lat, lng];
-      const [result1] = await conn.query(sqlStr, params);
-      await conn.commit();
-      conn.release();
+      await executeQuery(sqlStr, params);
+      // await conn.commit();
+      // //conn.release();
       console.log(`XXX Data Save: ${lat}, ${lng}`);
     }
 
@@ -185,15 +185,14 @@ app.post('/', async (req, res) => {
 });
 
 
-
 // Handle LOV
 app.get('/lov', async (req, res) => {
-  //const conn = await pool.getConnection();
-  const [users] = await conn.query("SELECT * FROM users");
+  // const conn = await pool.getConnection();
+  const users = await executeQuery("SELECT * FROM users", []);
+  // conn.release
   res.render('lov', { users });
+  // return res.status(400).json({ users });
 });
-
-
 
 
 //**************************************//
@@ -241,33 +240,35 @@ const selectAndUploadData = async () => {
       " Where a.po_date=b.po_date and a.po_no=b.po_no" +
       " and a.customer_id=c.customer_id and b.product_id=d.product_id and a.bu_id=e.bu_id" +
       " and a.ftp_date IS NULL and a.po_date = CURRENT_DATE()"; //Between ? and ?
-    //const params = [po_date, po_no];
-    const [results] = await conn.query(sqlStr)//, params);
-    if (results.length > 0) {
+    const params = [];
+    // const conn = await pool.getConnection();
+    const results = await executeQuery(sqlStr, params);
+    // conn.release
+    if (results && results.length > 0) {
       const csvData = convertToCsv(results);
       await uploadToFTP(csvData);
       //
-      await conn.beginTransaction();
+      // const conn1 = await pool.getConnection();
+      // await conn1.beginTransaction();
       const sqlStr = "UPDATE po_hd as a Set a.ftp_date=CURRENT_TIMESTAMP" +
         " WHERE a.ftp_date IS NULL and a.po_date = CURRENT_DATE()"
-      //const params = [customer_id, bu_id_hdn, exp_date, status_new, u_by, po_date, po_no];
-      await conn.query(sqlStr); //, params);
-      await conn.commit();
+      const params = [];
+      await executeQuery(sqlStr, params);
+      // await conn1.commit();
+      // conn1.release
 
     } else {
       console.log('No data found for uploade');
     }
   } catch (error) {
     console.error(error);
-    conn.release();
-  } finally {
-    conn.release();
+    //conn.release();
   }
 };
 //setInterval(selectAndUploadData, 1 * 60 * 1000); // schedule job every hour
 const times = [[9, 30], [10, 0], [10, 30], [11, 0], [11, 30], [12, 0], [12, 30], [13, 0], [13, 30], [14, 0], [14, 30],
 [15, 0], [15, 30], [16, 0], [16, 30], [17, 0], [17, 30], [18, 0], [18, 30], [19, 0], [19, 30], [20, 0], [20, 30],
-[21, 0], [21, 30], [22, 0], [22, 30], [23, 0], [23, 30], [17, 23]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
+[21, 0], [21, 30], [22, 0], [22, 30], [23, 0], [23, 30], [15, 11]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
 times.forEach((time) => {
   schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
 });

@@ -7,6 +7,7 @@
     <table class="table" id="dealerPayTable">
         <thead>
             <tr>
+                <th hidden>Entry Date1</th>
                 <th>Entry Date</th>
                 <th>Entry No</th>
                 <th>Dealer Name</th>
@@ -21,6 +22,7 @@
         <tbody>
             {{#each dealerPayments}}
             <tr>
+                <td hidden>{{momentYMD this.doc_date}}</td>
                 <td>{{momentDMY this.doc_date}}</td>
                 <td>{{this.doc_no_new}}</td>
                 <td>{{this.customer_name}}</td>
@@ -60,7 +62,7 @@
             $('#dealerPayTable').dataTable({
                 pageLength: 10,
                 responsive: true,
-                "order": [[0, "desc"], [1, "desc"]]
+                "order": [[0, "desc"], [2, "desc"]]
             });
         });
     </script>
