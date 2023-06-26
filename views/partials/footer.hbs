@@ -1,12 +1,12 @@
-<div class="container mt-3">
+<div class="container mt-5">
     <div></div>
 </div>
 
-<!-- <footer class="footer mt-auto py-3 bg-light"> 
+<footer class="footer mt-auto py-3 bg-light">
     <div class="container">
-        <span class="text-muted">© My App 2023</span>
+        <span class="text-muted">© Malpani Group 2023</span>
     </div>
-</footer> -->
+</footer>
 
 <script>
     // Get the current URL path
@@ -27,31 +27,23 @@
 </script>
 
 
-{{!-- <script>
-    // Activate current page in navbar
-    /*$(document).ready(function () {
-        // Get current URL path
-        var pathname = window.location.pathname;
+<script>
+    function adjustFontSize() {
+        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 
-        // Add active class to corresponding nav-link
-        $('.navbar-nav > li > a[href="' + pathname + '"]').addClass('active');
+        var txtItems = document.getElementsByClassName('text-muted');
+        for (var i = 0; i < txtItems.length; i++) {
+            var txtItem = txtItems[i];
+            if (screenWidth < 768) {
+                txtItem.style.fontSize = '40px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                txtItem.style.fontSize = '30px';
+            } else {
+                txtItem.style.fontSize = '20px';
+            }
+        }
+    }
 
-        // Add active class to corresponding dropdown item
-        $('.navbar-nav .dropdown-menu a[href="' + pathname + '"]').addClass('active');
-    });*/
-
-    /* document.addEventListener("DOMContentLoaded", function () {
-        // get all dropdown items
-        const dropdownItems = document.querySelectorAll('.dropdown-item');
-        // loop through each dropdown item
-        dropdownItems.forEach(item => {
-            // add a click event listener to the item
-            item.addEventListener('click', () => {
-                // get the parent "nav-link dropdown-toggle" element
-                const parent = item.closest('.nav-item dropdown').querySelector('.nav-link.dropdown-toggle');
-                // add the "active" class to the parent element
-                parent.classList.add('active');
-            });
-        });
-    }); */
-</script> --}}
+    window.addEventListener('DOMContentLoaded', adjustFontSize);
+    window.addEventListener('resize', adjustFontSize);
+</script>

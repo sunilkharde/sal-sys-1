@@ -125,16 +125,8 @@
 
 <script>
     const dropdownProductID = document.getElementById('product_id');
-    let isDropdownFilled = false;
-
     dropdownProductID.addEventListener("click", async function () {
-        if (!isDropdownFilled) {
-            await fillDropdownList(dropdownProductID);
-            isDropdownFilled = true;
-
-            btnCustomer.disabled = true;
-            btnCustomer.className = "btn btn-outline-secondary";
-        }
+        await fillDropdownList(dropdownProductID);
     });
 
     async function fillDropdownList(dropdownList) {
@@ -169,7 +161,7 @@
 
         if (dropdownProductID.options.length < 1) {
             alert("There are no available products in the list. Please select firs row product fist.");
-            return;
+            return; 
         }
 
         btnCustomer.disabled = true;
@@ -238,5 +230,6 @@
     }
 
 </script>
+
 
 {{> _lov-customers}}

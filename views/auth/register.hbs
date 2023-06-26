@@ -1,7 +1,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-6 border p-4">
-            <h2 class="mb-4">MALPANI Dealer Registration</h2>
+            <h2 class="mb-4">MALPANI Portal Registration</h2>
             <!--
             {{#if alert}}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -14,10 +14,10 @@
                 <div class="mb-3">
                     <label for="name" class="form-label">Display Name</label>
                     <input type="text" class="form-control" id="username" name="username" value="{{data.username}}"
-                        required placeholder="Enter your Display Name" pattern="[A-Za-z0-9._]{1,20}" maxlength="20"
+                        required placeholder="Enter your Display Name" pattern="[A-Za-z0-9._ ]{1,50}" maxlength="50"
                         aria-describedby="usernameHelp">
                     <div id="usernameHelp" class="form-text">Display name can only contain alphabets, numbers, underscore
-                        (_) and dot (.) and cannot exceed 20 characters.</div>
+                        (_) and dot (.) and cannot exceed 50 characters.</div>
                 </div>
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
@@ -51,7 +51,7 @@
                         value="{{data.confPassword}}" placeholder="Confirm your password">
                 </div>
                 </b>
-
+                
                 {{#isEqual user.user_role "Admin"}}
                 <div class="mb-3">
                     <button class="btn btn-info" type="button" data-bs-toggle="collapse"
@@ -82,8 +82,8 @@
                             <select class="form-select" id="user_role" name="user_role"
                                 aria-label=".form-select-sm example">
                                 {{#each role_list}}
-                                <option value="{{role_id}}" {{#isEqual ../data.role_id
-                                    category_id}}selected{{/isEqual}}>
+                                <option value="{{role_name}}" 
+                                {{#isEqual ../data.role_name role_name}}selected{{/isEqual}}>
                                     {{role_name}}</option>
                                 {{/each}}
                             </select>

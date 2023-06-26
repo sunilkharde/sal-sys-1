@@ -24,11 +24,12 @@ class authController {
 
   static register_user = async (req, res) => {
     const role_list = await this.getData();
-    //res.locals.user = 'undefined'  Needs to check
-    if (res.locals.user !== null && res.locals.user !== undefined && user.user_role == 'Admin') {
+
+    if (res.locals.user.user_role == 'Admin') {
       res.render('auth/register', { title: 'Register User', role_list });
     } else {
-      res.render('auth/register', { title: 'Register User', layout: 'global', role_list });
+      res.status(404).send("<h1>The registration service is currently unavailable.</h1>");
+      // res.render('auth/register', { title: 'Register User', layout: 'global', role_list });
     }
   }
 
@@ -41,14 +42,14 @@ class authController {
       //return res.status(400).json({ message: 'Enter all required fields' });
       return res.render('auth/register', { alert: 'Username, password, email and mobile are required.', data, role_list });
     }
-    const usernameRegex = /^[A-Za-z0-9_.]+$/;
-    if (!usernameRegex.test(username)) {
-      return res.render('auth/register', { alert: `Username can only contain alphabets, numbers, underscore (_) and dot (.) characters`, data, role_list });
-    }
-    const maxUsernameLength = 20;
-    if (username.includes(' ') || username.length > maxUsernameLength) {
-      return res.render('auth/register', { alert: `Username cannot contain spaces and cannot exceed ${maxUsernameLength} characters`, data, role_list });
-    }
+    // const usernameRegex = /^[A-Za-z0-9_.]+$/;
+    // if (!usernameRegex.test(username)) {
+    //   return res.render('auth/register', { alert: `Username can only contain alphabets, numbers, underscore (_) and dot (.) characters`, data, role_list });
+    // }
+    // const maxUsernameLength = 50;
+    // if (username.includes(' ') || username.length > maxUsernameLength) {
+    //   return res.render('auth/register', { alert: `Username cannot contain spaces and cannot exceed ${maxUsernameLength} characters`, data, role_list });
+    // }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email_id)) {
       return res.render('auth/register', { alert: `Invalid email format`, data, role_list });
@@ -128,7 +129,8 @@ class authController {
         return res.render('auth/login', { email_id, password, title: 'Register User', layout: 'global', alert: `Login failed. Invalid credentials or user is not active.` });
       } else {
         //return res.status(401).json({ message: 'found.' + rows[0] });
-        console.log(`User found ${user.username}`);
+        // const now = new Date().toLocaleString();
+        // console.log(`User '${user.username}' has login on '${now}'`);
       }
 
       const match = await bcrypt.compare(password, user.password);
@@ -142,6 +144,9 @@ class authController {
       // Set the JWT as a cookie
       res.cookie('authToken', token, { httpOnly: false, secure: false, maxAge: 24 * 60 * 60 * 1000 });
       //res.status(200).json({ message: 'Authentication Successful.', token: token });
+
+      const now = new Date().toLocaleString();
+      console.log(`User '${user.username}' has login as '${user.user_role}' on '${now}'`);
 
       res.redirect('/');
 

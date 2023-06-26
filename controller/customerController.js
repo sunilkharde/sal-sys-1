@@ -70,10 +70,10 @@ class customerController {
         //     errors.push({ message: 'Price must be a number' });
         // }
         //const conn = await pool.getConnection();
-        const rows = await executeQuery('SELECT * FROM customers WHERE customer_name=?', [customer_name]);
+        const rows = await executeQuery('SELECT * FROM customers WHERE customer_name=? or ext_code=?', [customer_name,ext_code]);
         //conn.release
         if (rows.length > 0) {
-            errors.push({ message: 'Customer with this name is already exists' });
+            errors.push({ message: 'Customer with this name or SAP code is already exists' });
         }
         if (errors.length) {
             res.render('customers/customer-create', { errors, data, cities_list, users_list, market_area_list, bu_list, selectedBu_list });
@@ -204,10 +204,10 @@ class customerController {
         //     errors.push({ message: 'Price must be a number' });
         // }
         //const conn = await pool.getConnection();
-        const rows = await executeQuery('SELECT * FROM customers WHERE customer_name=? and customer_id<>?', [customer_name, id]);
+        const rows = await executeQuery('SELECT * FROM customers WHERE (customer_name=? or ext_code=?) and customer_id<>?', [customer_name, ext_code, id]);
         //conn.release
         if (rows.length > 0) {
-            errors.push({ message: 'Dealer with this name is already exists' });
+            errors.push({ message: 'Dealer with this name or SAP code is already exists' });
         }
         if (errors.length) {
             res.render('customers/customer-edit', { errors, data, cities_list, users_list, market_area_list, bu_list, selectedBu_list });

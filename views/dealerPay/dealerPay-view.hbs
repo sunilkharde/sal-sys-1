@@ -15,8 +15,9 @@
                 <th>Pay Mode</th>
                 <th>Pay Ref Date</th>
                 <th>Pay Ref No</th>
+                <th style="text-align: end;">Amount</th>
                 <th>Narration</th>
-                <th>Action</th>
+                <th class="col-1">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -30,6 +31,7 @@
                 <td>{{this.pay_mode}}</td>
                 <td>{{momentDMY this.ref_date}}</td>
                 <td>{{this.ref_no}}</td>
+                <td style="text-align: end;">{{this.amount}}</td>
                 <td>{{this.ref_desc}}</td>
                 <td>
                     <!-- <a href="/dealerPay/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">

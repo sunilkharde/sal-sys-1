@@ -98,10 +98,10 @@ class productController {
             errors.push({ message: 'Select business unit' });
         }
         //const conn = await pool.getConnection();
-        const rows = await executeQuery('SELECT * FROM products WHERE product_name=?', [product_name]);
+        const rows = await executeQuery('SELECT * FROM products WHERE product_name=? or ext_code=?', [product_name, ext_code]);
         //conn.release
         if (rows.length > 0) {
-            errors.push({ message: 'Product with this name is already exists' });
+            errors.push({ message: 'Product with this name or SAP code is already exists' });
         }
         if (errors.length) {
             res.render('products/product-create', { errors, data, unit_list, category_list, bu_list, selectedBu_list });
@@ -229,10 +229,10 @@ class productController {
             errors.push({ message: 'Select business unit' });
         }
         //const conn = await pool.getConnection();
-        const rows = await executeQuery('SELECT * FROM products WHERE product_name=? and product_id<>?', [product_name, id]);
+        const rows = await executeQuery('SELECT * FROM products WHERE (product_name=? or ext_code=?) and product_id<>?', [product_name, ext_code, id]);
         //conn.release
         if (rows.length > 0) {
-            errors.push({ message: 'Product with this name is already exists' });
+            errors.push({ message: 'Product with this name or SAP code is already exists' });
         }
         if (errors.length) {
             res.render('products/product-edit', { errors, data, unit_list, category_list, bu_list, selectedBu_list });

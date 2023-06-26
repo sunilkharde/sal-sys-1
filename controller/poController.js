@@ -177,13 +177,16 @@ class poController {
         const alert = req.query.alert;
         try {//DATE_FORMAT(a.po_date,'%d/%m/%Y') as po_date2, DATE_FORMAT(a.exp_date,'%d/%m/%Y') as exp_date
             //const conn = await pool.getConnection();
-            const sqlStr = "Select a.po_date,a.po_no,a.po_no_new,b.customer_name,a.exp_date,CONCAT(c.bu_code,' | ',c.bu_short) as bu_name,a.posted,a.ftp_date,a.status" +
+            var sqlStr = "Select a.po_date,a.po_no,a.po_no_new,b.customer_name,a.exp_date,CONCAT(c.bu_code,' | ',c.bu_short) as bu_name,a.posted,a.ftp_date,a.status" +
                 " FROM po_hd as a, customers as b, business_units as c" +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.c_by=?" //+
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id" //+
             //" Order By a.po_date desc, a.po_no desc";
+            if (res.locals.user.user_role !== "Admin") {
+                sqlStr = sqlStr  + " and a.c_by=?";
+            }
             const params = [res.locals.user.user_id];
             const results = await executeQuery(sqlStr, params);
-            //conn.release
+            
             res.render('po/po-view', { po: results, alert });
 
         } catch (error) {
@@ -223,8 +226,8 @@ class poController {
             //
              const minDate = moment(po_date);  //moment(po_date, 'YYYY-MM-DD');
              const maxDate = moment(minDate).add(15, 'days');
-            console.log('Date..Edit...... Min ' + minDate + ' Max ' + maxDate  )
-            res.render('po/po-edit', { data: results[0], minDate, maxDate, data2: results2, customer_list, bu_list, productsList });
+
+             res.render('po/po-edit', { data: results[0], minDate, maxDate, data2: results2, customer_list, bu_list, productsList });
 
         } catch (error) {
             console.error(error);

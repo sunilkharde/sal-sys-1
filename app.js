@@ -15,6 +15,7 @@ import productRoute from "./routes/productRoutes.js";
 import customerRoute from "./routes/customerRoutes.js";
 import poRoute from "./routes/poRoutes.js";
 import dealerPayRoute from "./routes/dealerPayRoutes.js";
+import dsrRoute from "./routes/dsrRoutes.js";
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
@@ -53,6 +54,20 @@ app.use('/api', function (req, res, next) {
 });
 
 //start-define custome helpers //Use === value match, == string match
+const momentDDDD_HBS = function (date, format) {
+  if (typeof format === 'string') {
+    return moment(date, format).format('dddd');
+  } else {
+    return moment(date).format('dddd');
+  }
+};
+const momentDDD_HBS = function (date, format) {
+  if (typeof format === 'string') {
+    return moment(date, format).format('ddd');
+  } else {
+    return moment(date).format('ddd');
+  }
+};
 const momentDMY_HBS = function (date, format) {
   if (typeof format === 'string') {
     return moment(date, format).format('DD/MM/YYYY');
@@ -121,7 +136,9 @@ app.engine('hbs', exphbs.engine({
     isArray: isArrayHBS,
     momentDMY: momentDMY_HBS,
     momentYMD: momentYMD_HBS,
-    momentDMYHm: momentDMYHm_HBS
+    momentDMYHm: momentDMYHm_HBS,
+    momentDDDD: momentDDDD_HBS,
+    momentDDD: momentDDD_HBS
   }
 }));
 
@@ -132,6 +149,7 @@ app.use('/product', productRoute);
 app.use('/customer', customerRoute);
 app.use('/po', poRoute);
 app.use('/dealerPay', dealerPayRoute);
+app.use('/dsr', dsrRoute);
 
 // Log incoming requests
 /*app.use((req, res, next) => {
@@ -217,8 +235,9 @@ const uploadToFTP = async (csvData) => {
     //
     const tempFile = join(process.cwd(), 'temp.csv');
     fs.writeFileSync(tempFile, csvData);
-    await client.uploadFrom(tempFile, 'my_file.csv'); ///yashm24.sg-host.com/order_data/my_file.csv  //csvData //join(process.cwd(), 'tempKP.csv')
-    console.log('File uploaded successfully');
+    await client.uploadFrom(tempFile, '/Portal/PODetailReport'); // .csv ///yashm24.sg-host.com/order_data/my_file.csv  //csvData //join(process.cwd(), 'my_file.csv')
+    const now = new Date().toLocaleString();
+    console.log(`The file was uploaded successfully on ${now}`);
   } catch (error) {
     console.error(error);
   } finally {
@@ -231,16 +250,20 @@ const convertToCsv = (data) => {
   return `${header}\n${rows.join('\n')}`;
 };
 const selectAndUploadData = async () => {
+  const today = moment().format('YYYY-MM-DD')
+  const minDate = moment(today).add(-2, 'days');
+  const maxDate = moment(today);
   try {
-    const sqlStr = "Select a.po_no_new as Sr,'ZSOR' as Doc_Type, e.bu_code as Sales_Org,'20' as Distr_Channel,'10' as Division," +
-      " Null as Sales_office, Null as Sales_Group, Null as Inco_T1, Null as  Inco_T2,a.po_no_new as Customer_Reference," +
-      " DATE_FORMAT(a.po_date,'%d.%m.%Y') as Valid_From,DATE_FORMAT(a.po_date,'%d.%m.%Y') as Valid_To,c.ext_code as Sold_To_Party,d.ext_code as Material,b.qty as Target_Qty," +
-      " Null as Plant,b.sr_no as Line_Item,DATE_FORMAT(a.exp_date,'%d.%m.%Y') as Delivery_Date,b.qty as Order_Qty,c.customer_name as BP_Name,DATE_FORMAT(a.exp_date,'%d.%m.%Y') as ExpectedDeliveryDate" +
+    const sqlStr = "Select CONCAT(a.po_no_new,Space(2)) as Sr,'ZSOR' as Doc_Type, e.bu_code as Sales_Org,'20' as Distr_Channel,'10' as Division," +
+      " Null as Sales_office, Null as Sales_Group, Null as Inco_T1, Null as  Inco_T2,CONCAT(a.po_no_new,Space(2)) as Customer_Reference," +
+      " DATE_FORMAT(a.po_date,'%d.%m.%Y') as Valid_From,DATE_FORMAT(a.po_date,'%d.%m.%Y') as Valid_To,CONCAT('000',c.ext_code) as Sold_To_Party,d.ext_code as Material,b.qty as Target_Qty," +
+      " Null as Plant,b.sr_no as Line_Item,DATE_FORMAT(a.exp_date,'%d.%m.%Y') as Delivery_Date,b.qty as Order_Qty,c.customer_name as BP_Name,DATE_FORMAT(a.exp_date,'%d.%m.%Y') as ExpectedDeliveryDate,'' as ''" +
       " FROM po_hd as a, po_dt as b,customers as c, products as d, business_units as e" +
       " Where a.po_date=b.po_date and a.po_no=b.po_no" +
       " and a.customer_id=c.customer_id and b.product_id=d.product_id and a.bu_id=e.bu_id" +
-      " and a.ftp_date IS NULL and a.po_date = CURRENT_DATE()"; //Between ? and ?
-    const params = [];
+      " and a.po_date Between ? and ?"
+    //" and a.ftp_date IS NULL and a.po_date = CURRENT_DATE()"; //Between ? and ?
+    const params = [minDate.format('YYYY-MM-DD'), maxDate.format('YYYY-MM-DD')];
     // const conn = await pool.getConnection();
     const results = await executeQuery(sqlStr, params);
     // conn.release
@@ -258,7 +281,8 @@ const selectAndUploadData = async () => {
       // conn1.release
 
     } else {
-      console.log('No data found for uploade');
+      const now = new Date().toLocaleString();
+      console.log(`No data was found to upload for the date ${now}`);
     }
   } catch (error) {
     console.error(error);
@@ -266,9 +290,9 @@ const selectAndUploadData = async () => {
   }
 };
 //setInterval(selectAndUploadData, 1 * 60 * 1000); // schedule job every hour
-const times = [[9, 30], [10, 0], [10, 30], [11, 0], [11, 30], [12, 0], [12, 30], [13, 0], [13, 30], [14, 0], [14, 30],
-[15, 0], [15, 30], [16, 0], [16, 30], [17, 0], [17, 30], [18, 0], [18, 30], [19, 0], [19, 30], [20, 0], [20, 30],
-[21, 0], [21, 30], [22, 0], [22, 30], [23, 0], [23, 30], [15, 11]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
+const times = [[9, 32], [10, 2], [10, 32], [11, 2], [11, 32], [12, 2], [12, 32], [13, 2], [13, 32], [14, 2], [14, 32],
+[15, 2], [15, 32], [16, 2], [16, 32], [17, 2], [17, 32], [18, 2], [18, 32], [19, 2], [19, 32], [20, 2], [20, 32],
+[21, 2], [21, 32], [22, 2], [22, 32], [23, 2], [23, 32], [18, 20]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
 times.forEach((time) => {
   schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
 });

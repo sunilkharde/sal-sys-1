@@ -1,7 +1,7 @@
-<div class="container">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-lg-6 border p-4">
-            <h2 class="mb-4">MALPANI Dealer Portal Login</h2>
+        <div class="col-lg-6 col-md-12 col-sm-12 ">   {{!-- border p-4 --}}
+            <h2 class="mb-4"><span class="page-title"> MALPANI Portal Login </span></h2>         
 
             {{#if alert}}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -10,19 +10,20 @@
             </div>
             {{/if}}
 
-
             <form action="/auth/login" method="post">
                 <div class="mb-3">
                     <label for="email_id" class="form-label">Email Address</label>
                     <input type="email_id" class="form-control" id="email_id" name="email_id"
                         aria-describedby="emailHelp" placeholder="Enter your email" value="{{email_id}}">
-                    {{!-- <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div> --}}
+                    {{!-- <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                    --}}
                 </div>
-                
+
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <div class="input-group">
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" value="{{password}}">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password"
+                            value="{{password}}">
                         <button class="btn btn-outline-secondary" type="button" id="password-toggle">
                             <i class="bi bi-eye"></i></button>
                     </div>
@@ -40,14 +41,15 @@
                 </div>
 
             </form>
-            
-</b>
-            <p>If not Registered ? <a href="/auth/register">Register</a></p>
+
+            </b>
+            <p><span class="text-muted">
+                    If not Registered ? <a href="/auth/register">Register</a>
+                </span></p>
 
         </div>
     </div>
 </div>
-
 
 <script>
     const passwordToggle = document.getElementById('password-toggle');
@@ -61,4 +63,74 @@
             passwordToggle.innerHTML = '<i class="bi bi-eye"></i>';
         }
     });
+</script>
+
+<script>
+    function adjustFontSize() {
+        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+        var frmLabels = document.getElementsByClassName('form-label');
+        for (var i = 0; i < frmLabels.length; i++) {
+            var frmLabel = frmLabels[i];
+            if (screenWidth < 768) {
+                frmLabel.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmLabel.style.fontSize = '50px';
+            } else {
+                frmLabel.style.fontSize = '30px';
+            }
+        }
+
+        var frmControls = document.getElementsByClassName('form-control');
+        for (var i = 0; i < frmControls.length; i++) {
+            var frmControl = frmControls[i];
+            if (screenWidth < 768) {
+                frmControl.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmControl.style.fontSize = '50px';
+            } else {
+                frmControl.style.fontSize = '30px';
+            }
+        }
+
+        var frmBtns = document.getElementsByClassName('btn');
+        for (var i = 0; i < frmBtns.length; i++) {
+            var frmBtn = frmBtns[i];
+            if (screenWidth < 768) {
+                frmBtn.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmBtn.style.fontSize = '50px';
+            } else {
+                frmBtn.style.fontSize = '30px';
+            }
+        }
+
+        var txtItems = document.getElementsByClassName('text-muted');
+        for (var i = 0; i < txtItems.length; i++) {
+            var txtItem = txtItems[i];
+            if (screenWidth < 768) {
+                txtItem.style.fontSize = '40px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                txtItem.style.fontSize = '30px';
+            } else {
+                txtItem.style.fontSize = '20px';
+            }
+        }
+
+        var txtItems = document.getElementsByClassName('page-title');
+        for (var i = 0; i < txtItems.length; i++) {
+            var txtItem = txtItems[i];
+            if (screenWidth < 768) {
+                txtItem.style.fontSize = '60px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                txtItem.style.fontSize = '60px';
+            } else {
+                txtItem.style.fontSize = '40px';
+            }
+        }
+
+    }
+
+    window.addEventListener('DOMContentLoaded', adjustFontSize);
+    window.addEventListener('resize', adjustFontSize);
 </script>

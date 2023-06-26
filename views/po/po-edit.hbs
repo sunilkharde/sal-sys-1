@@ -1,7 +1,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-10 border p-4"> {{!-- border-secondary --}}
-            <h4 class="mb-3">Modify Purchase Order Date: {{momentDMY data.po_date}} Order No: {{data.po_no}}</h4>
+            <h4 class="mb-3">Purchase Order Date: {{momentDMY data.po_date}} Order No: {{data.po_no}}</h4>
             <form id="poForm" action="/po/update/{{momentYMD data.po_date}}/{{data.po_no}}" method="post">
                 <div class="form-group row mb-3">
                     <label for="po_date" class="col-sm-2 col-form-label">PO Date</label>
@@ -109,7 +109,11 @@
 
                     <div class="form-group row">
                         <div class="col-sm-8">
+                            {{#if data.ftp_date}}
+                            <button disabled type="button" id="addItemBtnDisabled" class="btn btn-secondary">Add Item</button>
+                            {{else}}
                             <button type="button" id="addItemBtn" class="btn btn-success">Add Item</button>
+                            {{/if}}
                         </div>
                         <div class="col-sm-4">
                             <div class="form-group row">
@@ -124,7 +128,11 @@
                 </div>
 
                 <div class="col-md-3"> {{!--d-flex justify-content-between"> --}}
+                    {{#if data.ftp_date}}
+                    <button disabled type="submit" id="submitBtnDisabled" class="btn btn-secondary mx-1">Submit</button>
+                    {{else}}
                     <button type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
+                    {{/if}}
                     {{!-- {{#isEqual data.htp_date ""}}
                     <button type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
                     {{else}}

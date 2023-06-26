@@ -3,22 +3,27 @@
     <!-- style="background-color: rgb(94, 50, 175)" -->
     <div class="container-fluid">
         <a class="navbar-brand" href="#">
-            <!-- <img src="/images/malpani-logo-2020.webp" width="40" height="45" class="d-inline-block align-top" alt="">  -->
-            <div class="navbar-image-wrapper">
-                <img src="/images/malpani-logo-2020.webp" width="35" height="40" class="d-inline-block align-top"
-                    alt="">
+            {{!-- <div class="navbar-image-wrapper">
+                <img id="imgLogo" src="/images/malpani-logo-2020.webp" width="42" height="60"
+                    class="d-inline-block align-top" alt="">
+            </div> --}}
+            <div style="background-color: white; padding: 2px; display: inline-block; border-radius: 3px;">
+                <img id="imgLogo" src="/images/malpani-logo-2020.webp" width="42" height="60" class="d-inline-block align-bottom" alt="">
             </div>
-            &nbspMalpani Dealer Portal
+            <span class="page-title" style="display: inline-block; vertical-align: top;"> &nbsp;Malpani Sales&nbsp;&nbsp;&nbsp; </span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler navbar-toggler-custom" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                {{#isEqual user.user_role "Admin" "Dealer"}}
                 <li class="nav-item">
                     <a class="nav-link {{#isEqual activePage '/'}}active{{/isEqual}}" href="/">Home</a>
                 </li>
+                {{/isEqual}}
 
                 {{#isEqual user.user_role "Admin"}}
                 <li class="nav-item dropdown">
@@ -45,16 +50,16 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown2">
                         <li><a class="dropdown-item" href="/product/view">Product Master</a></li>
-                        <li><a class="dropdown-item" href="/customer/view">Dealer Master</a></li>                        
+                        <li><a class="dropdown-item" href="/customer/view">Dealer Master</a></li>
                     </ul>
                 </li>
                 {{/isEqual}}
 
-                {{#isEqual user.user_role "Admin" "Dealer"}}
+                {{#isEqual user.user_role "Admin" "Dealer" "Support"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        Transactions
+                        Dealer Transactions
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown3">
                         <li><a class="dropdown-item" href="/po/view">Purchase Order</a></li>
@@ -64,21 +69,36 @@
                 </li>
                 {{/isEqual}}
 
+                {{#isEqual user.user_role "Admin" "Employee"}}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        Expenses
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown3">
+                        <li><a class="dropdown-item" href="/dsr/view-pm">Entry</a></li>
+                        <li><a class="dropdown-item" href="#">Posting</a></li>
+                        <li><a class="dropdown-item" href="#">Report</a></li>
+                    </ul>
+                </li>
+                {{/isEqual}}
+
+
+
                 {{!-- <li class="nav-item">
                     <a class="nav-link" href="/about">About</a>
                 </li> --}}
 
             </ul>
 
-
             <div class="d-flex">
                 {{#if user.username}}
-                <span class="navbar-text" style="color:aliceblue">Welcome, {{user.username}}</span>
+                <span class="navbar-text" style="color:Yellow">Hi, {{user.username}}</span>
                 {{else}}
-                <span class="navbar-text">Welcome, Guest</span>
+                <span class="navbar-text">Hi, Guest</span>
                 {{/if}}
                 <form method="POST" action="/auth/logout">
-                    <button class="btn btn-outline-danger ms-3 custom-font" type="submit">
+                    <button class="btn btn-outline-danger ms-3" type="submit">
                         Logout
                     </button>
                 </form>
@@ -87,3 +107,88 @@
         </div>
     </div>
 </nav>
+
+<script>
+    function adjustFontSize() {
+        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+        var imgLogo = document.getElementById('imgLogo');
+        if (screenWidth < 768) {
+            imgLogo.width = '60';
+            imgLogo.height = '80';
+        } else if (screenWidth >= 768 && screenWidth < 1024) {
+            imgLogo.width = '60';
+            imgLogo.height = '80';
+        } else {
+            imgLogo.width = '42';
+            imgLogo.height = '60'; /*60*/
+        }
+
+        var txtItems = document.getElementsByClassName('page-title');
+        for (var i = 0; i < txtItems.length; i++) {
+            var txtItem = txtItems[i];
+            if (screenWidth < 768) {
+                txtItem.style.fontSize = '60px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                txtItem.style.fontSize = '60px';
+            } else {
+                txtItem.style.fontSize = '45px'; /*45*/
+            }
+        }
+
+        var navLinks = document.getElementsByClassName('nav-link');
+        for (var i = 0; i < navLinks.length; i++) {
+            var navLink = navLinks[i];
+            if (screenWidth < 768) {
+                console.log('Small screen detected');
+                navLink.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                console.log('Medium screen detected');
+                navLink.style.fontSize = '50px';
+            } else {
+                console.log('Large screen detected');
+                navLink.style.fontSize = '25px'; /*25*/
+            }
+        }
+
+        var navDropdowns = document.getElementsByClassName('dropdown-item');
+        for (var i = 0; i < navDropdowns.length; i++) {
+            var navDropdown = navDropdowns[i];
+            if (screenWidth < 768) {
+                navDropdown.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                navDropdown.style.fontSize = '50px';
+            } else {
+                navDropdown.style.fontSize = '25px'; /*25*/
+            }
+        }
+
+        var navTexts = document.getElementsByClassName('navbar-text');
+        for (var i = 0; i < navTexts.length; i++) {
+            var navText = navTexts[i];
+            if (screenWidth < 768) {
+                navText.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                navText.style.fontSize = '50px';
+            } else {
+                navText.style.fontSize = '25px'; /*25*/
+            }
+        }
+
+        var navBtns = document.getElementsByClassName('btn btn-outline-danger ms-3');
+        for (var i = 0; i < navBtns.length; i++) {
+            var navBtn = navBtns[i];
+            if (screenWidth < 768) {
+                navBtn.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                navBtn.style.fontSize = '50px';
+            } else {
+                navBtn.style.fontSize = '25px'; /*25*/
+            }
+        }
+
+    }
+
+    window.addEventListener('DOMContentLoaded', adjustFontSize);
+    window.addEventListener('resize', adjustFontSize);
+</script>

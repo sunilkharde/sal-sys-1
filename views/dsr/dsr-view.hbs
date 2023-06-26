@@ -1,0 +1,259 @@
+{{!-- <div class="container"> --}}
+    <div style="padding-right: 5px; padding-left: 5px;">
+        <div class="col-lg-12">
+            {{!-- <h4 class="mb-3">Sales DSR Entry</h4> --}}
+            {{!-- <h5 class="mb-3">Hi, {{data2.first_name}} {{data2.last_name}} </h5> --}}
+            <div class="row">
+                <input hidden type="text" class="form-control" id="emp_id" name="emp_id" value="{{data2.emp_id}}"
+                    style="font-size: 45px;">
+                {{#each data}}
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-9">
+                                <h4 id="card-h1" class="card-title mt-3">Date: {{momentDMY this.dsr_date}},
+                                    {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}
+                                    <span style="color: red;">{{momentDDDD this.dsr_date}}</span>
+                                    {{else}} {{momentDDDD this.dsr_date}} {{/isEqual}}
+                                </h4>
+                            </div>
+
+                            <div class="col-md-3 d-flex justify-content-end">
+                                <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}"
+                                    class="btn btn-primary btn-sm"> {{!-- onclick="return
+                                    confirm('Are you sure?')" --}}
+                                    ...
+                                    <i id="bi-pencil" class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{!-- <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-check-inline">
+                                    <input disabled class="form-check-input" type="radio"
+                                        name="RG_{{momentYMD this.dsr_date}}" id="RG_{{momentYMD this.dsr_date}}_P"
+                                        value="P" {{#isEqual this.hr_flag "P" }}checked{{/isEqual}}>
+                                    <label class="form-check-label" for="inlineRadio1">Present</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input disabled class="form-check-input" type="radio"
+                                        name="RG_{{momentYMD this.dsr_date}}" id="RG_{{momentYMD this.dsr_date}}_A"
+                                        value="A" {{#isEqual this.hr_flag "A" }}checked{{/isEqual}}>
+                                    <label class="form-check-label" for="inlineRadio2">Absent</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="RG_{{momentYMD this.dsr_date}}"
+                                        id="RG_{{momentYMD this.dsr_date}}_L" value="L" {{#isEqual this.hr_flag "L"
+                                        }}checked{{/isEqual}}>
+                                    <label class="form-check-label" for="inlineRadio2">Leave</label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div> --}}
+
+                    <div class="card-body">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}disabled{{/isEqual}} 
+                                    {{#isEqual this.post_mg "Y"}} disabled{{/isEqual}}
+                                    class="form-check-input"
+                                        type="checkbox" id="chk_leave_{{momentYMD this.dsr_date}}" {{#isEqual
+                                        this.hr_flag "L" }}checked{{/isEqual}}>
+                                    <label class="form-check-label"
+                                        for="chk_leave_{{momentYMD this.dsr_date}}">
+                                        {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}
+                                        <span style="color: red;">Week Off</span>
+                                        {{else}}Leave{{/isEqual}}</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex justify-content-end">
+                                <div class="form-check form-switch">
+                                    <input disabled class="form-check-input" type="checkbox"
+                                        id="chk_post_mg_{{momentYMD this.dsr_date}}" {{#isEqual this.post_mg "Y"
+                                        }}checked{{/isEqual}}>
+                                    <label class="form-check-label"
+                                        for="chk_post_mg_{{momentYMD this.dsr_date}}">Approved</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="card-title">Status: {{#if this.atten_flag}}
+                            {{this.atten_flag}} {{else}} <span style="color: gray;">Not Selected</span> {{/if}}
+                            From: {{#if this.from_city}} {{this.from_city}} {{else}} <span style="color: gray;">Not
+                                Enter</span> {{/if}}
+                            To: {{#if this.to_city}} {{this.to_city}} {{else}} <span style="color: gray;">Not
+                                Enter</span> {{/if}}
+                        </h5>
+                        <h5 class="card-title">
+                            DA: {{this.total_allow}}
+                            Expenses: {{this.total_exp}}
+                        </h5>
+                        {{!-- <h5 class="card-title">
+                            Approved: {{#if this.post_mg}} {{this.post_mg}} {{else}} <span
+                                style="color: red;">Pending</span> {{/if}}
+                        </h5> --}}
+                    </div>
+                    <br>
+
+                </div>
+                {{/each}}
+            </div>
+
+        </div>
+    </div>
+    {{!--
+</div> --}}
+
+<script>
+    function adjustFontSize() {
+        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+        var SwitchBtns = document.getElementsByClassName('form-check form-switch');
+        for (var i = 0; i < SwitchBtns.length; i++) {
+            var SwitchBtn = SwitchBtns[i];
+            if (screenWidth < 768) {
+                SwitchBtn.style.fontSize = '45px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                SwitchBtn.style.fontSize = '45px';
+            } else {
+                SwitchBtn.style.fontSize = '35px';
+            }
+        }
+
+        var CardTitles = document.getElementsByClassName('card-title');
+        for (var i = 0; i < CardTitles.length; i++) {
+            var CardTitle = CardTitles[i];
+            if (screenWidth < 768) {
+                CardTitle.style.fontSize = '40px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardTitle.style.fontSize = '40px';
+            } else {
+                CardTitle.style.fontSize = '30px';
+            }
+        }
+
+        var CardTitles = document.getElementsByClassName('card-title mt-3');
+        for (var i = 0; i < CardTitles.length; i++) {
+            var CardTitle = CardTitles[i];
+            if (screenWidth < 768) {
+                CardTitle.style.fontSize = '45px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardTitle.style.fontSize = '45px';
+            } else {
+                CardTitle.style.fontSize = '45px';
+            }
+        }
+
+        /*var CardTexts = document.getElementsByClassName('card-text');
+        for (var i = 0; i < CardTexts.length; i++) {
+            var CardText = CardTexts[i];
+            if (screenWidth < 768) {
+                CardText.style.fontSize = '40px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardText.style.fontSize = '35px';
+            } else {
+                CardText.style.fontSize = '30px';
+            }
+        }*/
+
+        var frmBtns = document.getElementsByClassName('btn');
+        for (var i = 0; i < frmBtns.length; i++) {
+            var frmBtn = frmBtns[i];
+            if (screenWidth < 768) {
+                frmBtn.style.fontSize = '55px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmBtn.style.fontSize = '55px';
+            } else {
+                frmBtn.style.fontSize = '35px';
+            }
+        }
+
+        /*var txtItems = document.getElementsByClassName('page-title');
+        for (var i = 0; i < txtItems.length; i++) {
+            var txtItem = txtItems[i];
+            if (screenWidth < 768) {
+                txtItem.style.fontSize = '60px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                txtItem.style.fontSize = '60px';
+            } else {
+                txtItem.style.fontSize = '42px';
+            }
+        }*/
+
+    }
+
+    window.addEventListener('DOMContentLoaded', adjustFontSize);
+    window.addEventListener('resize', adjustFontSize);
+</script>
+
+
+<script>
+    window.addEventListener('DOMContentLoaded', function () {
+        const empID = document.getElementById('emp_id').value;
+        var dsrDate = null;
+        const checkboxes = document.querySelectorAll('[id^="chk_leave_"]');
+        var leaveFlag = null;
+
+        checkboxes.forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    dsrDate = checkbox.id.split('_')[2];
+                    leaveFlag = 'L';
+                    selectedCheckbox = checkbox;
+                    //showConfirmationDialog();
+                    const confirmed = confirm('Are you sure you want to save the leave data?');
+                    if (confirmed) {
+                        saveLeaveData();
+                    } else {
+                        selectedCheckbox.checked = false;
+                    }
+                } else {
+                    dsrDate = checkbox.id.split('_')[2];
+                    leaveFlag = 'A';
+                    selectedCheckbox = checkbox;
+                    //showConfirmationDialog();
+                    const confirmed = confirm('Are you sure you want to cancel the leave?');
+                    if (confirmed) {
+                        saveLeaveData();
+                    } else {
+                        selectedCheckbox.checked = true;
+                    }
+                }
+            });
+        });
+
+        /*async function showConfirmationDialog() {
+            const confirmed = confirm('Are you sure you want to save the leave data?');
+            if (confirmed) {
+                saveLeaveData();
+            } else {
+                selectedCheckbox.checked = false;
+            }
+        }*/
+
+        async function saveLeaveData() {
+            try {
+                const response = await fetch('/dsr/save-leave-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dsr_date: dsrDate, emp_id: empID, leave_flag: leaveFlag })
+                });
+
+                if (response.ok) {
+                    console.log('Leave data saved successfully');
+                } else {
+                    console.error('Failed to save leave data');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+    });
+</script>

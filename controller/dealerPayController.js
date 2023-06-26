@@ -133,11 +133,11 @@ class dealerPayController {
         const alert = req.query.alert;
         try {
             //const conn = await pool.getConnection();
-            const sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,CONCAT(c.bu_code,' | ',c.bu_short) as bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
+            let sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,CONCAT(c.bu_code,' | ',c.bu_short) as bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id ";
-            if (res.locals.user.user_role !== "Admin") {
-                sqlStr = sqlStr + ` and a.c_by==${res.locals.user.user_id}`;
+            if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
+                sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
             }
             const results = await executeQuery(sqlStr);
             //conn.release

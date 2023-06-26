@@ -1,0 +1,116 @@
+{{!-- <div class="container"> --}}
+    <br>
+    <div class="row">
+        <div class="row justify-content-center">
+            <div class="col-sm">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 id="card-h1" class="card-title">Hi, {{data.first_name}}
+                            {{data.last_name}} </h1>
+                    </div>
+                    <div class="card-body">
+                        <h1 id="card-h2" class="card-title">Month :
+                            {{data2.month_name}}-{{data2.year}}</h1>
+                        <h1 id="card-h3" class="card-title">HQ : {{data.hq_name}}</h1>
+                        <h1 id="card-h4" class="card-title">Designation : {{data.desg_name}}</h1>
+                        <br>
+                        <p class="card-text">You can enter your daily expenses for the selected
+                            period.</p>
+                        <br>
+
+                        <div class="row">
+                            <div class="col-sm">
+                                <a href="/dsr/view" class="btn btn-primary btn-lg mx-1">Continue... </a>
+                                <a href="/" class="btn btn-secondary btn-lg mx-5">Cancel </a>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!--
+</div> --}}
+
+
+<script>
+    function adjustFontSize() {
+        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+        var CardH1 = document.getElementById('card-h1');
+        var CardH2 = document.getElementById('card-h2');
+        var CardH3 = document.getElementById('card-h3');
+        var CardH4 = document.getElementById('card-h4');
+        if (screenWidth < 768) {
+            CardH1.style.fontSize = '60px';
+            CardH2.style.fontSize = '50px';
+            CardH3.style.fontSize = '45px';
+            CardH4.style.fontSize = '45px';
+        } else if (screenWidth >= 768 && screenWidth < 1024) {
+            CardH1.style.fontSize = '60px';
+            CardH2.style.fontSize = '50px';
+            CardH3.style.fontSize = '45px';
+            CardH4.style.fontSize = '45px';
+        } else {
+            CardH1.style.fontSize = '45px';
+            CardH2.style.fontSize = '35px';
+            CardH3.style.fontSize = '30px';
+            CardH4.style.fontSize = '30px';
+        }
+
+        /* var CardTitles = document.getElementsByClassName('card-title');
+        for (var i = 0; i < CardTitles.length; i++) {
+            var CardTitle = CardTitles[i];
+            if (screenWidth < 768) {
+                CardTitle.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardTitle.style.fontSize = '50px';
+            } else {
+                CardTitle.style.fontSize = '30px';
+            }
+        } */
+
+        var CardTexts = document.getElementsByClassName('card-text');
+        for (var i = 0; i < CardTexts.length; i++) {
+            var CardText = CardTexts[i];
+            if (screenWidth < 768) {
+                CardText.style.fontSize = '40px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardText.style.fontSize = '35px';
+            } else {
+                CardText.style.fontSize = '30px';
+            }
+        }
+
+        var frmBtns = document.getElementsByClassName('btn');
+        for (var i = 0; i < frmBtns.length; i++) {
+            var frmBtn = frmBtns[i];
+            if (screenWidth < 768) {
+                frmBtn.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmBtn.style.fontSize = '50px';
+            } else {
+                frmBtn.style.fontSize = '35px';
+            }
+        }
+
+        var txtItems = document.getElementsByClassName('page-title');
+        for (var i = 0; i < txtItems.length; i++) {
+            var txtItem = txtItems[i];
+            if (screenWidth < 768) {
+                txtItem.style.fontSize = '60px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                txtItem.style.fontSize = '60px';
+            } else {
+                txtItem.style.fontSize = '42px';
+            }
+        }
+
+    }
+
+    window.addEventListener('DOMContentLoaded', adjustFontSize);
+    window.addEventListener('resize', adjustFontSize);
+</script>

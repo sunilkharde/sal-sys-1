@@ -30,9 +30,9 @@
                 {{!-- <td>{{this.posted}}</td> --}}
                 <td>{{#if this.ftp_date}}{{momentDMYHm this.ftp_date}}{{else}}Syncing....{{/if}}</td>
                 <td>
-                    <!-- <a href="/customer/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">
+                    <a href="/po/update/{{momentYMD this.po_date}}/{{this.po_no}}" class="btn btn-primary btn-sm">
                         <i class="bi bi-eye"></i>
-                    </a> -->
+                    </a>
                     {{#if this.ftp_date}}
                     <a href="#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
                         <i class="bi bi-pencil"></i>

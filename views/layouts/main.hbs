@@ -35,6 +35,25 @@
 
     {{> footer}}
 
+    <script>
+        function adjustFontSize() {
+            var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            var frmAlerts = document.getElementsByClassName('alert');
+            for (var i = 0; i < frmAlerts.length; i++) {
+                var frmAlert = frmAlerts[i];
+                if (screenWidth < 768) {
+                    frmAlert.style.fontSize = '50px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    frmAlert.style.fontSize = '50px';
+                } else {
+                    frmAlert.style.fontSize = '30px';
+                }
+            }
+        }
+        window.addEventListener('DOMContentLoaded', adjustFontSize);
+        window.addEventListener('resize', adjustFontSize);
+    </script>
+
 </body>
 
 

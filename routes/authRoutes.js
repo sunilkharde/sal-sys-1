@@ -15,10 +15,7 @@ router.get('/reset-password', authController.checkToken, (req, res) => {
     }
 });
 
-/*router.get('/register', (req, res) => {
-    res.render('auth/register', { title: 'Register User', layout: 'global' });
-});*/
-router.get('/register', authController.register_user);
+router.get('/register', authController.checkToken,  authController.register_user); //authController.checkToken,
 router.post('/register', authController.register); //authController.validateUserRegistration,
 router.post('/login', authController.login);
 router.post('/logout', authController.logout);
