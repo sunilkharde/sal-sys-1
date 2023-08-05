@@ -16,7 +16,6 @@ class poController {
                 sqlCust = sqlCust + ` and a.user_id=${user.user_id}`;
             }
             const customer_list = await executeQuery(sqlCust);
-            //conn.release
 
             //const conn1 = await pool.getConnection();
             const bu_list = await executeQuery("SELECT bu_id, CONCAT(bu_code,' | ',bu_name) as bu_name FROM business_units Where status='A'")
@@ -55,7 +54,7 @@ class poController {
             const { bu_id } = req.query;
             //const conn = await pool.getConnection();
             const sqlStr = "SELECT a.product_id, a.product_name FROM products as a, products_bu as b" +
-                " WHERE a.product_id=b.product_id and b.bu_id = ?";
+                " WHERE a.product_id=b.product_id and a.status='A' and b.bu_id = ?";
             const productsList = await executeQuery(sqlStr, [bu_id]);
             //conn.release;
             res.json({ products_list: productsList });
@@ -91,10 +90,13 @@ class poController {
     static create = async (req, res) => {
         //const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, ftp_date, status, 'sr_no[]': sr_no, 'bu_ids[]': bu_ids, 'bu_names[]': bu_names, 'product_id[]': product_id, 'product_name[]': product_name, 'qty[]': qty, 'rate[]': rate, 'amount[]': amount } = req.body;
         const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, ftp_date, status, sr_no, bu_ids, bu_names, product_id, product_name, qty, rate, amount } = req.body;
-        const data = req.body  //po_date, po_no, po_no_new, 
+        // const data = req.body  //po_date, po_no, po_no_new, 
         const [customer_list, bu_list] = await this.getData(req, res.locals.user);
 
         var errors = [];
+        if (product_id === undefined || product_id === null) {
+            errors.push({ message: 'तुम्ही कोणताही प्रॉडक्ट निवडलेला नाही, कृपया प्रॉडक्ट निवडा.' });
+        }
         if (!customer_id) {
             errors.push({ message: 'Customer name is required' });
         }
@@ -107,15 +109,19 @@ class poController {
         // if (isNaN(rate) || rate <= 0) {
         //     errors.push({ message: 'Price must be a number' });
         // }
-        //const conn = await pool.getConnection();
         const row = await executeQuery("SELECT DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d') as po_date;")
-        //conn.release
         var sysDate = row[0].po_date;
         if (exp_date < sysDate) {
             errors.push({ message: 'Expected date should greater than today' });
         }
-        //
+
         if (errors.length) {
+            const row = await executeQuery("SELECT CURRENT_DATE() as po_date;")
+            const poDate = row[0].po_date
+            const minDate = moment(poDate);
+            const maxDate = moment(poDate).add(15, 'days');
+            const data = {...req.body, po_date: poDate, po_no: '*****', exp_date: minDate, minDate, maxDate };
+
             res.render('po/po-create', { errors, data, customer_list, bu_list });
             return;
         }
@@ -149,6 +155,7 @@ class poController {
             const qty_val = Array.isArray(qty) ? qty : [qty];
             const rate_val = Array.isArray(rate) ? rate : [rate];
             const amount_val = Array.isArray(amount) ? amount : [amount];
+
             for (let i = 0; i < product_id_val.length; i++) {
                 let sr_no_val = (i + 1) * 10;
                 const sqlStr2 = "INSERT INTO po_dt (po_date, po_no, sr_no, bu_id, product_id, qty, rate, amount)" +
@@ -182,11 +189,11 @@ class poController {
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id" //+
             //" Order By a.po_date desc, a.po_no desc";
             if (res.locals.user.user_role !== "Admin") {
-                sqlStr = sqlStr  + " and a.c_by=?";
+                sqlStr = sqlStr + " and a.c_by=?";
             }
             const params = [res.locals.user.user_id];
             const results = await executeQuery(sqlStr, params);
-            
+
             res.render('po/po-view', { po: results, alert });
 
         } catch (error) {
@@ -224,10 +231,10 @@ class poController {
             const productsList = await executeQuery(sqlStr3, results[0].bu_id);
             // conn3.release
             //
-             const minDate = moment(po_date);  //moment(po_date, 'YYYY-MM-DD');
-             const maxDate = moment(minDate).add(15, 'days');
+            const minDate = moment(po_date);  //moment(po_date, 'YYYY-MM-DD');
+            const maxDate = moment(minDate).add(15, 'days');
 
-             res.render('po/po-edit', { data: results[0], minDate, maxDate, data2: results2, customer_list, bu_list, productsList });
+            res.render('po/po-edit', { data: results[0], minDate, maxDate, data2: results2, customer_list, bu_list, productsList });
 
         } catch (error) {
             console.error(error);

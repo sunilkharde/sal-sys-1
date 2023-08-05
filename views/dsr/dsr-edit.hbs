@@ -1,53 +1,53 @@
 <div style="padding-right: 5px; padding-left: 5px;">
     <div class="row justify-content-center">
-        <form id="dsrForm" action="/dsr/update/{{momentYMD data.dsr_date}}/{{data.emp_id}}" method="post">
-            <div class="row mb-3"> 
-                <label for="dsr_date" class="col-sm-3 col-form-label">Date</span></label> 
+        <form id="dsrForm" action="/dsr/update/{{momentYMD data.dsr_date}}/{{data.emp_id}}?postFlag={{postFlag}}"
+            method="post">
+            <div class="row mb-3">
+                <label for="dsr_date" class="col-sm-3 col-form-label">Date</span></label>
                 <div class="col-sm-9">
-                    <input hidden type="text" class="form-control" id="dsr_date" 
-                        name="dsr_date" value="{{momentYMD data.dsr_date}}" placeholder="DSR Date">
-                    <input type="text" class="form-control" id="dsr_date_new"
-                        name="dsr_date_new" value="{{momentDMY data.dsr_date}}" placeholder="DSR Date">
+                    <input hidden type="text" class="form-control" id="postFlag" name="postFlag" value="{{postFlag}}">
+                    <input hidden type="text" class="form-control" id="dsr_date" name="dsr_date"
+                        value="{{momentYMD data.dsr_date}}" placeholder="DSR Date">
+                    <input type="text" class="form-control" id="dsr_date_new" name="dsr_date_new"
+                        value="{{momentDMY data.dsr_date}}" placeholder="DSR Date">
                 </div>
             </div>
-            <div class="row mb-3"> 
+            <div class="row mb-3">
                 <label for="emp_id" class="col-sm-3 col-form-label">EMP</span></label>
                 <div class="col-sm-9">
-                    <input hidden type="text" class="form-control" id="emp_id" name="emp_id"
-                        value="{{data.emp_id}}" placeholder="EMP-ID">
+                    <input hidden type="text" class="form-control" id="emp_id" name="emp_id" value="{{data.emp_id}}"
+                        placeholder="EMP-ID">
                     <input readonly type="text" class="form-control" id="emp_name" name="emp_name"
                         value="{{data3.first_name}} {{data3.last_name}}" placeholder="EMP-Name">
                 </div>
             </div>
-            <div class="row mb-3"> 
+            <div class="row mb-3">
                 <label for="hq_name" class="col-sm-3 col-form-label">HQ</span></label>
                 <div class="col-sm-9">
-                    <input readonly type="text" class="form-control" id="hq_name"
-                        name="hq_name" value="{{data3.hq_name}}" placeholder="HQ-Name">
+                    <input readonly type="text" class="form-control" id="hq_name" name="hq_name"
+                        value="{{data3.hq_name}}" placeholder="HQ-Name">
                 </div>
             </div>
             <div class="row mb-3">
                 <label for="desg_name" class="col-sm-3 col-form-label">Desg</span></label>
                 <div class="col-sm-9">
-                    <input readonly type="text" class="form-control" id="desg_name"
-                        name="desg_name" value="{{data3.desg_name}}" placeholder="Designation">
-                    <input hidden type="text" class="form-control" id="desg_id" name="desg_id"
-                        value="{{data3.desg_id}}" placeholder="desg_id">
+                    <input readonly type="text" class="form-control" id="desg_name" name="desg_name"
+                        value="{{data3.desg_name}}" placeholder="Designation">
+                    <input hidden type="text" class="form-control" id="desg_id" name="desg_id" value="{{data3.desg_id}}"
+                        placeholder="desg_id">
                 </div>
             </div>
             <div class="row mb-3">
                 <label for="boss_name" class="col-sm-3 col-form-label">Boss</span></label>
                 <div class="col-sm-9">
-                    <input readonly type="text" class="form-control" id="boss_name"
-                        name="boss_name" value="{{data3.boss_name}}" placeholder="HQ-Name">
+                    <input readonly type="text" class="form-control" id="boss_name" name="boss_name"
+                        value="{{data3.boss_name}}" placeholder="HQ-Name">
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="atten_flag" class="col-sm-3 col-form-label">Status<span
-                        style="color: red;">*</span></label>
+                <label for="atten_flag" class="col-sm-3 col-form-label">Status<span style="color: red;">*</span></label>
                 <div class="col-sm-9">
-                    <select class="form-select" id="atten_flag" name="atten_flag"
-                        aria-label=".form-select-sm example">
+                    <select class="form-select" id="atten_flag" name="atten_flag" aria-label=".form-select-sm example">
                         <option value="XX" selected>(Select Status)</option>
                         {{#each atten_flag_list}}
                         <option value="{{this.atten_flag}}" {{#if (eq this.atten_flag
@@ -58,40 +58,44 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="from_city" class="col-sm-3 col-form-label">From<span
-                        style="color: red;">*</span></label>
+                <label for="from_city" class="col-sm-3 col-form-label">From<span style="color: red;">*</span></label>
                 <div class="col-sm-9">
-                    <input required type="text" class="form-control" id="from_city"
-                        name="from_city" value="{{data.from_city}}">
+                    <input required type="text" class="form-control" id="from_city" name="from_city"
+                        value="{{data.from_city}}">
                 </div>
             </div>
             <div class="row mb-3">
-                <label for="to_city" class="col-sm-3 col-form-label" >To<span
-                        style="color: red;">*</span></label>
+                <label for="to_city" class="col-sm-3 col-form-label">To<span style="color: red;">*</span></label>
                 <div class="col-sm-9">
-                    <input required type="text" class="form-control" id="to_city"
-                        name="to_city" value="{{data.to_city}}">
+                    <input required type="text" class="form-control" id="to_city" name="to_city"
+                        value="{{data.to_city}}">
                 </div>
             </div>
             <div class="row mb-3">
                 <label for="stay_city" class="col-sm-3 col-form-label">Stay</label>
                 <div class="col-sm-9">
-                    <input type="text" class="form-control" id="stay_city" name="stay_city"
-                        value="{{data.stay_city}}">
+                    <input type="text" class="form-control" id="stay_city" name="stay_city" value="{{data.stay_city}}">
                 </div>
             </div>
             <div class="row mb-3">
                 <label for="total_allow" class="col-sm-3 col-form-label">Total DA</label>
                 <div class="col-sm-4">
-                    <input readonly type="number" class="form-control text-end"
-                        id="total_allow" name="total_allow" value="{{data.total_allow}}" min="0" step="1.00">
+                    <input readonly type="number" class="form-control text-end" id="total_allow" name="total_allow"
+                        value="{{data.total_allow}}" min="0" step="1.00">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="total_lodge" class="col-sm-3 col-form-label">Lodging</label>
+                <div class="col-sm-4">
+                    <input {{#isEqual data.emp_id 1 2 }} {{else}}readonly{{/isEqual}} type="number" class="form-control text-end" id="total_lodge" name="total_lodge"
+                        value="{{data.total_lodge}}" min="0" step="1.00">
                 </div>
             </div>
             <div class="row mb-3">
                 <label for="total_exp" class="col-sm-3 col-form-label">Total Exp</label>
                 <div class="col-sm-4">
-                    <input readonly type="number" class="form-control text-end" id="total_exp"
-                        name="total_exp" value="{{data.total_exp}}" min="0" step="1.00">
+                    <input readonly type="number" class="form-control text-end" id="total_exp" name="total_exp"
+                        value="{{data.total_exp}}" min="0" step="1.00">
                 </div>
             </div>
 
@@ -100,7 +104,7 @@
                 <br>
                 <label for="orderItems" class="form-label">
                     <strong>Expenses Details</strong></label>
-                <table class="table" id="drs_dtTable"> 
+                <table class="table" id="drs_dtTable">
                     <thead>
                         <tr>
                             <th hidden class="col-1">Sr</th>
@@ -115,8 +119,8 @@
                     <tbody id="orderItemsBody">
                         {{#each [data2]}}
                         <tr>
-                            <td hidden><input readonly type="text" class="form-control text-end"
-                                    id="sr_no" name="sr_no[]" required value="{{this.sr_no}}">
+                            <td hidden><input readonly type="text" class="form-control text-end" id="sr_no"
+                                    name="sr_no[]" required value="{{this.sr_no}}">
                             </td>
                             <td>
                                 <select class="form-select" id="allow_id" name="allow_id[]">
@@ -130,15 +134,15 @@
                             </td>
 
                             <td><input {{#isEqual this.type "Fix" "PerKM" }}readonly{{/isEqual}} type="number"
-                                    class="form-control text-end"  id="amount" name="amount[]"
-                                    min="0" step="1" value="{{this.amount}}" required>
+                                    class="form-control text-end" id="amount" name="amount[]" min="0" step="1"
+                                    value="{{this.amount}}" required>
                             </td>
                             <td><input {{#isEqual this.type "Actual" }}readonly{{/isEqual}} type="number"
-                                    class="form-control text-end" id="from_km" name="from_km[]"
-                                    min="0" step="1" value="{{this.from_km}}"></td>
+                                    class="form-control text-end" id="from_km" name="from_km[]" min="0" step="1"
+                                    value="{{this.from_km}}"></td>
                             <td><input {{#isEqual this.type "Actual" }}readonly{{/isEqual}} type="number"
-                                    class="form-control text-end" id="to_km" name="to_km[]"
-                                    min="0" step="1" value="{{this.to_km}}"></td>
+                                    class="form-control text-end" id="to_km" name="to_km[]" min="0" step="1"
+                                    value="{{this.to_km}}"></td>
                             <td>
                                 <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
                                     class="btn btn-danger">
@@ -147,10 +151,10 @@
                             </td>
                             <td>
                                 <div hidden>
-                                    <input type="text" class="form-control" id="type"
-                                        name="type[]" value="{{this.type}}">
-                                    <input type="number" class="form-control text-end"
-                                        id="km_rate" name="km_rate[]" value="{{this.km_rate}}">
+                                    <input type="text" class="form-control" id="type" name="type[]"
+                                        value="{{this.type}}">
+                                    <input type="number" class="form-control text-end" id="km_rate" name="km_rate[]"
+                                        value="{{this.km_rate}}">
                                 </div>
                             </td>
 
@@ -180,7 +184,14 @@
             <div class="row">
                 <div class="col-sm">
                     <button type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
-                    <button type="button" class="btn btn-secondary mx-5" onclick="window.location.href='/dsr/view'">Cancel</button>
+
+                    {{#if (eq postFlag 'Y')}}
+                    <button type="button" class="btn btn-secondary mx-5"
+                        onclick="window.location.href='/dsr/post-edit?selectedEmpID={{data.emp_id}}'">Cancel</button>
+                    {{else}}
+                    <button type="button" class="btn btn-secondary mx-5"
+                        onclick="window.location.href='/dsr/view'">Cancel</button>
+                    {{/if}}
                 </div>
             </div>
 
@@ -198,9 +209,11 @@
 
             const response = await fetch(`/dsr/dsr-da?desg_id=${desgID}&atten_flag=${selectedAttenFlag}`);
             const data = await response.json();
-            const daAmount = data.allowDA ? data.allowDA.amount : 0;
+            const daAmount = data.allowDA ? data.allowDA.daRate : 0;
+            const lodgeAmount = data.allowDA ? data.allowDA.lodgeRate : 0;
 
             document.getElementById("total_allow").value = daAmount.toFixed(0);
+            document.getElementById("total_lodge").value = lodgeAmount.toFixed(0);
 
         } catch (error) {
             console.error(error);

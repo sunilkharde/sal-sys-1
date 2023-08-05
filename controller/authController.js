@@ -84,12 +84,13 @@ class authController {
         // Insert new user into database
         //const conn = await pool.getConnection();
         // await conn.beginTransaction();
+        var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
         var status_new = user_status !== null && user_status !== undefined ? user_status : 'A';
         var userRoll_new = user_role !== null && user_role !== undefined ? user_role : 'Dealer';
         var sqlStr = "INSERT INTO users (user_id,username,password,first_name,middle_name,last_name,user_role,email_id,mobile_no,status,c_at,c_by)" +
-          " VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),1)"
+          " VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
         await executeQuery(sqlStr,
-          [nextUserID, username, hashedPassword, first_name, middle_name, last_name, userRoll_new, email_id, mobile_no, status_new]) //, c_at, c_by
+          [nextUserID, username, hashedPassword, first_name, middle_name, last_name, userRoll_new, email_id, mobile_no, status_new, c_by]) //, c_at, c_by
         // await conn.commit();
         //conn.release
         //res.status(201).json({ message: 'User registered successfully', user_id: result.user_id });

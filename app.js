@@ -16,6 +16,7 @@ import customerRoute from "./routes/customerRoutes.js";
 import poRoute from "./routes/poRoutes.js";
 import dealerPayRoute from "./routes/dealerPayRoutes.js";
 import dsrRoute from "./routes/dsrRoutes.js";
+import dsrAcRoute from "./routes/dsrAcRoutes.js";
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
@@ -107,17 +108,22 @@ const eqHBS = function (a, b) {
 const isEqualsHBS = function (arg1, arg2, options) {
   return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
 };
-// const isEqualHelperHandlerbar = function (variable, value, options) {
-//   if (variable == value) {
-//     return options.fn(this);
-//   } else {
-//     return options.inverse(this);
-//   }
-// }
 const isEqualHelperHandlerbar = function (variable, ...values) {
   const options = values.pop();
   const isEqual = values.some((value) => variable === value);
   return isEqual ? options.fn(this) : options.inverse(this);
+};
+// const addHBS = function(a, b) {
+//   return Number(a) + Number(b);
+// };
+const addHBS = function(...values) {
+  let sum = 0;
+  values.forEach((value) => {
+    if (!isNaN(value)) {
+      sum += Number(value);
+    }
+  });
+  return sum;
 };
 
 // view engine setup
@@ -138,7 +144,8 @@ app.engine('hbs', exphbs.engine({
     momentYMD: momentYMD_HBS,
     momentDMYHm: momentDMYHm_HBS,
     momentDDDD: momentDDDD_HBS,
-    momentDDD: momentDDD_HBS
+    momentDDD: momentDDD_HBS,
+    add: addHBS
   }
 }));
 
@@ -150,6 +157,7 @@ app.use('/customer', customerRoute);
 app.use('/po', poRoute);
 app.use('/dealerPay', dealerPayRoute);
 app.use('/dsr', dsrRoute);
+app.use('/dsrAc', dsrAcRoute);
 
 // Log incoming requests
 /*app.use((req, res, next) => {

@@ -6,6 +6,9 @@
             <div class="row">
                 <input hidden type="text" class="form-control" id="emp_id" name="emp_id" value="{{data2.emp_id}}"
                     style="font-size: 45px;">
+                <input hidden type="text" class="form-control" id="open_year" name="open_year" value="{{openMon.year}}">
+                <input hidden type="text" class="form-control" id="open_month" name="open_month"
+                    value="{{openMon.month}}">
                 {{#each data}}
                 <div class="card">
                     <div class="card-header">
@@ -19,12 +22,17 @@
                             </div>
 
                             <div class="col-md-3 d-flex justify-content-end">
+                                {{#isEqual this.post_mg 'Y' }}
+                                <a href="#" class="btn btn-secondary btn-sm">
+                                    ... <i id="bi-pencil" class="bi bi-pencil"></i>
+                                </a>
+                                {{else}}
                                 <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}"
                                     class="btn btn-primary btn-sm"> {{!-- onclick="return
                                     confirm('Are you sure?')" --}}
-                                    ...
-                                    <i id="bi-pencil" class="bi bi-pencil"></i>
+                                    ... <i id="bi-pencil" class="bi bi-pencil"></i>
                                 </a>
+                                {{/isEqual}}
                             </div>
                         </div>
                     </div>
@@ -60,13 +68,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-check form-switch">
-                                    <input {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}disabled{{/isEqual}} 
-                                    {{#isEqual this.post_mg "Y"}} disabled{{/isEqual}}
-                                    class="form-check-input"
+                                    <input {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}disabled{{/isEqual}}
+                                        {{#isEqual this.post_mg "Y" }} disabled{{/isEqual}} class="form-check-input"
                                         type="checkbox" id="chk_leave_{{momentYMD this.dsr_date}}" {{#isEqual
                                         this.hr_flag "L" }}checked{{/isEqual}}>
-                                    <label class="form-check-label"
-                                        for="chk_leave_{{momentYMD this.dsr_date}}">
+                                    <label class="form-check-label" for="chk_leave_{{momentYMD this.dsr_date}}">
                                         {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}
                                         <span style="color: red;">Week Off</span>
                                         {{else}}Leave{{/isEqual}}</label>
@@ -92,7 +98,7 @@
                         </h5>
                         <h5 class="card-title">
                             DA: {{this.total_allow}}
-                            Expenses: {{this.total_exp}}
+                            Expenses: {{add this.total_exp this.total_lodge}}
                         </h5>
                         {{!-- <h5 class="card-title">
                             Approved: {{#if this.post_mg}} {{this.post_mg}} {{else}} <span
@@ -103,8 +109,74 @@
 
                 </div>
                 {{/each}}
-            </div>
 
+                <div>
+                    <br>
+                    <br>
+                </div>
+
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-6 border p-4">
+                            <h4 class="mb-4 page-title">Monthly Expenses</h4>
+                            <div class="row mb-3">
+                                <label for="Stationary" class="col-sm-6 col-form-label">Stationary</label>
+                                <div class="col-sm-6">
+                                    <input readonly type="number" class="form-control text-end" id="Stationary" name="Stationary"
+                                        value="{{monAllow.stationaryRate}}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="Postage" class="col-sm-6 col-form-label">Postage</label>
+                                <div class="col-sm-6">
+                                    <input readonly type="number" class="form-control text-end" id="Postage" name="Postage"
+                                        value="{{monAllow.postageRate}}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="Internet" class="col-sm-6 col-form-label">Internet</label>
+                                <div class="col-sm-6">
+                                    <input readonly type="number" class="form-control text-end" id="Internet" name="Internet"
+                                        value="{{monAllow.internetRate}}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="Other" class="col-sm-6 col-form-label">Other</label>
+                                <div class="col-sm-6">
+                                    <input type="number" class="form-control text-end" id="Other" name="Other"
+                                        value="{{monAllow.otherRate}}">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label for="Remarks" class="col-sm-6 col-form-label">Remarks</label>
+                                <div class="col-sm-6">
+                                    {{!-- <input type="text" maxlength="50" class="form-control" id="Remarks" name="Remarks" value="{{monAllow.monRemarks}}"> --}}
+                                    <textarea maxlength="50" class="form-control" id="Remarks" name="Remarks">{{monAllow.monRemarks}}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <button type="button" id="btnMonAllow" class="btn btn-success" {{#if (eq
+                                        monAllow.monPost 'Y' )}} disabled {{/if}} {{#if (eq daysDiff '0' )}} {{else}}
+                                        disabled {{/if}}>Update</button>
+                                </div>
+                                <div class="col-sm-9 row align-items-end">
+                                    <span style="color: red;">
+                                        {{#if (eq daysDiff '0' )}} {{else}}
+                                        <h5 style="font-size: 30px;" >This button will activate after {{daysDiff}} days...</h5>
+                                        {{/if}}
+                                        {{#if (eq monAllow.monPost 'Y' )}}<h5 style="font-size: 30px;">Posted entry can't change</h5>{{/if}}
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
     {{!--
@@ -174,24 +246,59 @@
             }
         }
 
-        /*var txtItems = document.getElementsByClassName('page-title');
+        var txtItems = document.getElementsByClassName('page-title');
         for (var i = 0; i < txtItems.length; i++) {
             var txtItem = txtItems[i];
             if (screenWidth < 768) {
-                txtItem.style.fontSize = '60px';
+                txtItem.style.fontSize = '50px';
             } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '60px';
+                txtItem.style.fontSize = '50px';
             } else {
-                txtItem.style.fontSize = '42px';
+                txtItem.style.fontSize = '45px';
             }
-        }*/
+        }
+
+        var frmLabels = document.getElementsByClassName('col-form-label');
+        for (var i = 0; i < frmLabels.length; i++) {
+            var frmLabel = frmLabels[i];
+            if (screenWidth < 768) {
+                frmLabel.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmLabel.style.fontSize = '50px';
+            } else {
+                frmLabel.style.fontSize = '30px';
+            }
+        }
+
+        var frmLabels = document.getElementsByClassName('form-label');
+        for (var i = 0; i < frmLabels.length; i++) {
+            var frmLabel = frmLabels[i];
+            if (screenWidth < 768) {
+                frmLabel.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmLabel.style.fontSize = '50px';
+            } else {
+                frmLabel.style.fontSize = '30px';
+            }
+        }
+
+        var frmControls = document.getElementsByClassName('form-control');
+        for (var i = 0; i < frmControls.length; i++) {
+            var frmControl = frmControls[i];
+            if (screenWidth < 768) {
+                frmControl.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmControl.style.fontSize = '50px';
+            } else {
+                frmControl.style.fontSize = '30px';
+            }
+        }
 
     }
 
     window.addEventListener('DOMContentLoaded', adjustFontSize);
     window.addEventListener('resize', adjustFontSize);
 </script>
-
 
 <script>
     window.addEventListener('DOMContentLoaded', function () {
@@ -254,6 +361,45 @@
                 console.error(err);
             }
         }
-
     });
+</script>
+
+<script>
+    const btnMonAllow = document.getElementById('btnMonAllow');
+
+    btnMonAllow.addEventListener("click", async (event) => {
+        const dsrYear = document.getElementById('open_year').value;
+        const dsrMonth = document.getElementById('open_month').value;
+        const empID = document.getElementById('emp_id').value;
+        const stationaryVal = document.getElementById('Stationary').value;
+        const postageVal = document.getElementById('Postage').value;
+        const internetVal = document.getElementById('Internet').value;
+        const otherVal = document.getElementById('Other').value;
+        const remarksVal = document.getElementById('Remarks').value;
+
+        try {
+            const response = await fetch('/dsr/save-mon-allow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dsrYear, dsrMonth, empID, stationaryVal, postageVal, internetVal, otherVal, remarksVal })
+            });
+
+            const data = await response.json();
+            if (data.postMgFlag === 'Y') {
+                alert('Record is posted cannot change');
+                return
+            }
+
+            if (response.ok) {
+                alert('Monthly allowance data saved successfully');
+                //console.log('Montly allowance data saved successfully');
+            } else {
+                alert('Failed to save allowance data');
+                //console.error('Failed to save allowance data');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
 </script>

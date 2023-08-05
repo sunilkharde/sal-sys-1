@@ -12,6 +12,18 @@ router.get('/view', dsrController.viewAll);
 router.get('/update/:dsr_date/:emp_id', dsrController.edit);
 router.post('/update/:dsr_date/:emp_id', dsrController.update);
 router.get('/delete/:dsr_date/:emp_id', dsrController.delete);
+router.get('/post-pm', dsrController.postPM);
+router.get('/post-edit', dsrController.postEdit);
+router.post('/save-mon-allow', dsrController.saveMonAllow);
+router.post('/post-mon-allow', dsrController.postMonAllow);
+router.get('/report', dsrController.empReport);
+
+// router.get('/export-excel', dsrController.exportExcel);
+// router.get('/export-csv', dsrController.exportCSV);
+router.get('/export-pdf', dsrController.exportPdf);
+
+router.get('/report-atten', dsrController.reportAtten);
+router.get('/atten-export-csv', dsrController.attenExportCSV);
 
 
 export default router;

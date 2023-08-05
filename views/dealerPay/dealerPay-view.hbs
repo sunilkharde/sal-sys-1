@@ -1,63 +1,117 @@
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h4 style=" margin-bottom: 20px;">Dealer Payment History...</h4>
+        {{#isEqual user.user_role "Admin" "Dealer"}}
         <a href="/dealerPay/create" class="btn btn-success">Create New</a>
+        {{else}}
+        <a href="#" class="btn btn-secondary">Create New</a>
+        {{/isEqual}}
     </div>
 
-    <table class="table" id="dealerPayTable">
-        <thead>
-            <tr>
-                <th hidden>Entry Date1</th>
-                <th>Entry Date</th>
-                <th>Entry No</th>
-                <th>Dealer Name</th>
-                <th>Business Unit</th>
-                <th>Pay Mode</th>
-                <th>Pay Ref Date</th>
-                <th>Pay Ref No</th>
-                <th style="text-align: end;">Amount</th>
-                <th>Narration</th>
-                <th class="col-1">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each dealerPayments}}
-            <tr>
-                <td hidden>{{momentYMD this.doc_date}}</td>
-                <td>{{momentDMY this.doc_date}}</td>
-                <td>{{this.doc_no_new}}</td>
-                <td>{{this.customer_name}}</td>
-                <td>{{this.bu_code}}</td>
-                <td>{{this.pay_mode}}</td>
-                <td>{{momentDMY this.ref_date}}</td>
-                <td>{{this.ref_no}}</td>
-                <td style="text-align: end;">{{this.amount}}</td>
-                <td>{{this.ref_desc}}</td>
-                <td>
-                    <!-- <a href="/dealerPay/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">
+    <form id="form1" action="/dealerPay/view" method="GET">
+        <div class="col-lg-9 border p-4">
+            <div class="form-group row mb-3">
+                <label for="from_date" class="col-sm-2 col-form-label text-end">Pay Ref Date From</label>
+                <div class="col-sm-3">
+                    <input type="date" class="form-control" id="from_date" name="from_date"
+                        value="{{momentYMD data.from_date}}">
+                </div>
+                <label for="to_date" class="col-sm-2 col-form-label text-end">Date To</label>
+                <div class="col-sm-3">
+                    <input type="date" class="form-control" id="to_date" name="to_date"
+                        value="{{momentYMD data.to_date}}">
+                </div>
+                <div class="col-md-2 item-align-start">
+                    {{!-- <button type="button" id="btnRefresh" class="btn btn-success">Refresh Data</button> --}}
+                    <button type="submit" id="btnRefresh" class="btn btn-success">Refresh Data</button>
+                </div>
+            </div>
+        </div>
+        <br>
+
+        <table class="table" id="dealerPayTable">
+            <thead>
+                <tr>
+                    <th hidden>Entry Date1</th>
+                    <th>Entry Date</th>
+                    <th>Entry No</th>
+                    <th>Dealer Name</th>
+                    <th>Business Unit</th>
+                    <th>Pay Mode</th>
+                    <th>Pay Ref Date</th>
+                    <th>Pay Ref No</th>
+                    <th style="text-align: end;">Amount</th>
+                    {{!-- <th hidden>Narration</th> --}}
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each dealerPayments}}
+                <tr>
+                    <td hidden>{{momentYMD this.doc_date}}</td>
+                    <td class="col-1">{{momentDMY this.doc_date}}</td>
+                    <td class="col-1">{{this.doc_no_new}}</td>
+                    <td class="col-3">{{this.customer_name}}</td>
+                    <td class="col-2">{{this.bu_code}}</td>
+                    <td class="col-1">{{this.pay_mode}}</td>
+                    <td class="col-1">{{momentDMY this.ref_date}}</td>
+                    <td class="col-1">{{this.ref_no}}</td>
+                    <td class="col-1" style="text-align: end;">{{this.amount}}</td>
+                    {{!-- <td hidden class="col-0">{{this.ref_desc}}</td> --}}
+                    <td class="col-1">
+                        <!-- <a href="/dealerPay/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">
                         <i class="bi bi-eye"></i>
-                    </a> -->
-                    <a href="/dealerPay/update/{{momentYMD this.doc_date}}/{{this.doc_no}}"
-                        class="btn btn-primary btn-sm">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    {{#isEqual ../user.user_role "Admin"}}
-                    <a href="/dealerPay/delete/{{momentYMD this.doc_date}}/{{this.doc_no}}"
-                        class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
-                        <i class="bi bi-trash"></i>
-                    </a>
-                    {{/isEqual}}
-                </td>
-            </tr>
-            {{/each}}
-        </tbody>
-    </table>
+                        </a> -->
+                        {{#isEqual ../user.user_role "Admin" "Dealer"}}
+                        <a href="/dealerPay/update/{{momentYMD this.doc_date}}/{{this.doc_no}}"
+                            class="btn btn-primary btn-sm"> <i class="bi bi-pencil"></i>
+                        </a>
+                        {{else}}
+                        <a href="/#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {{/isEqual}}
 
-    <div class="mt-3">
-        <button id="export-excel" class="btn btn-success"  onclick="window.location.href='/dealerPay/export-excel'">Export to Excel</button>
-        <button id="export-csv" class="btn btn-warning"  onclick="window.location.href='/dealerPay/export-csv'">Export to CSV</button>
-        <button id="export-pdf" class="btn btn-danger" onclick="window.location.href='/dealerPay/export-pdf'">Export to PDF</button>
+                        {{#isEqual ../user.user_role "Admin"}}
+                        <a href="/dealerPay/delete/{{momentYMD this.doc_date}}/{{this.doc_no}}"
+                            class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {{else}}
+                        <a href="/#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
+                            <i class="bi bi-trash"></i>
+                        </a>
+
+                        {{/isEqual}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+    </form>
+
+    <div>
+        <form id="form2" action="/dealerPay/export-excel" method="GET" class="d-inline">
+            <input type="hidden" id="exportExcel_from_date" name="exportExcel_from_date"
+                value="{{momentYMD data.from_date}}">
+            <input type="hidden" id="exportExcel_to_date" name="exportExcel_to_date" value="{{momentYMD data.to_date}}">
+            <button type="submit" id="expor-excel" class="btn btn-success">Export to Excel</button>
+        </form>
+        <form id="form3" action="/dealerPay/export-csv" method="GET" class="d-inline">
+            <input type="hidden" id="exportCSV_from_date" name="exportCSV_from_date"
+                value="{{momentYMD data.from_date}}">
+            <input type="hidden" id="exportCSV_to_date" name="exportCSV_to_date" value="{{momentYMD data.to_date}}">
+            <button type="submit" id="expor-csv" class="btn btn-warning">Export to CSV</button>
+        </form>
+        <form id="form4" action="/dealerPay/export-pdf" method="GET" class="d-inline">
+            <input type="hidden" id="exportPDF_from_date" name="exportPDF_from_date"
+                value="{{momentYMD data.from_date}}">
+            <input type="hidden" id="exportPDF_to_date" name="exportPDF_to_date" value="{{momentYMD data.to_date}}">
+            <button type="submit" id="expor-pdf" class="btn btn-danger">Export to PDF</button>
+        </form>
     </div>
+
 
     <script>
         $(document).ready(function () {
@@ -67,7 +121,20 @@
                 "order": [[0, "desc"], [2, "desc"]]
             });
         });
+
+        // Update the hidden input fields when the form is submitted
+        $('#form1').on('submit', function (event) {
+            event.preventDefault();
+            var from_date = $('#from_date').val();
+            var to_date = $('#to_date').val();
+            $('#exportExcel_from_date').val(from_date);
+            $('#exportExcel_to_date').val(to_date);
+            $('#exportCSV_from_date').val(from_date);
+            $('#exportCSV_to_date').val(to_date);
+            $('#exportPDF_from_date').val(from_date);
+            $('#exportPDF_to_date').val(to_date);
+            this.submit();
+        });
     </script>
 
-    
 </div>

@@ -25,6 +25,6 @@
     "node-schedule": "^2.1.1",
     "pdfkit-table": "^0.1.99",
     "serve-favicon": "^2.5.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
   }
 }

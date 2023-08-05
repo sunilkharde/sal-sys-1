@@ -1,13 +1,16 @@
 html,
 body {
     /* height: 100%; */
-    padding-top: 1px; /*Add padding to the body to prevent content from being hidden behind the navbar*/
-  }
-  .navbar {
+    padding-top: 1px;
+    /*Add padding to the body to prevent content from being hidden behind the navbar*/
+}
+
+.navbar {
     position: sticky;
     top: 0;
-    z-index: 1000; /* Set a higher z-index value */
-  }
+    z-index: 1000;
+    /* Set a higher z-index value */
+}
 
 
 .wrapper {
@@ -22,8 +25,8 @@ body {
 }
 
 .navbar-brand {
-    /*font-family: Arial, sans-serif;  28*/ 
-    font-size: 40px; 
+    /*font-family: Arial, sans-serif;  28*/
+    font-size: 40px;
 }
 
 .navbar-nav .nav-link {
@@ -42,6 +45,11 @@ body {
     font-size: 22px;
 }
 
+.navbar-text2 {
+    /*font-family: Arial, sans-serif;*/
+    font-size: 22px;
+}
+
 .navbar-image-wrapper {
     background-color: white;
     padding: 2px;
@@ -50,6 +58,24 @@ body {
 }
 
 .navbar-toggler-custom {
-    font-size: 3rem; /* Adjust the size as needed */
+    font-size: 3rem;
+    /* Adjust the size as needed */
     /* Add any other custom styles here */
-  }
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printable-area, #printable-area * {
+        visibility: visible;
+    }
+    #printable-area {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        top: 0;
+    }
+   
+}
+

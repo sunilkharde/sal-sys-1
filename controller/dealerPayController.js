@@ -5,7 +5,7 @@ import csv from 'fast-csv';
 import PDFDocument from 'pdfkit-table';
 import ftp from 'basic-ftp';
 import { join } from 'path';
-// import fs from 'fs';
+import moment from 'moment';
 
 //const conn = await pool.getConnection();
 class dealerPayController {
@@ -131,23 +131,40 @@ class dealerPayController {
     static viewAll = async (req, res) => {
         // retrieve the alert message from the query parameters
         const alert = req.query.alert;
+        const { from_date, to_date } = req.query;
         try {
-            //const conn = await pool.getConnection();
-            let sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,CONCAT(c.bu_code,' | ',c.bu_short) as bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
+            var fromDate = null;
+            var toDate = null;
+            if (from_date === null || from_date === undefined) {
+                fromDate = moment().startOf('month');
+                toDate = fromDate.clone().endOf('month');
+            } else {
+                fromDate = from_date
+                toDate = to_date
+            }
+
+            const data = { from_date: fromDate, to_date: toDate }
+
+            let sqlStr = "Select a.doc_date,a.doc_no,RIGHT(a.doc_no_new,3) AS doc_no_new,a.customer_id,b.customer_name,a.bu_id,CONCAT(c.bu_code,' | ',c.bu_short) as bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id ";
-            if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
+            // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
+            if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
             }
-            const results = await executeQuery(sqlStr);
-            //conn.release
-            res.render('dealerPay/dealerPay-view', { dealerPayments: results, alert });
+            var params = null;
+            if (from_date === null || from_date === undefined) {
+                params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')]
+            } else {
+                params = [fromDate, toDate]
+            }
+            const results = await executeQuery(sqlStr, params);
+
+            res.render('dealerPay/dealerPay-view', { dealerPayments: results, data, alert });
 
         } catch (error) {
             console.error(error);
             // Handle the error
-        } finally {
-            //conn.release();
         }
     }
 
@@ -269,14 +286,32 @@ class dealerPayController {
     };
 
     static exportExcel = async (req, res) => {
+        const { exportExcel_from_date, exportExcel_to_date } = req.query;
         try {
-            //const conn = await pool.getConnection();
-            const sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
+            var fromDate = null;
+            var toDate = null;
+            if (exportExcel_from_date === null || exportExcel_from_date === undefined) {
+                fromDate = moment().startOf('month');
+                toDate = fromDate.clone().endOf('month');
+            } else {
+                fromDate = exportExcel_from_date
+                toDate = exportExcel_to_date
+            }
+
+            let sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id";
-            //const params = [ doc_date, doc_no];
-            const rows = await executeQuery(sqlStr)//, params);
-            //conn.release
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
+            // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
+            if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
+                sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
+            }
+            var params = null;
+            if (exportExcel_from_date === null || exportExcel_from_date === undefined) {
+                params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')]
+            } else {
+                params = [fromDate, toDate]
+            }
+            const rows = await executeQuery(sqlStr, params);
 
             const header = Object.keys(rows[0]);
             const data = [header, ...rows.map(row => Object.values(row))];
@@ -287,6 +322,10 @@ class dealerPayController {
             res.setHeader('Content-Disposition', 'attachment; filename=DealerPayment.xlsx');
             res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.send(excelBuffer);
+
+            const now = new Date().toLocaleString();
+            console.log(`Dealer payment data exported successfully to Excel file!... user: '${res.locals.user.username} on '${now}'`);
+
         } catch (error) {
             console.error(error);
             res.status(500).send('Internal server error');
@@ -296,14 +335,34 @@ class dealerPayController {
     };
 
     static exportCSV = async (req, res) => {
+        const { exportCSV_from_date, exportCSV_to_date } = req.query;
         try {
-            //const conn = await pool.getConnection();
-            const sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
+            // console.log('exportCSV from date..... ' + exportCSV_from_date + ' ' + exportCSV_to_date)
+
+            var fromDate = null;
+            var toDate = null;
+            if (exportCSV_from_date === null || exportCSV_from_date === undefined) {
+                fromDate = moment().startOf('month');
+                toDate = fromDate.clone().endOf('month');
+            } else {
+                fromDate = exportCSV_from_date
+                toDate = exportCSV_to_date
+            }
+
+            let sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id";
-            //const params = [ doc_date, doc_no];
-            const rows = await executeQuery(sqlStr)//, params);
-            //conn.release
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
+            // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
+            if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
+                sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
+            }
+            var params = null;
+            if (exportCSV_from_date === null || exportCSV_from_date === undefined) {
+                params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')]
+            } else {
+                params = [fromDate, toDate]
+            }
+            const rows = await executeQuery(sqlStr, params);
 
             const csvStream = csv.format({ headers: true });
             res.setHeader('Content-disposition', 'attachment; filename=DealerPayment.csv'); // Replace "users.csv" with your desired filename
@@ -311,7 +370,10 @@ class dealerPayController {
             csvStream.pipe(res);
             rows.forEach((row) => csvStream.write(row));
             csvStream.end();
-            console.log('Data exported successfully to CSV file!');
+
+            const now = new Date().toLocaleString();
+            console.log(`Dealer payment data exported successfully to CSV file!... user: '${res.locals.user.username} on '${now}'`);
+            // console.log('Data exported successfully to CSV file!');
 
         } catch (err) {
             console.error(err);
@@ -321,14 +383,32 @@ class dealerPayController {
     };
 
     static exportPdf = async (req, res) => {
+        const { exportPDF_from_date, exportPDF_to_date } = req.query;
         try {
-            //const conn = await pool.getConnection();
-            const sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
+            var fromDate = null;
+            var toDate = null;
+            if (exportPDF_from_date === null || exportPDF_from_date === undefined) {
+                fromDate = moment().startOf('month');
+                toDate = fromDate.clone().endOf('month');
+            } else {
+                fromDate = exportPDF_from_date
+                toDate = exportPDF_to_date
+            }
+
+            let sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
                 " from dealer_payment as a, customers as b, business_units as c " +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id";
-            //const params = [ doc_date, doc_no];
-            const rows = await executeQuery(sqlStr)//, params);
-            //conn.release
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
+            // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
+            if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
+                sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
+            }
+            var params = null;
+            if (exportPDF_from_date === null || exportPDF_from_date === undefined) {
+                params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')]
+            } else {
+                params = [fromDate, toDate]
+            }
+            const rows = await executeQuery(sqlStr, params);
 
             let doc = new PDFDocument({ margin: 20, size: 'A4' });
 
@@ -363,7 +443,10 @@ class dealerPayController {
             doc.pipe(res);
             // End the PDF document
             doc.end();
-            console.log('Data exported successfully to PDF file!');
+
+            const now = new Date().toLocaleString();
+            console.log(`Dealer payment data exported successfully to PDF file!... user: '${res.locals.user.username} on '${now}'`);
+            // console.log('Data exported successfully to PDF file!');
 
         } catch (err) {
             console.error(err);
@@ -376,7 +459,7 @@ class dealerPayController {
     static viewBalance = async (req, res) => {
         try {
             //const conn = await pool.getConnection();
-            const sqlStr = "SELECT a.ext_code FROM customers AS a, users AS b" +
+            const sqlStr = "SELECT CONCAT('000',a.ext_code) as ext_code FROM customers AS a, users AS b" +
                 " WHERE a.user_id = b.user_id and b.user_id=?";
             const params = [res.locals.user.user_id];
             const rows = await executeQuery(sqlStr, params);
@@ -385,9 +468,9 @@ class dealerPayController {
             //
             const client = new ftp.Client();
             await client.access({
-                host: process.env.ftp_host,
-                user: process.env.ftp_user,
-                password: process.env.ftp_password,
+                host: process.env.ftp_host_temp,
+                user: process.env.ftp_user_temp,
+                password: process.env.ftp_password_temp,
                 port: process.env.ftp_port
             });
 
@@ -397,6 +480,11 @@ class dealerPayController {
             const results = [];
             csv.parseFile(filePath, { headers: true })
                 .on('data', (data) => results.push(data))
+                .on('error', (error) => {
+                    console.error('Error occurred while parsing CSV file:', error);
+                    // Handle the error gracefully, e.g., by sending an error response or redirecting.
+                    res.status(500).send('Error occurred while processing CSV file.');
+                })
                 .on('end', () => {
                     //const filterValues = ['A', 'B', 'C'];
                     const filteredResults = results.filter(record => filterValues.includes(record.CUSTOMER_CODE));
@@ -409,11 +497,14 @@ class dealerPayController {
                     client.close();
                 });
 
-            console.log('Data import successful!');
+            const now = new Date().toLocaleString();
+            console.log(`Data imported successful by user '${res.locals.user.username} on '${now}'`);
+            // console.log('Data import successful!');
 
         } catch (err) {
             console.error(err);
-            res.status(500).send('Internal server error');
+            // res.status(500).send('Internal server error');
+            res.redirect('/');
         }
     }
 

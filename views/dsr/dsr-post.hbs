@@ -1,0 +1,202 @@
+<div class="container">
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style=" margin-bottom: 20px;">Expenses Approval</h4>
+        {{!-- <div class="row"></div> --}}
+        <div class="col-sm-3" style="display: flex;justify-content: flex-start;">
+            <button type="button" class="btn btn-secondary mx-2" onclick="window.location.href='/dsr/post-pm'">Back</button>
+            <button type="button" id="btnMonAllow" class="btn btn-success">Post Data</button>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <label for="boss_name" class="col-sm-2 col-form-label">Team of:</label>
+        <div class="col-sm-6">
+            <div class="input-group">
+                <input readonly type="text" class="form-control" id="boss_name" name="boss_name"
+                    value="{{bossData.boss_name}}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <label for="month_name" class="col-sm-2 col-form-label">Month:</label>
+        <div class="col-sm-6">
+            <div class="input-group">
+                <input hidden type="text" class="form-control" id="open_year" name="open_year" value="{{openMon.year}}">
+                <input hidden type="text" class="form-control" id="open_month" name="open_month"
+                    value="{{openMon.month}}">
+                <input readonly type="text" class="form-control" id="month_name" name="month_name"
+                    value="{{monData.month_name}}-{{monData.year}}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <label for="emp_id" class="col-sm-2 col-form-label">Employee</label>
+        <div class="col-sm-6">
+            <div class="input-group">
+                <input hidden type="text" class="form-control" id="emp_id" name="emp_id" value="{{empData.emp_id}}">
+                <input readonly type="text" class="form-control" id="emp_name" name="emp_name"
+                    value="{{empData.emp_name}}">
+                <button disabled class="btn btn-outline-secondary" type="button" id="btnEmp" data-bs-toggle="modal"
+                    data-bs-target="#empModal"> <i class="bi bi-list"></i></button>
+            </div>
+        </div>
+    </div>
+    <br>
+
+    <div class="col-lg-8 border p-4">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h5 style=" margin-bottom: 20px;">Monthly Expenses</h5>
+        </div>
+        <div class="form-group row lg-10">
+            <label for="Stationary" class="col-sm-2 col-form-label">Stationary</label>
+            <div class="col-sm-4">
+                <input type="number" class="form-control text-end" id="Stationary" name="Stationary"
+                    value="{{monAllow.stationaryRate}}">
+            </div>
+            <label for="Postage" class="col-sm-2 col-form-label">Postage</label>
+            <div class="col-sm-4">
+                <input type="number" class="form-control text-end" id="Postage" name="Postage"
+                    value="{{monAllow.postageRate}}">
+            </div>
+        </div>
+        <div class="form-group row lg-10">
+            <label for="Internet" class="col-sm-2 col-form-label">Internet</label>
+            <div class="col-sm-4">
+                <input type="number" class="form-control text-end" id="Internet" name="Internet"
+                    value="{{monAllow.internetRate}}">
+            </div>
+            <label for="Other" class="col-sm-2 col-form-label">Other</label>
+            <div class="col-sm-4">
+                <input type="number" class="form-control text-end" id="Other" name="Other"
+                    value="{{monAllow.otherRate}}">
+            </div>
+        </div>
+
+        <div class="form-group row lg-10">
+            <label for="Remarks" class="col-sm-2 col-form-label">Remarks</label>
+            <div class="col-sm-10">
+                {{!-- <input type="text" maxlength="50" class="form-control" id="Remarks" name="Remarks"
+                    value="{{monAllow.monRemarks}}"> --}}
+                <textarea maxlength="50" class="form-control" id="Remarks"
+                    name="Remarks">{{monAllow.monRemarks}}</textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <br>
+
+    <table class="table" id="dsrTable">
+        <thead>
+            <tr>
+                <th hidden>Date1</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>HR Flag</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Stay</th>
+                <th>DA</th>
+                <th>Lodge</th>
+                <th>Exp</th>
+                <th>Post</th>
+                <th class="col-1">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each dsrData}}
+            <tr>
+                <td hidden>{{momentYMD this.dsr_date}}</td>
+                <td>{{momentDMY this.dsr_date}}</td>
+                <td>{{this.atten_flag}}</td>
+                <td>{{this.hr_flag}}</td>
+                <td>{{this.from_city}}</td>
+                <td>{{this.to_city}}</td>
+                <td>{{this.stay_city}}</td>
+                <td class="text-end">{{this.total_allow}}</td>
+                <td class="text-end">{{this.total_lodge}}</td>
+                <td class="text-end">{{this.total_exp}}</td>
+                <td>{{this.post_mg}}</td>
+                <td>
+                    {{!-- <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}"
+                        class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye"></i>
+                    </a> --}}
+
+                    {{!-- {{#if this.ftp_date}}
+                    <a href="#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    {{else}} --}}
+                    <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}?postFlag=Y"
+                        class="btn btn-primary btn-sm"
+                        onclick="return confirm('This will modify your previously saved data. Are you sure?')">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    {{!-- {{/if}} --}}
+
+                    {{!-- {{#isEqual ../user.user_role "Admin"}}
+                    <a href="/po/delete/{{momentYMD this.dsr_date}}/{{this.emp_id}}" class="btn btn-danger btn-sm"
+                        onclick="return confirm('Are you sure?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                    {{/isEqual}} --}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function () {
+            $('#dsrTable').dataTable({
+                pageLength: 10 //,
+                //"order": [[0, "desc"], [2, "desc"]]
+
+            });
+        });
+    </script>
+
+</div>
+
+<script>
+    const btnMonAllow = document.getElementById('btnMonAllow');
+
+    btnMonAllow.addEventListener("click", async (event) => {
+        const dsrYear = document.getElementById('open_year').value;
+        const dsrMonth = document.getElementById('open_month').value;
+        const empID = document.getElementById('emp_id').value;
+        const stationaryVal = document.getElementById('Stationary').value;
+        const postageVal = document.getElementById('Postage').value;
+        const internetVal = document.getElementById('Internet').value;
+        const otherVal = document.getElementById('Other').value;
+        const remarksVal = document.getElementById('Remarks').value;
+
+        try {
+            const response = await fetch('/dsr/post-mon-allow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dsrYear, dsrMonth, empID, stationaryVal, postageVal, internetVal, otherVal, remarksVal })
+            });
+
+            if (response.ok) {
+                const data = await response.json(); // Read the response body as JSON
+                if (data.postAcFlag === 'Y') {
+                    alert('Record is posted by the finance department');
+                    return;
+                } else {
+                    alert('Monthly allowance data posted successfully');
+                    window.location.href = '/dsr/post-pm'; // Redirect to other page
+                }
+            } else {
+                alert('Failed to post allowance data');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+</script>

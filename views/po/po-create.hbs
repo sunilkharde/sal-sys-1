@@ -23,7 +23,7 @@
                         <div class="input-group">
                             <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
                                 value="{{data.customer_id}}">
-                            <input disabled type="text" class="form-control" id="customer_name" name="customer_name"
+                            <input readonly type="text" class="form-control" id="customer_name" name="customer_name"
                                 value="{{data.customer_name}}">
                             <button class="btn btn-outline-info" type="button" id="btnCustomer" data-bs-toggle="modal"
                                 data-bs-target="#customersModal">
@@ -37,8 +37,8 @@
                             style="color: red;">*</span></label>
                     <div class="col-sm-4">
                         <input hidden type="text" class="form-control" id="bu_id_hdn" name="bu_id_hdn"
-                            value="{{data.bu_id}}">
-                        <input disabled type="text" class="form-control" id="bu_name" name="bu_name"
+                            value="{{data.bu_id_hdn}}">
+                        <input readonly type="text" class="form-control" id="bu_name" name="bu_name"
                             value="{{data.bu_name}}">
 
                         {{!-- <select class="form-select" id="bu_id" name="bu_id" aria-label=".form-select-sm example">

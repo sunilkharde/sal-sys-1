@@ -1,0 +1,179 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 border p-4"> {{!-- border-secondary --}}
+            <h4 class="mb-3">Employee Expenses for Month: {{expDate}} </h4>
+
+            <form id="expPostForm" action="/dsrAc/update/{{postData.year}}/{{postData.month}}/{{postData.emp_id}}"
+                method="post">
+
+                <div class="row mb-3">
+                    <label for="emp_id" class="col-sm-2 col-form-label">Employee Name<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <div class="input-group">
+                            <input hidden type="text" class="form-control" id="emp_id" name="emp_id"
+                                value="{{postData.emp_id}}">
+                            <input readonly type="text" class="form-control" id="emp_name" name="emp_name"
+                                value="{{postData.emp_name}}" required>
+                        </div>
+                    </div>
+                    <label for="chk_post_ac" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="chk_post_ac" name="chk_post_ac"
+                                {{#isEqual postData.post_ac "Y" }}checked{{/isEqual}}>
+                            <label class="form-check-label" for="chk_post_ac"><span
+                                    style="color: red;">*</span>&nbsp;<strong>Post This Entry</strong></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="desg_name" class="col-sm-2 col-form-label">Designation<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input readonly type="text" class="form-control" id="desg_name" name="desg_name"
+                            value="{{empData.desg_name}}">
+                    </div>
+                    <label for="hq_name" class="col-sm-2 col-form-label">Headquarter<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input readonly type="text" class="form-control" id="hq_name" name="hq_name"
+                            value="{{empData.hq_name}}">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="boss_name" class="col-sm-2 col-form-label">Manager Name<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input readonly type="text" class="form-control" id="boss_name" name="boss_name"
+                            value="{{empData.boss_name}}">
+                    </div>
+                    {{!-- <label for="hq_name" class="col-sm-2 col-form-label">Headquarter<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input readonly type="text" class="form-control" id="hq_name" name="hq_name"
+                            value="{{empData.hq_name}}">
+                    </div> --}}
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label for="da" class="col-sm-2 col-form-label">DA<span style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input required type="number" class="forCalculate form-control text-end" id="da" name="da"
+                            value="{{postData.da}}" min="0" step="1">
+                    </div>
+                    <label for="lodge" class="col-sm-2 col-form-label">lodge<span style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input required type="number" class="forCalculate form-control text-end" id="lodge" name="lodge"
+                            value="{{postData.lodge}}" min="0" step="1">
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label for="fare" class="col-sm-2 col-form-label">Fare<span style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input required type="number" class="forCalculate form-control text-end" id="fare" name="fare"
+                            value="{{postData.fare}}" min="0" step="1">
+                    </div>
+                    {{!-- <label for="lodge" class="col-sm-2 col-form-label">lodge<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input required type="number" class="form-control text-end" id="lodge" name="lodge"
+                            value="{{postData.lodge}}" min="0" step="1">
+                    </div> --}}
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label for="stationary_val" class="col-sm-2 col-form-label">Stationary<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input required type="number" class="forCalculate form-control text-end" id="stationary_val"
+                            name="stationary_val" value="{{postData.stationary_val}}" min="0" step="1">
+                    </div>
+                    <label for="postage_val" class="col-sm-2 col-form-label">Postage<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input required type="number" class="forCalculate form-control text-end" id="postage_val"
+                            name="postage_val" value="{{postData.postage_val}}" min="0" step="1">
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label for="internet_val" class="col-sm-2 col-form-label">Internet<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input required type="number" class="forCalculate form-control text-end" id="internet_val"
+                            name="internet_val" value="{{postData.internet_val}}" min="0" step="1">
+                    </div>
+                    <label for="other_val" class="col-sm-2 col-form-label">Other<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input required type="number" class="forCalculate form-control text-end" id="other_val"
+                            name="other_val" value="{{postData.other_val}}" min="0" step="1">
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label for="totalAmount" class="col-sm-2 col-form-label">Total Amount<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-4">
+                        <input readonly type="number" style="font-weight: bold;" class="form-control text-end"
+                            id="totalAmount" name="totalAmount" value="0" min="0" step="1">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="remark" class="col-sm-2 col-form-label">Remarsk</label>
+                    <div class="col-sm-10">
+                        <textarea class="form-control" id="remarks" name="remarks" rows="3" maxlength="50"
+                            placeholder="Enter remark" aria-describedby="remarkHelp">{{postData.remarks}}</textarea>
+                        <div id="remarkHelp" class="form-text">Remark cannot exceed 50 characters.</div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary mx-1">Submit</button>
+                    <div class="col-sm-10">
+                        <button type="button" class="btn btn-secondary mx-1"
+                            onclick="window.location.href='/dsrAc/view?mon_date={{yearMon}}'">Cancel</button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Function to check for null or blank value
+        function checkValue(value) {
+            return value === null || value.trim() === '' ? 0 : parseFloat(value);
+        }
+
+        // Function to calculate the total
+        function calculateTotal() {
+            const da = checkValue(document.getElementById("da").value);
+            const fare = checkValue(document.getElementById("fare").value);
+            const lodge = checkValue(document.getElementById("lodge").value);
+            const stationary_val = checkValue(document.getElementById("stationary_val").value);
+            const postage_val = checkValue(document.getElementById("postage_val").value);
+            const internet_val = checkValue(document.getElementById("internet_val").value);
+            const other_val = checkValue(document.getElementById("other_val").value);
+
+            const total = da + fare + lodge + stationary_val + postage_val + internet_val + other_val;
+            document.getElementById("totalAmount").value = total;
+        }
+
+        // Add event listeners to input elements
+        const inputElements = document.querySelectorAll(".forCalculate");
+        inputElements.forEach(input => {
+            input.addEventListener("input", calculateTotal);
+        });
+
+        // Calculate total on page load
+        calculateTotal();
+    });
+</script>

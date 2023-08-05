@@ -16,7 +16,8 @@
                     <input type="text" class="form-control" id="username" name="username" value="{{data.username}}"
                         required placeholder="Enter your Display Name" pattern="[A-Za-z0-9._ ]{1,50}" maxlength="50"
                         aria-describedby="usernameHelp">
-                    <div id="usernameHelp" class="form-text">Display name can only contain alphabets, numbers, underscore
+                    <div id="usernameHelp" class="form-text">Display name can only contain alphabets, numbers,
+                        underscore
                         (_) and dot (.) and cannot exceed 50 characters.</div>
                 </div>
                 <div class="mb-3">
@@ -35,23 +36,34 @@
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <div class="input-group">
-                        <input type="password" class="form-control" name="password" id="password"
-                            value="{{data.password}}" required placeholder="Enter your password"
-                            aria-describedby="passwordHelp"
-                            pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$">
+                        <input required type="password" class="form-control" name="password" id="password"
+                            value="{{data.password}}" placeholder="Enter your password"
+                            pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$"
+                            aria-describedby="passwordHelp" onpaste="return false;">
                         <button class="btn btn-outline-secondary" type="button" id="password-toggle">
                             <i class="bi bi-eye"></i></button>
                     </div>
                     <div id="passwordeHelp" class="form-text">Password between 6 to 20 characters which contain numbers,
                         uppercase/lowercase letters and at least one special character.</div>
+                    <div class="form-text" style="color: red;" id="password-paste-error" hidden>
+                        Pasting is not allowed in the password field.
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="confirm-password" class="form-label">Confirm Password</label>
-                    <input type="password" class="form-control" id="confPassword" name="confPassword"
-                        value="{{data.confPassword}}" placeholder="Confirm your password">
+                    <div class="input-group">
+                        <input required type="password" class="form-control" id="confPassword" name="confPassword"
+                            value="{{data.confPassword}}" placeholder="Confirm your password"
+                            pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$" onpaste="return false;">
+                        <button class="btn btn-outline-secondary" type="button" id="confPassword-toggle">
+                            <i class="bi bi-eye"></i></button>
+                    </div>
+                    <div class="form-text" style="color: red;" id="confPassword-paste-error" hidden>
+                        Pasting is not allowed in the password field.
+                    </div>
                 </div>
                 </b>
-                
+
                 {{#isEqual user.user_role "Admin"}}
                 <div class="mb-3">
                     <button class="btn btn-info" type="button" data-bs-toggle="collapse"
@@ -82,8 +94,8 @@
                             <select class="form-select" id="user_role" name="user_role"
                                 aria-label=".form-select-sm example">
                                 {{#each role_list}}
-                                <option value="{{role_name}}" 
-                                {{#isEqual ../data.role_name role_name}}selected{{/isEqual}}>
+                                <option value="{{role_name}}" {{#isEqual ../data.role_name
+                                    role_name}}selected{{/isEqual}}>
                                     {{role_name}}</option>
                                 {{/each}}
                             </select>
@@ -121,9 +133,9 @@
                     </div>
                 </div>
                 {{/isEqual}}
-                
+
                 <button type="submit" class="btn btn-primary">Register</button>
-                
+
             </form>
 
             <br />
@@ -146,4 +158,37 @@
             passwordToggle.innerHTML = '<i class="bi bi-eye"></i>';
         }
     });
+
+    const confPasswordToggle = document.getElementById('confPassword-toggle');
+    const confPasswordField = document.getElementById('confPassword');
+    confPasswordToggle.addEventListener('click', function () {
+        if (confPasswordField.type === 'password') {
+            confPasswordField.type = 'text';
+            confPasswordToggle.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        } else {
+            confPasswordField.type = 'password';
+            confPasswordToggle.innerHTML = '<i class="bi bi-eye"></i>';
+        }
+    });
+
+</script>
+
+<script>
+    // Get the password input fields and paste error message elements
+    const passwordInput = document.getElementById('password');
+    const confPasswordInput = document.getElementById('confPassword');
+    const passwordPasteError = document.getElementById('password-paste-error');
+    const confPasswordPasteError = document.getElementById('confPassword-paste-error');
+
+    // Listen for paste events and prevent pasting in the password fields
+    passwordInput.addEventListener('paste', function (e) {
+        e.preventDefault();
+        passwordPasteError.hidden = false;
+    });
+
+    confPasswordInput.addEventListener('paste', function (e) {
+        e.preventDefault();
+        confPasswordPasteError.hidden = false;
+    });
+
 </script>

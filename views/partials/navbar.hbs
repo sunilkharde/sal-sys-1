@@ -8,9 +8,11 @@
                     class="d-inline-block align-top" alt="">
             </div> --}}
             <div style="background-color: white; padding: 2px; display: inline-block; border-radius: 3px;">
-                <img id="imgLogo" src="/images/malpani-logo-2020.webp" width="42" height="60" class="d-inline-block align-bottom" alt="">
+                <img id="imgLogo" src="/images/malpani-logo-2020.webp" width="42" height="60"
+                    class="d-inline-block align-bottom" alt="">
             </div>
-            <span class="page-title" style="display: inline-block; vertical-align: top;"> &nbsp;Malpani Sales&nbsp;&nbsp;&nbsp; </span>
+            <span class="page-title" style="display: inline-block; vertical-align: top;"> &nbsp;Malpani
+                Sales&nbsp;&nbsp;&nbsp; </span>
         </a>
         <button class="navbar-toggler navbar-toggler-custom" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +57,7 @@
                 </li>
                 {{/isEqual}}
 
-                {{#isEqual user.user_role "Admin" "Dealer" "Support"}}
+                {{#isEqual user.user_role "Admin" "Dealer"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -69,21 +71,44 @@
                 </li>
                 {{/isEqual}}
 
-                {{#isEqual user.user_role "Admin" "Employee"}}
+                {{#isEqual user.user_role "Admin" "Employee" "Account"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         Expenses
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown3">
+                        {{#isEqual user.user_role "Admin" "Employee"}}
                         <li><a class="dropdown-item" href="/dsr/view-pm">Entry</a></li>
-                        <li><a class="dropdown-item" href="#">Posting</a></li>
-                        <li><a class="dropdown-item" href="#">Report</a></li>
+                        <li><a class="dropdown-item" href="/dsr/post-pm">Posting</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report">Report</a></li>
+                        {{/isEqual}}
+                        {{#isEqual user.user_role "Admin" "Account"}}
+                        <div class="dropdown-divider"></div>
+                        <li><a class="dropdown-item" href="/dsrAc/view">AC Posting</a></li>
+                        {{/isEqual}}
                     </ul>
                 </li>
                 {{/isEqual}}
 
-
+                {{#isEqual user.user_role "Admin" "Support" "Audit" "Account" "Bank"}}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown4" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        Reports
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown4">
+                        {{#isEqual user.user_role "Admin" "Support" "Audit" "Bank"}}
+                        <li><a class="dropdown-item" href="/dealerPay/view">Dealer Payment</a></li>
+                        {{/isEqual}}
+                        {{#isEqual user.user_role "Admin" "Support" "Audit" "Account"}}
+                        <li><a class="dropdown-item" href="/dsr/report">TA/DA</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report-atten">Attendance</a></li>
+                        <li><a class="dropdown-item" href="#">Other</a></li>
+                        {{/isEqual}}
+                    </ul>
+                </li>
+                {{/isEqual}}
 
                 {{!-- <li class="nav-item">
                     <a class="nav-link" href="/about">About</a>
@@ -93,9 +118,9 @@
 
             <div class="d-flex">
                 {{#if user.username}}
-                <span class="navbar-text" style="color:Yellow">Hi, {{user.username}}</span>
+                <span class="navbar-text2" style="color:Yellow">Hi, {{user.username}}</span>
                 {{else}}
-                <span class="navbar-text">Hi, Guest</span>
+                <span class="navbar-text2">Hi, Guest</span>
                 {{/if}}
                 <form method="POST" action="/auth/logout">
                     <button class="btn btn-outline-danger ms-3" type="submit">
@@ -172,6 +197,18 @@
                 navText.style.fontSize = '50px';
             } else {
                 navText.style.fontSize = '25px'; /*25*/
+            }
+        }
+
+        var navTexts = document.getElementsByClassName('navbar-text2');
+        for (var i = 0; i < navTexts.length; i++) {
+            var navText = navTexts[i];
+            if (screenWidth < 768) {
+                navText.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                navText.style.fontSize = '50px';
+            } else {
+                navText.style.fontSize = '18px'; /*25*/
             }
         }
 

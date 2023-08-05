@@ -1,0 +1,264 @@
+<div class="container">
+
+    <div id="printable-area">
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h4 style=" margin-bottom: 20px;">Employee Attendance Report...</h4>
+            {{!-- {{#isEqual user.user_role "Admin" "Dealer"}}
+            <a href="/dealerPay/create" class="btn btn-success">Create New</a>
+            {{else}}
+            <a href="#" class="btn btn-secondary">Create New</a>
+            {{/isEqual}} --}}
+
+            <div>
+                <form id="form2" action="/dsr/atten-export-csv" method="GET" class="d-inline">
+                    <input hidden required type="month" id="exportCSV_curMon" name="exportCSV_curMon" value="{{curMon}}" min="{{minDate}}" max="{{maxDate}}">
+                    <input hidden id="exportCSV_empID" name="exportCSV_empID" value="{{empData.emp_id}}">
+                    <button type="submit" id="expor-csv" class="btn btn-warning">Export to CSV</button>
+                </form>
+                {{!-- {{#isEqual dsrSum.post_mg "Y" }}
+                <form id="form3" action="/dsr/atten-export-pdf" method="GET" class="d-inline">
+                    <input hidden required type="month" id="exportPDF_curMon" name="exportPDF_curMon" value="{{curMon}}"
+                        min="{{minDate}}" max="{{maxDate}}">
+                    <input hidden required id="exportPDF_empID" name="exportPDF_empID" value="{{empData.emp_id}}">
+                    <button type="submit" id="expor-pdf" class="btn btn-danger">Export to PDF</button>
+                </form>
+                {{/isEqual}} --}}
+            </div>
+
+        </div>
+
+        <form id="form1" action="/dsr/report-atten" method="GET">
+            {{!-- <div class="col-lg-9 border p-4">
+                <div class="form-group row mb-3"> --}}
+
+                    <div class="row mb-2">
+                        <label for="mon_date" class="col-sm-2 col-form-label">Month&nbsp;<span style="color: red;">*</span></label>
+                        <div class="col-sm-2">
+                            <input required type="month" class="form-control" id="mon_date" name="mon_date"
+                                value="{{curMon}}" min="{{minDate}}" max="{{maxDate}}">
+                        </div>
+                        <div class="col-md-2 item-align-start">
+                            <button type="submit" id="btnRefresh" class="btn btn-success">Refresh Data</button>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <label for="emp_id" class="col-sm-2 col-form-label">Employee</label>
+                        <div class="col-sm-6">
+                            <div class="input-group">
+                                <input hidden  type="text" class="form-control" id="emp_id" name="emp_id"
+                                    value="{{empData.emp_id}}">
+                                <input readonly type="text" class="form-control" id="emp_name" name="emp_name" 
+                                    value="{{#if empData.emp_name}} {{empData.emp_name}} {{else}}---: All Employee :---{{/if}}">
+                                <button class="btn btn-outline-secondary" type="button" id="btnEmp"
+                                    data-bs-toggle="modal" data-bs-target="#empModal"> <i
+                                        class="bi bi-list"></i></button>
+                                <button class="btn btn-outline-secondary" type="button" id="resetBtn">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{!-- <div class="row mb-2">
+                        <label for="boss_id" class="col-sm-2 col-form-label">Approved By</label>
+                        <div class="col-sm-6">
+                            <div class="input-group">
+                                <input hidden type="text" class="form-control" id="boss_id" name="boss_id"
+                                    value="{{empData.boss_id}}">
+                                <input readonly type="text" class="form-control" id="boss_name" name="boss_name"
+                                    value="{{empData.boss_name}}">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{#isEqual dsrSum.post_mg "Y" }}{{else}}
+                    <div class="row mb-2">
+                        <label for="boss_id" class="col-sm-2 col-form-label"></label>
+                        <div class="col-sm-6">
+                            <strong style="color: red; font-size: large;">This report is not approved. </strong>
+                        </div>
+                    </div>
+                    {{/isEqual}} --}}
+
+                    {{!--
+                </div>
+            </div> --}}
+
+            <br>
+
+            {{#if attenData }}
+            <table class="table" id="attenDataTable">
+                <thead>
+                    <tr>
+                        <th hidden>Date1</th>
+                        <th style="width:10%;">Date</th>
+                        <th style="width:10%;">EmpID</th>
+                        <th style="width:30%;">Employee</th>
+                        <th style="width:10%;">Comp Code</th>
+                        <th style="width:10%;">Emp Code</th>
+                        <th style="width:10%;">Atten Flage</th>
+                        <th style="width:10%;">HR Flag</th>
+                        <th style="width:10%;">Post</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each attenData}}
+                    <tr>
+                        <td hidden>{{momentYMD this.dsr_date}}</td>
+                        <td>{{momentDMY this.dsr_date}}</td>
+                        <td>{{this.emp_id}}</td>
+                        <td>{{this.emp_name}}</td>
+                        <td>{{this.vc_comp_code}}</td>
+                        <td>{{this.vc_emp_code}}</td>
+                        <td>{{this.atten_flag}}</td>
+                        <td>{{this.hr_flag}}</td>
+                        <td>{{this.post_mg}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+
+            {{!-- <div class="row mb-2">
+                <div class="col-sm-3">
+                    <table class="table" id="dsrAttenTable">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th style="text-align: end;">Days</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each dsrAtten}}
+                            <tr>
+                                <td class="col-1">{{this.atten_flag}}</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="atten_days">
+                                        {{this.atten_cnt}}
+                                    </span>
+                                </td>
+                            </tr>
+                            {{/each}}
+                            <tr>
+                                <td class="col-1"><strong>Total Days</strong></td>
+                                <td class="col-1" style="text-align: end;"><strong><span id="totalDays"></strong></span>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm-1"> </div>
+                <div class="col-sm-3">
+                    <table class="table" id="dsrSumTable">
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th style="text-align: end;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="col-1">Total DA</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="GTotalAllow"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="col-1">Total Lodging</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="GTotalLodge"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="col-1">Total Fare</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="GTotalExp"></span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="col-1">Stationary</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="stationaryVal">{{dsrSum.stationary_val}}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="col-1">Postage</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="postageVal">{{dsrSum.postage_val}}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="col-1">Internet</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="internetVal">{{dsrSum.internet_val}}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="col-1">Other</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="otherVal">{{dsrSum.other_val}}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="col-1"><strong>Total Amount</strong></td>
+                                <td class="col-2" style="text-align: end;">
+                                    <strong> <span style="font: bold;" id="GTotal"></span> </strong>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="col-1">Remarks</td>
+                                <td class="col-2" style="text-align: end;">
+                                    <span id="remarksVal">{{dsrSum.remarks}}</span>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div> --}}
+
+            {{else}}
+            <div class="row mb-2  border p-4">
+                <span style="display: flex; justify-content: center;  align-items: center;">
+                    ---: No data found :---</span>
+            </div>
+            {{/if}}
+
+        </form>
+
+    </div>
+
+    <br>
+
+    <script>
+        $(document).ready(function () {
+            $('#attenDataTable').dataTable({
+                pageLength: 50,
+                responsive: true,
+                "order": [[2, "asc"], [0, "asc"]]
+            });
+
+            $('#resetBtn').on('click', function () {
+                $('#emp_id').val('');
+                $('#emp_name').val('---: All Employee :---');
+            });
+
+        });
+
+        // Update the hidden input fields when the form is submitted
+        $('#form1').on('submit', function (event) {
+            event.preventDefault();
+            var mon_date = $('#mon_date').val();
+            var emp_id = $('#emp_id').val();
+            $('#exportCSV_curMon').val(mon_date);
+            $('#exportCSV_empID').val(emp_id);
+            this.submit();
+        });
+
+    </script>
+
+</div>
+
+{{> _lov-emp}}

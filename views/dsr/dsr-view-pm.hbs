@@ -18,6 +18,39 @@
                             period.</p>
                         <br>
 
+                        {{#if (eq showNote 'Y' )}}
+                        <P style="font-size: 40px; color: rgb(6, 124, 28);">Could you please kindly re-enter your
+                            expenses for the
+                            following dates? It appears that the data was not properly saved, and we would greatly
+                            appreciate your cooperation in resubmitting the information. Thank you!</p>
+                        <br>
+                        <P style="font-size: 40px; color: rgb(6, 124, 28);">कृपया खालील तारखांसाठी तुम्ही तुमचा खर्च
+                            पुन्हा टाका. असे दिसते की सादर तारखांना तपशील योग्य प्रकारे जतन केला गेला नाही.
+                            खालील थोड्याशा तारखांना माहिती पुन्हा सबमिट करण्यासाठी तुमच्या सहकार्याची प्रशंसा करतो.
+                            धन्यवाद!</P>
+                        <div class="border p-4">
+                            <table class="table" id="NoteTable" style="font-size: 40px; color: rgb(3, 178, 35);">
+                                <thead>
+                                    <tr>
+                                        <th hidden>Date</th>
+                                        <th>Date</th>
+                                        <th class="text-end">Diff. Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#each dataNote}}
+                                    <tr>
+                                        <td hidden>{{momentYMD this.dsr_date}}</td>
+                                        <td>{{momentDMY this.dsr_date}}</td>
+                                        <td class="text-end">{{this.total_exp}}</td>
+                                    </tr>
+                                    {{/each}}
+                                </tbody>
+                            </table>
+                        </div>
+                        {{/if}}
+
+
                         <div class="row">
                             <div class="col-sm">
                                 <a href="/dsr/view" class="btn btn-primary btn-lg mx-1">Continue... </a>
