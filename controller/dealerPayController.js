@@ -146,7 +146,7 @@ class dealerPayController {
             const data = { from_date: fromDate, to_date: toDate }
 
             let sqlStr = "Select a.doc_date,a.doc_no,RIGHT(a.doc_no_new,3) AS doc_no_new,a.customer_id,b.customer_name,a.bu_id,CONCAT(c.bu_code,' | ',c.bu_short) as bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
-                " from dealer_payment as a, customers as b, business_units as c " +
+                " from dealer_payment as a, customers as b, business_units as c" +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
             if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
@@ -298,9 +298,10 @@ class dealerPayController {
                 toDate = exportExcel_to_date
             }
 
-            let sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark" +
-                " from dealer_payment as a, customers as b, business_units as c " +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
+            let sqlStr = "Select a.doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,a.ref_date,a.ref_no,a.ref_desc,a.remark," +
+                " d.mobile_no, b.ext_code as SAP_Code" +
+                " from dealer_payment as a, customers as b, business_units as c, users as d" +
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and b.user_id=d.user_id and a.ref_date Between ? and ?";
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
             if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
@@ -349,9 +350,10 @@ class dealerPayController {
                 toDate = exportCSV_to_date
             }
 
-            let sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
-                " from dealer_payment as a, customers as b, business_units as c " +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
+            let sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark," +
+                " d.mobile_no, b.ext_code as SAP_Code" +
+                " from dealer_payment as a, customers as b, business_units as c, users as d " +
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and b.user_id=d.user_id and a.ref_date Between ? and ?";
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
             if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
@@ -395,9 +397,10 @@ class dealerPayController {
                 toDate = exportPDF_to_date
             }
 
-            let sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark" +
-                " from dealer_payment as a, customers as b, business_units as c " +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
+            let sqlStr = "Select DATE_FORMAT(a.doc_date,'%d/%m/%Y') as doc_date,a.doc_no,a.doc_no_new,a.customer_id,b.customer_name,a.bu_id,c.bu_code,a.pay_mode,a.amount,DATE_FORMAT(a.ref_date,'%d/%m/%Y') as ref_date,a.ref_no,a.ref_desc,a.remark," +
+                " d.mobile_no, b.ext_code as SAP_Code" +
+                " from dealer_payment as a, customers as b, business_units as c, users as d" +
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and b.user_id=d.user_id and a.ref_date Between ? and ?";
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
             if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
@@ -422,16 +425,17 @@ class dealerPayController {
                 subtitle: { label: "Dealer Payment Report" },
                 headers: [
                     { label: "Date", width: 50, align: 'left' },
-                    { label: "Doc No", width: 70, align: 'left' },
+                    { label: "No", width: 20, align: 'left' },
                     { label: "Customer", width: 110, align: 'left' },
                     { label: "Business Unit", width: 50, align: 'left' },
                     { label: "Pay Mode", width: 40, align: 'left' },
                     { label: "Amount", width: 60, align: 'center' },
                     { label: "Ref Date", width: 50, align: 'left' },
-                    { label: "Ref No", width: 50, align: 'left' },
-                    { label: "Narration", width: 70, align: 'left' }
+                    { label: "Ref No", width: 80, align: 'left' },
+                    { label: "Narration", width: 60, align: 'left' },
+                    { label: "Mobile", width: 50, align: 'left' }
                 ],
-                rows: rows.map(row => [row.doc_date, row.doc_no_new, row.customer_name, row.bu_code, row.pay_mode, row.amount, row.ref_date, row.ref_no, row.ref_desc]),
+                rows: rows.map(row => [row.doc_date, row.doc_no, row.customer_name, row.bu_code, row.pay_mode, row.amount, row.ref_date, row.ref_no, row.ref_desc, row.mobile_no]),
                 // header: headerOpts,
                 repeatingHeader: true // enable repeating headers
             });

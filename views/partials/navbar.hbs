@@ -7,12 +7,18 @@
                 <img id="imgLogo" src="/images/malpani-logo-2020.webp" width="42" height="60"
                     class="d-inline-block align-top" alt="">
             </div> --}}
-            <div style="background-color: white; padding: 2px; display: inline-block; border-radius: 3px;">
+            {{!-- <div style="background-color: white; padding: 2px; display: inline-block; border-radius: 3px;">
                 <img id="imgLogo" src="/images/malpani-logo-2020.webp" width="42" height="60"
+                    class="d-inline-block align-bottom" alt="">  rgb(235, 238, 243)
+            </div> --}}
+
+            <div style="background-color: white ; padding: 2px; display: inline-block; border-radius: 3px;">
+                <img id="imgLogo" src="/images/Saleswift_logo.webp" width="300" height="60"
                     class="d-inline-block align-bottom" alt="">
             </div>
-            <span class="page-title" style="display: inline-block; vertical-align: top;"> &nbsp;Malpani
-                Sales&nbsp;&nbsp;&nbsp; </span>
+
+            {{!-- <span class="page-title" style="display: inline-block; vertical-align: top;"> &nbsp;Malpani
+                Sales&nbsp;&nbsp;&nbsp; </span> --}}
         </a>
         <button class="navbar-toggler navbar-toggler-custom" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,15 +37,15 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        Manage User
+                        User Area
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown1">
-                        <li><a class="dropdown-item" href="/auth/register">Register New User</a></li>
-                        <li><a class="dropdown-item" href="/auth/reset-password">Reset User's Password</a></li>
+                        <li><a class="dropdown-item" href="/auth/register">Register</a></li>
+                        <li><a class="dropdown-item" href="/auth/reset-password">Reset Password</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" href="#">User Master</a></li>
+                        <li><a class="dropdown-item" href="#">Users Master</a></li>
                     </ul>
                 </li>
                 {{/isEqual}}
@@ -51,8 +57,8 @@
                         Masters
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown2">
-                        <li><a class="dropdown-item" href="/product/view">Product Master</a></li>
-                        <li><a class="dropdown-item" href="/customer/view">Dealer Master</a></li>
+                        <li><a class="dropdown-item" href="/product/view">Products</a></li>
+                        <li><a class="dropdown-item" href="/customer/view">Dealers</a></li>
                     </ul>
                 </li>
                 {{/isEqual}}
@@ -61,7 +67,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        Dealer Transactions
+                        Dealer Area
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown3">
                         <li><a class="dropdown-item" href="/po/view">Purchase Order</a></li>
@@ -75,17 +81,23 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        Expenses
+                        Sales Zone
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown3">
                         {{#isEqual user.user_role "Admin" "Employee"}}
-                        <li><a class="dropdown-item" href="/dsr/view-pm">Entry</a></li>
+                        <li><a class="dropdown-item" href="/dsrTp/view-pm">Fix Routes</a></li>
+                        <div class="dropdown-divider"></div>
+                        <li><a class="dropdown-item" href="/dsr/view-pm">Work Entry</a></li>
                         <li><a class="dropdown-item" href="/dsr/post-pm">Posting</a></li>
-                        <li><a class="dropdown-item" href="/dsr/report">Report</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report">Work Report</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report-loc">Locate Team</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report-loc2">Route Map</a></li>
+                        <div class="dropdown-divider"></div>
+                        <li><a class="dropdown-item" href="/customer/view-info">Dealer Info</a></li>
                         {{/isEqual}}
                         {{#isEqual user.user_role "Admin" "Account"}}
                         <div class="dropdown-divider"></div>
-                        <li><a class="dropdown-item" href="/dsrAc/view">AC Posting</a></li>
+                        <li><a class="dropdown-item" href="/dsrAc/view">Exp Posting</a></li>
                         {{/isEqual}}
                     </ul>
                 </li>
@@ -102,9 +114,10 @@
                         <li><a class="dropdown-item" href="/dealerPay/view">Dealer Payment</a></li>
                         {{/isEqual}}
                         {{#isEqual user.user_role "Admin" "Support" "Audit" "Account"}}
-                        <li><a class="dropdown-item" href="/dsr/report">TA/DA</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report">Expenses</a></li>
                         <li><a class="dropdown-item" href="/dsr/report-atten">Attendance</a></li>
-                        <li><a class="dropdown-item" href="#">Other</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report-loc">Locate Team</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report-loc2">Route Map</a></li>
                         {{/isEqual}}
                     </ul>
                 </li>
@@ -136,17 +149,30 @@
 <script>
     function adjustFontSize() {
         var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+        /*
+                var imgLogo = document.getElementById('imgLogo');
+                if (screenWidth < 768) {
+                    imgLogo.width = '60';
+                    imgLogo.height = '80';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    imgLogo.width = '60';
+                    imgLogo.height = '80';
+                } else {
+                    imgLogo.width = '42';
+                    imgLogo.height = '60'; 
+                }
+        */
 
         var imgLogo = document.getElementById('imgLogo');
         if (screenWidth < 768) {
-            imgLogo.width = '60';
+            imgLogo.width = '400';
             imgLogo.height = '80';
         } else if (screenWidth >= 768 && screenWidth < 1024) {
-            imgLogo.width = '60';
+            imgLogo.width = '400';
             imgLogo.height = '80';
         } else {
-            imgLogo.width = '42';
-            imgLogo.height = '60'; /*60*/
+            imgLogo.width = '300';
+            imgLogo.height = '60';
         }
 
         var txtItems = document.getElementsByClassName('page-title');

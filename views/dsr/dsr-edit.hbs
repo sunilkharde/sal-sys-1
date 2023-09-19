@@ -1,7 +1,7 @@
 <div style="padding-right: 5px; padding-left: 5px;">
     <div class="row justify-content-center">
-        <form id="dsrForm" action="/dsr/update/{{momentYMD data.dsr_date}}/{{data.emp_id}}?postFlag={{postFlag}}"
-            method="post">
+        <form id="dsrForm" onsubmit="return validateKmRange();"
+            action="/dsr/update/{{momentYMD data.dsr_date}}/{{data.emp_id}}?postFlag={{postFlag}}" method="post">
             <div class="row mb-3">
                 <label for="dsr_date" class="col-sm-3 col-form-label">Date</span></label>
                 <div class="col-sm-9">
@@ -87,8 +87,9 @@
             <div class="row mb-3">
                 <label for="total_lodge" class="col-sm-3 col-form-label">Lodging</label>
                 <div class="col-sm-4">
-                    <input {{#isEqual data.emp_id 1 2 }} {{else}}readonly{{/isEqual}} type="number" class="form-control text-end" id="total_lodge" name="total_lodge"
-                        value="{{data.total_lodge}}" min="0" step="1.00">
+                    <input {{#isEqual data.emp_id 1 2 }} {{else}}readonly{{/isEqual}} type="number"
+                        class="form-control text-end" id="total_lodge" name="total_lodge" value="{{data.total_lodge}}"
+                        min="0" step="1.00">
                 </div>
             </div>
             <div class="row mb-3">
@@ -102,8 +103,8 @@
             <div class="mb-3">
                 <br>
                 <br>
-                <label for="orderItems" class="form-label">
-                    <strong>Expenses Details</strong></label>
+                <label for="drs_dtTable" class="form-label"><strong>Expenses Details</strong></label>
+                {{!-- <h1><strong>Expenses Details</strong></h1> --}}
                 <table class="table" id="drs_dtTable">
                     <thead>
                         <tr>
@@ -138,10 +139,10 @@
                                     value="{{this.amount}}" required>
                             </td>
                             <td><input {{#isEqual this.type "Actual" }}readonly{{/isEqual}} type="number"
-                                    class="form-control text-end" id="from_km" name="from_km[]" min="0" step="1"
+                                    class="form-control text-end" id="from_km" name="from_km[]" min="1" step="1"
                                     value="{{this.from_km}}"></td>
                             <td><input {{#isEqual this.type "Actual" }}readonly{{/isEqual}} type="number"
-                                    class="form-control text-end" id="to_km" name="to_km[]" min="0" step="1"
+                                    class="form-control text-end" id="to_km" name="to_km[]" min="1" step="1"
                                     value="{{this.to_km}}"></td>
                             <td>
                                 <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
@@ -228,11 +229,15 @@
             row.querySelector("#amount").readOnly = false;
             row.querySelector("#from_km").readOnly = true;
             row.querySelector("#to_km").readOnly = true;
+            row.querySelector("#from_km").value = 0;
+            row.querySelector("#to_km").value = 0;
         } else if (allowType === 'Fix') {
             row.querySelector("#amount").value = parseFloat(allowAmtVal).toFixed(0);
             row.querySelector("#amount").readOnly = true;
             row.querySelector("#from_km").readOnly = true;
             row.querySelector("#to_km").readOnly = true;
+            row.querySelector("#from_km").value = 0;
+            row.querySelector("#to_km").value = 0;
         } else if (allowType === 'PerKM') {
             if (isNaN(parseFloat(toKm)) || isNaN(parseFloat(fromKm)) || isNaN(parseFloat(kmRate))) {
                 row.querySelector("#amount").value = 0;
@@ -270,7 +275,7 @@
 
         // Get the newly added amount field
         const amtInpute = newRow.querySelector('#amount');
-        amtInpute.readOnly = false;
+        amtInpute.readOnly = true; //false;
         const fromKmInpute = newRow.querySelector('#from_km');
         fromKmInpute.readOnly = true;
         const toKmInpute = newRow.querySelector('#to_km');
@@ -323,7 +328,10 @@
             const amountInputs = orderItemsBody.querySelectorAll("#amount");
             let totalAmount = 0;
             amountInputs.forEach((input) => {
-                totalAmount += parseFloat(input.value);
+                const inputValue = parseFloat(input.value);
+                if (!isNaN(inputValue)) {
+                    totalAmount += inputValue;
+                }
             });
             document.getElementById("totalAmount").value = totalAmount.toFixed(2);
             document.getElementById("total_exp").value = totalAmount.toFixed(0);
@@ -336,7 +344,10 @@
         const amountInputs = document.querySelectorAll("#drs_dtTable #amount");
         let totalAmount = 0;
         amountInputs.forEach((input) => {
-            totalAmount += parseFloat(input.value);
+            const inputValue = parseFloat(input.value);
+            if (!isNaN(inputValue)) {
+                totalAmount += inputValue;
+            }
         });
         document.getElementById("totalAmount").value = totalAmount.toFixed(2);
         document.getElementById("total_exp").value = totalAmount.toFixed(0);
@@ -354,7 +365,10 @@
         const amountInputs = orderItemsBody.querySelectorAll("#amount");
         let totalAmount = 0;
         amountInputs.forEach((input) => {
-            totalAmount += parseFloat(input.value);
+            const inputValue = parseFloat(input.value);
+            if (!isNaN(inputValue)) {
+                totalAmount += inputValue;
+            }
         });
         document.getElementById("totalAmount").value = totalAmount.toFixed(2);
         document.getElementById("total_exp").value = totalAmount.toFixed(0);
@@ -454,4 +468,29 @@
 
     window.addEventListener('DOMContentLoaded', adjustFontSize);
     window.addEventListener('resize', adjustFontSize);
+</script>
+
+<script>
+    function validateKmRange() {
+        const fromKmInputs = document.getElementsByName('from_km[]');
+        const toKmInputs = document.getElementsByName('to_km[]');
+        const allowTypes = document.getElementsByName('type[]');
+
+        for (let i = 0; i < fromKmInputs.length; i++) {
+            const fromKm = parseFloat(fromKmInputs[i].value);
+            const toKm = parseFloat(toKmInputs[i].value);
+            const allowType = allowTypes[i].value;
+
+            //console.log('fromKm... ', i, ' Type... ', allowTypes[i].value, ' ... ' , fromKmInputs[i].value, ' ... ', toKmInputs[i].value)
+
+            if (allowType === 'PerKM') {
+                if (isNaN(fromKm) || isNaN(toKm) || fromKm >= toKm) {
+                    alert('The "To Km" value must be greater than the "From Km" value.');
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 </script>

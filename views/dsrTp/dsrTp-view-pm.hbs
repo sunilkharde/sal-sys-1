@@ -1,0 +1,239 @@
+<br>
+<div class="row">
+    <div class="row justify-content-center">
+        <div class="col-sm">
+            <div class="card">
+                <div class="card-header">
+                    <h1 id="card-h1" class="card-title">Hi, {{mgData.emp_name}}</h1>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h1 id="card-h2" class="card-title">Month : {{monData.month_name}}-{{monData.year}}</h1>
+                        </div>
+                        <div class="col-md-6 d-flex justify-content-end">
+                            <h1 id="card-h2" class="card-title">Team Size : {{teamSize}}&nbsp;</h1>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h1 id="card-h3" class="card-title">Desg : {{mgData.desg_name}}</h1>
+                        </div>
+                        <div class="col-md-6 d-flex justify-content-end">
+                            <h1 id="card-h3" class="card-title">HQ : {{mgData.hq_name}}</h1>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row m-2">
+    <h4 hidden id="card-h4" class="card-title">Enter 'Tour Plan' for your team for the selected period.</h1>
+        <p style="color: brown;" class="card-text"> Please provide your team's tour plan.</p>
+</div>
+
+<div class="row" style="max-height: 1200px; overflow-y: scroll;">
+    <input hidden type="text" class="form-control" id="open_year" name="open_year" value="{{monData.year}}">
+    <input hidden type="text" class="form-control" id="open_month" name="open_month" value="{{monData.month}}">
+    {{#each empList}}
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-9">
+                    <h4 id="card-h1" class="card-title mt-3">{{this.emp_name}}</h4>
+                </div>
+
+                <div class="col-md-3 d-flex justify-content-end">
+                    {{#isEqual this.tp_count 0 }}
+                    <a href="/dsrTp/update/{{../monData.year}}/{{../monData.month}}/{{this.emp_id}}"
+                        class="btn btn-success btn-sm">
+                        ... <i id="bi-plus" class="bi bi-plus"></i>
+                    </a>
+                    {{else}}
+                    <a href="/dsrTp/update/{{../monData.year}}/{{../monData.month}}/{{this.emp_id}}"
+                        class="btn btn-primary btn-sm">
+                        ... <i id="bi-pencil" class="bi bi-pencil"></i>
+                    </a>
+                    {{/isEqual}}
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <h5 class="card-title">
+                <div class="row">
+                    <div class="col-md-6">
+                        Desg:<span style="color: teal;">&nbsp;{{this.desg_name}}&nbsp;</span>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-end">
+                        HQ:<span style="color: teal;">&nbsp;{{this.hq_name}}&nbsp;</span>
+                    </div>
+                </div>
+            </h5>
+            <h5 class="card-title">
+                <div class="row">
+                    <div class="col-md-6">
+                        Week Off:<span style="color: teal;">&nbsp;{{this.off_day}}&nbsp;</span>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-end">
+                        TP Count:<span style="color: teal;">&nbsp;{{this.tp_count}}&nbsp;</span>
+                    </div>
+                </div>
+            </h5>
+
+        </div>
+
+    </div>
+    {{/each}}
+
+    <div>
+        <br>
+        <br>
+    </div>
+
+</div>
+
+
+<script>
+    function adjustFontSize() {
+        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+        var CardH1 = document.getElementById('card-h1');
+        var CardH2 = document.getElementById('card-h2');
+        var CardH3 = document.getElementById('card-h3');
+        var CardH4 = document.getElementById('card-h4');
+        if (screenWidth < 768) {
+            CardH1.style.fontSize = '60px';
+            CardH2.style.fontSize = '50px';
+            CardH3.style.fontSize = '45px';
+            CardH4.style.fontSize = '45px';
+        } else if (screenWidth >= 768 && screenWidth < 1024) {
+            CardH1.style.fontSize = '60px';
+            CardH2.style.fontSize = '50px';
+            CardH3.style.fontSize = '45px';
+            CardH4.style.fontSize = '45px';
+        } else {
+            CardH1.style.fontSize = '45px';
+            CardH2.style.fontSize = '35px';
+            CardH3.style.fontSize = '30px';
+            CardH4.style.fontSize = '30px';
+        }
+
+        var SwitchBtns = document.getElementsByClassName('form-check form-switch');
+        for (var i = 0; i < SwitchBtns.length; i++) {
+            var SwitchBtn = SwitchBtns[i];
+            if (screenWidth < 768) {
+                SwitchBtn.style.fontSize = '45px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                SwitchBtn.style.fontSize = '45px';
+            } else {
+                SwitchBtn.style.fontSize = '35px';
+            }
+        }
+
+        var CardTitles = document.getElementsByClassName('card-title');
+        for (var i = 0; i < CardTitles.length; i++) {
+            var CardTitle = CardTitles[i];
+            if (screenWidth < 768) {
+                CardTitle.style.fontSize = '40px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardTitle.style.fontSize = '40px';
+            } else {
+                CardTitle.style.fontSize = '30px';
+            }
+        }
+
+        var CardTitles = document.getElementsByClassName('card-title mt-3');
+        for (var i = 0; i < CardTitles.length; i++) {
+            var CardTitle = CardTitles[i];
+            if (screenWidth < 768) {
+                CardTitle.style.fontSize = '45px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardTitle.style.fontSize = '45px';
+            } else {
+                CardTitle.style.fontSize = '45px';
+            }
+        }
+
+        var CardTexts = document.getElementsByClassName('card-text');
+        for (var i = 0; i < CardTexts.length; i++) {
+            var CardText = CardTexts[i];
+            if (screenWidth < 768) {
+                CardText.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardText.style.fontSize = '40px';
+            } else {
+                CardText.style.fontSize = '40px';
+            }
+        }
+
+        var frmBtns = document.getElementsByClassName('btn');
+        for (var i = 0; i < frmBtns.length; i++) {
+            var frmBtn = frmBtns[i];
+            if (screenWidth < 768) {
+                frmBtn.style.fontSize = '55px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmBtn.style.fontSize = '55px';
+            } else {
+                frmBtn.style.fontSize = '35px';
+            }
+        }
+
+        var txtItems = document.getElementsByClassName('page-title');
+        for (var i = 0; i < txtItems.length; i++) {
+            var txtItem = txtItems[i];
+            if (screenWidth < 768) {
+                txtItem.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                txtItem.style.fontSize = '50px';
+            } else {
+                txtItem.style.fontSize = '45px';
+            }
+        }
+
+        var frmLabels = document.getElementsByClassName('col-form-label');
+        for (var i = 0; i < frmLabels.length; i++) {
+            var frmLabel = frmLabels[i];
+            if (screenWidth < 768) {
+                frmLabel.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmLabel.style.fontSize = '50px';
+            } else {
+                frmLabel.style.fontSize = '30px';
+            }
+        }
+
+        var frmLabels = document.getElementsByClassName('form-label');
+        for (var i = 0; i < frmLabels.length; i++) {
+            var frmLabel = frmLabels[i];
+            if (screenWidth < 768) {
+                frmLabel.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmLabel.style.fontSize = '50px';
+            } else {
+                frmLabel.style.fontSize = '30px';
+            }
+        }
+
+        var frmControls = document.getElementsByClassName('form-control');
+        for (var i = 0; i < frmControls.length; i++) {
+            var frmControl = frmControls[i];
+            if (screenWidth < 768) {
+                frmControl.style.fontSize = '50px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                frmControl.style.fontSize = '50px';
+            } else {
+                frmControl.style.fontSize = '30px';
+            }
+        }
+
+    }
+
+    window.addEventListener('DOMContentLoaded', adjustFontSize);
+    window.addEventListener('resize', adjustFontSize);
+</script>

@@ -5,8 +5,10 @@
             <div class="col-sm">
                 <div class="card">
                     <div class="card-header">
-                        <h1 id="card-h1" class="card-title">Hi, {{data.first_name}}
-                            {{data.last_name}} </h1>
+                        <h1 id="card-h1" class="card-title">Hi, {{data.first_name}} {{data.last_name}} </h1>
+                        <input hidden type="text" id="emp_id" name="emp_id" value="{{data.emp_id}}">
+                        <input hidden type="text" id="emp_name" name="emp_name"
+                            value="{{data.first_name}} {{data.last_name}}">
                     </div>
                     <div class="card-body">
                         <h1 id="card-h2" class="card-title">Month :
@@ -18,6 +20,7 @@
                             period.</p>
                         <br>
 
+                        {{!-- Employee Notification --}}
                         {{#if (eq showNote 'Y' )}}
                         <P style="font-size: 40px; color: rgb(6, 124, 28);">Could you please kindly re-enter your
                             expenses for the
@@ -48,102 +51,252 @@
                                 </tbody>
                             </table>
                         </div>
+                        <br>
                         {{/if}}
 
-
-                        <div class="row">
-                            <div class="col-sm">
-                                <a href="/dsr/view" class="btn btn-primary btn-lg mx-1">Continue... </a>
-                                <a href="/" class="btn btn-secondary btn-lg mx-5">Cancel </a>
+                        {{!-- Get user current location --}}
+                        {{!-- <div class="border p-4"> --}}
+                            <div class="row">
+                                <div class="col-sm">
+                                    {{!-- <a href="#" id="getLocationButton"
+                                        class="btn btn-outline-success btn-sm mb-1">Get Location... </a> --}}
+                                    <button type="button" id="getLocationButton"
+                                        class="btn btn-outline-success btn-sm mb-1">Get Location...</button>
+                                    &nbsp;<a id="placeName" style="font-size: 40px; color: rgb(3, 178, 35);"></a>
+                                    &nbsp;&nbsp;<a id="placeLatLng"
+                                        style="font-size: 30px; color: rgb(3, 178, 35);"></a>
+                                </div>
                             </div>
-                        </div>
+                            <div class="row">
+                                <div class="col-sm">
+                                    <a id="emp_route" style="font-size: 30px; color:magenta ;"></a>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm">
+                                    <div id="map" style="height: 600px;"> </div>
+                                </div>
+                            </div>
+                            <br>
 
+                            <div class="row">
+                                <div class="col-sm">
+                                    <a href="/dsr/view" class="btn btn-primary btn-lg mx-1">Continue... </a>
+                                    <a href="/" class="btn btn-secondary btn-lg mx-5">Cancel </a>
+                                </div>
+                            </div>
 
+                            {{!--
+                        </div> --}}
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    {{!--
-</div> --}}
+        {{!--
+    </div> --}}
 
 
-<script>
-    function adjustFontSize() {
-        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    <script>
+        function adjustFontSize() {
+            var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 
-        var CardH1 = document.getElementById('card-h1');
-        var CardH2 = document.getElementById('card-h2');
-        var CardH3 = document.getElementById('card-h3');
-        var CardH4 = document.getElementById('card-h4');
-        if (screenWidth < 768) {
-            CardH1.style.fontSize = '60px';
-            CardH2.style.fontSize = '50px';
-            CardH3.style.fontSize = '45px';
-            CardH4.style.fontSize = '45px';
-        } else if (screenWidth >= 768 && screenWidth < 1024) {
-            CardH1.style.fontSize = '60px';
-            CardH2.style.fontSize = '50px';
-            CardH3.style.fontSize = '45px';
-            CardH4.style.fontSize = '45px';
-        } else {
-            CardH1.style.fontSize = '45px';
-            CardH2.style.fontSize = '35px';
-            CardH3.style.fontSize = '30px';
-            CardH4.style.fontSize = '30px';
+            var CardH1 = document.getElementById('card-h1');
+            var CardH2 = document.getElementById('card-h2');
+            var CardH3 = document.getElementById('card-h3');
+            var CardH4 = document.getElementById('card-h4');
+            if (screenWidth < 768) {
+                CardH1.style.fontSize = '60px';
+                CardH2.style.fontSize = '50px';
+                CardH3.style.fontSize = '45px';
+                CardH4.style.fontSize = '45px';
+            } else if (screenWidth >= 768 && screenWidth < 1024) {
+                CardH1.style.fontSize = '60px';
+                CardH2.style.fontSize = '50px';
+                CardH3.style.fontSize = '45px';
+                CardH4.style.fontSize = '45px';
+            } else {
+                CardH1.style.fontSize = '45px';
+                CardH2.style.fontSize = '35px';
+                CardH3.style.fontSize = '30px';
+                CardH4.style.fontSize = '30px';
+            }
+
+            /* var CardTitles = document.getElementsByClassName('card-title');
+            for (var i = 0; i < CardTitles.length; i++) {
+                var CardTitle = CardTitles[i];
+                if (screenWidth < 768) {
+                    CardTitle.style.fontSize = '50px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    CardTitle.style.fontSize = '50px';
+                } else {
+                    CardTitle.style.fontSize = '30px';
+                }
+            } */
+
+            var CardTexts = document.getElementsByClassName('card-text');
+            for (var i = 0; i < CardTexts.length; i++) {
+                var CardText = CardTexts[i];
+                if (screenWidth < 768) {
+                    CardText.style.fontSize = '40px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    CardText.style.fontSize = '35px';
+                } else {
+                    CardText.style.fontSize = '30px';
+                }
+            }
+
+            var frmBtns = document.getElementsByClassName('btn');
+            for (var i = 0; i < frmBtns.length; i++) {
+                var frmBtn = frmBtns[i];
+                if (screenWidth < 768) {
+                    frmBtn.style.fontSize = '50px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    frmBtn.style.fontSize = '50px';
+                } else {
+                    frmBtn.style.fontSize = '35px';
+                }
+            }
+
+            var txtItems = document.getElementsByClassName('page-title');
+            for (var i = 0; i < txtItems.length; i++) {
+                var txtItem = txtItems[i];
+                if (screenWidth < 768) {
+                    txtItem.style.fontSize = '60px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    txtItem.style.fontSize = '60px';
+                } else {
+                    txtItem.style.fontSize = '42px';
+                }
+            }
+
         }
 
-        /* var CardTitles = document.getElementsByClassName('card-title');
-        for (var i = 0; i < CardTitles.length; i++) {
-            var CardTitle = CardTitles[i];
-            if (screenWidth < 768) {
-                CardTitle.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardTitle.style.fontSize = '50px';
-            } else {
-                CardTitle.style.fontSize = '30px';
-            }
-        } */
+        window.addEventListener('DOMContentLoaded', adjustFontSize);
+        window.addEventListener('resize', adjustFontSize);
+    </script>
 
-        var CardTexts = document.getElementsByClassName('card-text');
-        for (var i = 0; i < CardTexts.length; i++) {
-            var CardText = CardTexts[i];
-            if (screenWidth < 768) {
-                CardText.style.fontSize = '40px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardText.style.fontSize = '35px';
-            } else {
-                CardText.style.fontSize = '30px';
+    <script>
+        let locLat = "";
+        let locLng = "";
+        let locName = "";
+        let saveLocFlag = "";
+
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 19.565143, lng: 74.206182 },
+                zoom: 12,
+            });
+
+            const getLocationButton = document.getElementById('getLocationButton');
+            const placeName = document.getElementById('placeName');
+            const empName = document.getElementById('emp_name').value;
+
+            getLocationButton.addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const userLocation = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude,
+                            };
+
+                            // Place a marker at the user's location on the map
+                            new google.maps.Marker({
+                                position: userLocation,
+                                map: map,
+                                title: empName,
+                                //label: empName,
+                                label: {
+                                    text: empName,
+                                    fontWeight: 'bold', // Make the label text bold
+                                    fontSize: '20px',   // Change the font size
+                                    color: 'magenta',
+                                }
+                            });
+
+                            //console.log('Emp ', empName)
+
+                            // Center the map on the user's location
+                            map.setCenter(userLocation);
+
+                            placeLatLng.textContent = ""//`Lat-Lon: ${userLocation.lat.toFixed(2)}-${userLocation.lng.toFixed(2)}`;
+                            locLat = userLocation.lat.toFixed(6); // Store with 6 decimal places
+                            locLng = userLocation.lng.toFixed(6); // Store with 6 decimal places
+
+                            // Get place name using reverse geocoding
+                            const geocoder = new google.maps.Geocoder();
+                            const latlng = new google.maps.LatLng(userLocation.lat, userLocation.lng);
+                            //const latlng = new google.maps.LatLng(19.51718, 74.19813);
+                            //const latlng = new google.maps.LatLng(40.712776, -74.005974);
+
+                            try {
+                                const response = await geocoder.geocode({ location: latlng });
+
+                                if (response.results && response.results.length > 0) {
+                                    const firstResult = response.results[0];
+                                    let cityName = 'City name not found.';
+
+                                    for (const component of firstResult.address_components) {
+                                        if (component.types.includes('locality')) {
+                                            cityName = component.long_name;
+                                            break;
+                                        }
+                                    }
+
+                                    placeName.textContent = `City Name: ${cityName}`;
+                                    locName = cityName;
+                                } else {
+                                    placeName.textContent = 'No results found.';
+                                }
+                            } catch (error) {
+                                console.error('Geocoding error:', error);
+                                placeName.textContent = 'Error fetching city name.';
+                            }
+
+                            //showConfirmationDialog();
+                            const confirmed = confirm('Are you sure you want to save the location data?');
+                            if (confirmed) {
+                                saveLocFlag = 'Y';
+                            }
+                            else { saveLocFlag = 'N'; }
+                            saveLocationData();
+                        },
+                        (error) => {
+                            console.error(error);
+                            alert('Location is not enabled on your mobile device. Please enable location services.');
+                        }
+                    );
+                } else {
+                    console.error('Geolocation is not supported by this browser.');
+                }
+            });
+
+        }
+
+        async function saveLocationData() {
+            const empID = document.getElementById('emp_id').value;
+            try {
+                const response = await fetch('/dsr/save-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ empID, locLat, locLng, locName, saveLocFlag })
+                });
+
+                if (response.ok) {
+                    //alert('Location updated successfully');
+                    const locNames = await response.json();
+                    const locNameList = locNames.locNames ? locNames.locNames : '';
+                    document.getElementById("emp_route").textContent = locNameList;
+                } else {
+                    alert('Failed to save location data');
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
 
-        var frmBtns = document.getElementsByClassName('btn');
-        for (var i = 0; i < frmBtns.length; i++) {
-            var frmBtn = frmBtns[i];
-            if (screenWidth < 768) {
-                frmBtn.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmBtn.style.fontSize = '50px';
-            } else {
-                frmBtn.style.fontSize = '35px';
-            }
-        }
+    </script>
 
-        var txtItems = document.getElementsByClassName('page-title');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '60px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '60px';
-            } else {
-                txtItem.style.fontSize = '42px';
-            }
-        }
-
-    }
-
-    window.addEventListener('DOMContentLoaded', adjustFontSize);
-    window.addEventListener('resize', adjustFontSize);
-</script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{googleApiKey}}&callback=initMap">
+    </script>

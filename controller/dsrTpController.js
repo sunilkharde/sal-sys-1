@@ -16,7 +16,7 @@ const titleCase = (str) => {
         .join(' ');
 };
 
-class dsrController {
+class dsrTpController {
 
     static getData = async (req, user) => {
         try {
@@ -189,103 +189,54 @@ class dsrController {
         }
     };
 
+    /***** */
     static viewPM = async (req, res) => {
         try {
-            const sqlStr = "Select a.emp_id,a.first_name,a.middle_name,a.last_name,a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day" +
-                " FROM employees as a, designations as b, hqs as c" +
-                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.status='A' and a.user_id=?"
-            const params = [res.locals.user.user_id];
-            const results = await executeQuery(sqlStr, params);
-            if (results.length === 0) {
-                res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
-                return;
-            }
-
-            const sqlStr2 = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
+            const sqlStr = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
                 " STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y') as month_date" +
                 " FROM month_open Where status='O'"
-            const results2 = await executeQuery(sqlStr2);
-            if (results2.length === 0) {
+            const monData = await executeQuery(sqlStr);
+            if (monData.length === 0) {
                 res.status(404).send("<h1>Month is not open.</h1>");
                 return;
             }
+            const from_date = moment(monData[0].month_date);
+            const to_date = from_date.clone().endOf('month');
 
-            const sqlStr3 = "Select * From dsr_1 Where emp_id=? and dsr_date=?"
-            const params3 = [results[0].emp_id, results2[0].month_date];
-            const results3 = await executeQuery(sqlStr3, params3);
-            if (results3.length === 0) {
-                const from_date = moment(results2[0].month_date);
-                const to_date = from_date.clone().endOf('month');
-
-                const numDays = to_date.diff(from_date, 'days');
-                var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-
-                for (let i = 0; i <= numDays; i++) {
-                    const sqlStr = "INSERT INTO dsr_1 (emp_id,dsr_date,c_at,c_by)" +
-                        " VALUES (?,?,CURRENT_TIMESTAMP( ),?)"
-                    const paramsDt = [results[0].emp_id, from_date.format('YYYY-MM-DD'), c_by];
-                    await executeQuery(sqlStr, paramsDt);
-                    // console.log('Insert Query : ' + paramsDt)
-                    from_date.add(1, 'day');
-                }
+            //Get login user details
+            const sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.user_id=?"
+            const params = [res.locals.user.user_id];
+            const mgData = await executeQuery(sqlStr1, params);
+            let mgID = 0;
+            if (mgData.length > 0) {
+                mgID = mgData[0].emp_id;
+                //     res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
+                //     return;
             }
 
-            const monthDate = results2[0].month_date;
-            const year = monthDate.getFullYear();
-            const month = monthDate.getMonth() + 1;
-            const sqlStr4 = "Select * From dsr_0 Where emp_id=? and year=? and month=?"
-            const params4 = [results[0].emp_id, year, month];
-            const results4 = await executeQuery(sqlStr4, params4);
-            if (results4.length === 0) {
-                //Get monthly allowance pricelist 
-                let monAllow = { monPost: 'N', stationaryRate: 0, postageRate: 0, internetRate: 0, otherRate: 0 };
-                if (results.length > 0) {
-
-                    const sqlStr8 = "SELECT * FROM allow_pricelist WHERE allow_id = 8 AND desg_id = ?";
-                    const params8 = [results[0].desg_id];
-                    const row8 = await executeQuery(sqlStr8, params8);
-
-                    const sqlStr9 = "SELECT * FROM allow_pricelist WHERE allow_id = 9 AND desg_id = ?";
-                    const params9 = [results[0].desg_id];
-                    const row9 = await executeQuery(sqlStr9, params9);
-
-                    const sqlStr10 = "SELECT * FROM allow_pricelist WHERE allow_id = 10 AND desg_id = ?";
-                    const params10 = [results[0].desg_id];
-                    const row10 = await executeQuery(sqlStr10, params10);
-
-                    monAllow = {
-                        monPost: 'N',
-                        stationaryRate: row8.length > 0 ? row8[0].amount : 0,
-                        postageRate: row9.length > 0 ? row9[0].amount : 0,
-                        internetRate: row10.length > 0 ? row10[0].amount : 0,
-                        otherRate: 0,
-                        monRemarks: ''
-                    };
-
-                    var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-                    const sqlStr4 = "INSERT INTO dsr_0 (year,month,emp_id,post_mg,post_ac,stationary_val,postage_val,internet_val,other_val,remarks,c_at,c_by)" +
-                        " VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
-                    const params4 = [results2[0].year, results2[0].month, results[0].emp_id, monAllow.monPost, 'N', monAllow.stationaryRate, monAllow.postageRate, monAllow.internetRate, monAllow.otherRate, monAllow.monRemarks, c_by];
-                    await executeQuery(sqlStr4, params4);
-
-                }
+            //Get manager team list
+            var sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name, IFNULL(COUNT(e.tp_route), 0) as tp_count" +
+                " FROM employees as a LEFT JOIN designations as b ON (a.desg_id=b.desg_id)" +
+                " LEFT JOIN hqs as c ON (a.hq_id=c.hq_id)" +
+                " LEFT JOIN employees as d ON (a.boss_id=d.emp_id)" +
+                " LEFT JOIN dsr_1 as e ON (a.emp_id=e.emp_id and e.dsr_date Between ? and ?)" +
+                " Where a.status='A'"
+            const sqlGroupBy = " Group By a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name)," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day,a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name)"
+            if (!["Admin", "Support"].includes(res.locals.user.user_role)) {
+                sqlStr2 = sqlStr2 + ` and (a.boss_id=${mgID})`;
             }
+            // console.log('MySQL Query : ' + sqlStr2 + sqlGroupBy)
+            const params2 = [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD')];
+            const empList = await executeQuery(sqlStr2 + sqlGroupBy, params2);
 
-            //******Notification******
-            const sqlStr5 = "SELECT a.emp_id, a.dsr_date, a.total_exp, Sum(b.amount) as amount" +
-                " FROM dsr_1 as a LEFT JOIN dsr_2 as b ON (a.dsr_date=b.dsr_date and a.emp_id=b.emp_id)" +
-                " WHERE YEAR(a.dsr_date)=? and MONTH(a.dsr_date)=? and a.emp_id=?" +
-                " GROUP By a.emp_id, a.dsr_date, a.total_exp" +
-                " HAVING a.total_exp > 0 and (a.total_exp <> Sum(b.amount) or Sum(b.amount) Is Null)"
-            const params5 = [year, month, results[0].emp_id];
-            const dataNote = await executeQuery(sqlStr5, params5);
-            let showNote = 'N';
-            if (dataNote.length > 0) {
-                showNote = 'Y'
-            }
-            //******Notification End******
-
-            res.render('dsr/dsr-view-pm', { layout: 'mobile', data: results[0], data2: results2[0], dataNote, showNote: showNote, googleApiKey: process.env.GOOGLE_MAPS_API_KEY });
+            res.render('dsrTp/dsrTp-view-pm', { layout: 'mobile', monData: monData[0], mgData: mgData[0], empList, teamSize: empList.length });
 
         } catch (error) {
             console.error(error);
@@ -380,51 +331,123 @@ class dsrController {
         }
     }
 
+    /***** */
     static edit = async (req, res) => {
-        const { dsr_date, emp_id } = req.params;
-        const { postFlag } = req.query;
+        const { emp_id } = req.params;
+        let sqlTp = "";
         try {
-            const [atten_flag_list] = await this.getData(req, res.locals.user);
+            const sqlStr0 = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
+                " STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y') as month_date" +
+                " FROM month_open Where status='O'"
+            const monData = await executeQuery(sqlStr0);
+            if (monData.length === 0) {
+                res.status(404).send("<h1>Month is not open</h1>");
+                return;
+            }
+            const from_date = moment(monData[0].month_date);
+            const to_date = from_date.clone().endOf('month');
 
-            const sqlStr = "Select a.emp_id,a.dsr_date,a.atten_flag,a.hr_flag,a.from_city,a.to_city,a.stay_city,a.total_allow,total_lodge,a.total_exp,a.post_mg,a.post_ac" +
-                " FROM dsr_1 as a" +
-                " Where a.dsr_date=? and a.emp_id=?";
-            const params = [dsr_date, emp_id];
-            const results = await executeQuery(sqlStr, params);
+            const sqlStr1 = "Select * From dsr_1 Where emp_id=? and dsr_date=?"
+            const params1 = [emp_id, monData[0].month_date];
+            const dsrData = await executeQuery(sqlStr1, params1);
 
-            const sqlStr3 = "Select a.first_name,a.middle_name,a.last_name,a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
-                " a.boss_id, CONCAT(d.first_name,' ',d.middle_name,' ',d.last_name) as boss_name" +
+            if (dsrData.length === 0) {
+                const numDays = to_date.diff(from_date, 'days');
+                var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
+
+                for (let i = 0; i <= numDays; i++) {
+                    const sqlStr = "INSERT INTO dsr_1 (emp_id,dsr_date,c_at,c_by)" +
+                        " VALUES (?,?,CURRENT_TIMESTAMP( ),?)"
+                    const paramsDt = [emp_id, from_date.format('YYYY-MM-DD'), c_by];
+                    await executeQuery(sqlStr, paramsDt);
+
+                    from_date.add(1, 'day');
+                }
+
+                sqlTp = "Select a.emp_id, a.dsr_date, a.post_mg, c.hq_name as from_city, a.to_city," +
+                    " DATE_FORMAT(a.dsr_date,'%a') as tp_day, DATE_FORMAT(a.dsr_date,'%d') as tp_date," +
+                    " b.off_day, c.hq_name" +
+                    " FROM dsr_1 as a, employees as b, hqs as c" +
+                    " Where a.emp_id=b.emp_id and b.hq_id=c.hq_id and a.dsr_date Between ? and ? and a.emp_id=?" +
+                    " Order By a.dsr_date";
+            } else {
+                sqlTp = "Select a.emp_id, a.dsr_date, a.post_mg, IF(a.tp_route Is Null, c.hq_name, a.from_city) as from_city, a.to_city," +
+                    " DATE_FORMAT(a.dsr_date,'%a') as tp_day, DATE_FORMAT(a.dsr_date,'%d') as tp_date," +
+                    " b.off_day, c.hq_name" +
+                    " FROM dsr_1 as a, employees as b, hqs as c" +
+                    " Where a.emp_id=b.emp_id and b.hq_id=c.hq_id and a.dsr_date Between ? and ? and a.emp_id=?" +
+                    " Order By a.dsr_date";
+            }
+
+            //Get employee details
+            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
                 " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
-            const params3 = [emp_id];
-            const results3 = await executeQuery(sqlStr3, params3);
-            if (results3.length === 0) {
-                res.status(404).send("<h1>Designation not found for this employee.</h1>");
+            const params2 = [emp_id];
+            const empData = await executeQuery(sqlStr2, params2);
+
+            const paramsTp = [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id];
+            const tpData = await executeQuery(sqlTp, paramsTp);
+
+            res.render('dsrTp/dsrTp-edit', { layout: 'mobile', monData: monData[0], empData: empData[0], tpData });
+
+        } catch (error) {
+            console.error(error);
+            // Handle the error
+        }
+    }
+
+    /***** */
+    static getTP = async (req, res) => {
+        const { emp_id, year, month } = req.params;
+        try {
+            const sqlStr0 = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
+                " STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y') as month_date" +
+                " FROM month_open Where status='O'"
+            const monData = await executeQuery(sqlStr0);
+            if (monData.length === 0) {
+                res.status(404).send("<h1>Month is not open</h1>");
                 return;
             }
 
-            let sqlStr2 = "Select a.sr_no,a.allow_id,b.allow_name,a.amount,a.from_km,a.to_km,a.photo_path,c.type,c.km_rate" +
-                " FROM dsr_2 as a, allowances as b, allow_pricelist as c" +
-                " Where a.allow_id=b.allow_id and b.allow_id=c.allow_id" +
-                " and a.dsr_date=? and a.emp_id=? and c.desg_id=? and c.atten_flag IN ('XX',?) Order By a.sr_no";
-            let params2 = [dsr_date, emp_id, results3[0].desg_id, results[0].atten_flag];
-            let results2 = await executeQuery(sqlStr2, params2);
-            if (results2.length === 0) {
-                sqlStr2 = "Select '10' as sr_no,'2' as allow_id,'Train' as allow_name,0 as amount,0 as from_km,0 as to_km,'' as photo_path,'Fix' as type,0 as km_rate" +
-                    " FROM dual";
-                results2 = await executeQuery(sqlStr2);
+            const sqlStr1 = "Select * From dsr_0 Where emp_id=? and year=? and month=? and post_mg='Y'"
+            const params1 = [emp_id, year, month];
+            const dsrMonData = await executeQuery(sqlStr1, params1);
+            if (dsrMonData.length > 0) {
+                res.status(404).send("<h1>Month is posted; Can't change</h1>");
+                return;
             }
 
-            const sqlStr4 = "SELECT a.allow_id,a.allow_name FROM allowances as a" +
-                " Where a.status='A' and a.allow_group='B'" +
-                " and a.allow_id In (Select DISTINCT b.allow_id From allow_pricelist as b Where b.desg_id=?)"
-            const allow_list = await executeQuery(sqlStr4, [results3[0].desg_id]);
+            const from_date = moment(monData[0].month_date);
+            const to_date = from_date.clone().endOf('month');
+            const from_date_lm = moment(from_date).subtract(1, 'months');
+            const to_date_lm = from_date_lm.clone().endOf('month');
 
-            if (postFlag === 'Y') {
-                res.render('dsr/dsr-edit', { data: results[0], data2: results2, data3: results3[0], atten_flag_list, allow_list, postFlag });
-            } else {
-                res.render('dsr/dsr-edit', { layout: 'mobile', data: results[0], data2: results2, data3: results3[0], atten_flag_list, allow_list });
-            }
+            //Get employee details
+            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
+            const params2 = [emp_id];
+            const empData = await executeQuery(sqlStr2, params2);
+
+            const sqlTp = "Select a.emp_id, a.dsr_date, a.post_mg, d.from_city, d.to_city," +
+                " DATE_FORMAT(a.dsr_date,'%a') as tp_day, DATE_FORMAT(a.dsr_date,'%d') as tp_date," +
+                " b.off_day, c.hq_name" +
+                " FROM dsr_1 as a LEFT JOIN employees as b ON (a.emp_id=b.emp_id)" +
+                " LEFT JOIN hqs as c ON (b.hq_id=c.hq_id)" +
+                " LEFT JOIN dsr_1 as d ON (a.emp_id=d.emp_id and d.dsr_date Between ? and ?" +
+                " and DATE_FORMAT(a.dsr_date,'%d')=DATE_FORMAT(d.dsr_date,'%d'))" +
+                " Where a.dsr_date Between ? and ? and a.emp_id=?" +
+                " Order By a.dsr_date";
+            const paramsTp = [from_date_lm.format('YYYY-MM-DD'), to_date_lm.format('YYYY-MM-DD'),
+            from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id];
+            const tpData = await executeQuery(sqlTp, paramsTp);
+
+            res.render('dsrTp/dsrTp-edit', { layout: 'mobile', monData: monData[0], empData: empData[0], tpData });
 
         } catch (error) {
             console.error(error);
@@ -457,123 +480,41 @@ class dsrController {
         }
     };
 
+    /***** */
     static update = async (req, res) => {
-        const { dsr_date, emp_id } = req.params;
-        const { atten_flag, from_city, to_city, stay_city, total_allow, total_lodge, total_exp, sr_no, allow_id, amount, from_km, to_km, type, km_rate } = req.body;
-        const data = req.body
-        const [atten_flag_list] = await this.getData(req, res.locals.user);
-        const { postFlag } = req.query;
+        const { emp_id } = req.params;
+        const { dsr_date, from_city, to_city } = req.body;
+        // const data = req.body
 
-        const sqlStr4 = "SELECT a.allow_id,a.allow_name FROM allowances as a" +
-            " Where a.status='A' and a.allow_group='B'" +
-            " and a.allow_id In (Select DISTINCT b.allow_id From allow_pricelist as b Where b.desg_id=?)"
-        const allow_list = await executeQuery(sqlStr4, [data.desg_id]);
-
-        var errors = [];
+        // var errors = [];
         // if (!atten_flag || atten_flag === 'XX') {
         //     errors.push({ message: 'Attendance (Status) flag is required' });
         // }
-        if (!from_city) {
-            errors.push({ message: 'Select from city' });
-        }
-        if (!to_city) {
-            errors.push({ message: 'Select to city' });
-        }
-
-        if (!allow_id || allow_id.length === undefined) {
-            errors.push({ message: 'You have not select proper values.' });
-            console.log('Allowance not selected.... emp_id ' + emp_id);
-            // return;
-        } else {
-            //Check duplicate item entry
-            // const allowIDVal = Array.isArray(allow_id) ? allow_id : [allow_id];
-            // for (let i = 0; i < allow_id.length; i++) {
-            //     for (let j = i + 1; j < allow_id.length; j++) {
-            //         if (allowIDVal[i] === allowIDVal[j]) {
-            //             errors.push({ message: `Duplicate entry found for row no ${i + 1} and row no ${j + 1}.` });
-            //         }
-            //     }
-            // }
-
-            //Check allowance with price list whether it allowed or not
-            // const allow_id_val = Array.isArray(allow_id) ? allow_id : [allow_id];
-            // const type_val = Array.isArray(type) ? type : [type];
-            // for (let i = 0; i < allow_id.length; i++) {
-            //     const sqlStr = "Select a.allow_id,b.allow_name,a.desg_id,a.atten_flag,a.type,a.km_rate" +
-            //         " FROM allow_pricelist as a, allowances as b" +
-            //         " Where a.allow_id=b.allow_id and a.allow_id=? and a.desg_id=? and a.atten_flag IN ('XX',?) and a.type=?";
-            //     let params = [allow_id_val[i], data.desg_id, atten_flag, type_val[i]];
-            //     let results = await executeQuery(sqlStr, params);
-            //     if (results.length === 0) {
-            //         errors.push({ message: `Status (Atten Flag: '${atten_flag}') with row no ${i + 1} is not allowed.` });
-            //     }
-            // }
-        }
-
-        if (errors.length) {
-            const sqlStr3 = "Select a.first_name,a.middle_name,a.last_name,a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
-                " a.boss_id, CONCAT(d.first_name,' ',d.middle_name,' ',d.last_name) as boss_name" +
-                " FROM employees as a, designations as b, hqs as c, employees as d" +
-                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
-            const params3 = [emp_id];
-            const results3 = await executeQuery(sqlStr3, params3);
-
-            let sqlStr2 = "Select a.sr_no,a.allow_id,b.allow_name,a.amount,a.from_km,a.to_km,a.photo_path,c.type,c.km_rate" +
-                " FROM dsr_2 as a, allowances as b, allow_pricelist as c" +
-                " Where a.allow_id=b.allow_id and b.allow_id=c.allow_id" +
-                " and a.dsr_date=? and a.emp_id=? and c.desg_id=? Order By a.sr_no";
-            let params2 = [dsr_date, emp_id, results3[0].desg_id];
-            let results2 = await executeQuery(sqlStr2, params2);
-            if (results2.length === 0) {
-                sqlStr2 = "Select '10' as sr_no,'2' as allow_id,'Train' as allow_name,0 as amount,0 as from_km,0 as to_km,'' as photo_path,'Fix' as type,0 as km_rate" +
-                    " FROM dual";
-                results2 = await executeQuery(sqlStr2);
-            }
-
-            res.render('dsr/dsr-edit', { layout: 'mobile', errors, data, data2: results2, data3: results3[0], atten_flag_list, allow_list, postFlag });
-            return;
-        }
+        // if (errors.length) {
+        //     res.render('dsr/dsr-edit', { layout: 'mobile', errors, data, data2: results2, data3: results3[0], atten_flag_list, allow_list, postFlag });
+        //     return;
+        // }
 
         try {
-            //sr_no, allow_id, allow_name, amount, from_km, to_km
-            var hr_flag = !atten_flag || atten_flag.length === undefined || atten_flag === 'XX' ? 'A' : 'P';
             var u_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const from_city_title = from_city ? titleCase(from_city) : null;
-            const to_city_title = to_city ? titleCase(to_city) : null;
-            const stay_city_title = stay_city ? titleCase(stay_city) : null;
 
-            const sqlStr = "UPDATE dsr_1 Set atten_flag=?,hr_flag=?,from_city=?,to_city=?,stay_city=?,total_allow=?,total_lodge=?,total_exp=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
-                " WHERE dsr_date=? and emp_id=?"
-            const params = [atten_flag, hr_flag, from_city_title, to_city_title, stay_city_title, total_allow, total_lodge, total_exp, u_by, dsr_date, emp_id];
-            await executeQuery(sqlStr, params);
+            const dsr_date_val = Array.isArray(dsr_date) ? dsr_date : [dsr_date];
+            const from_city_val = Array.isArray(from_city) ? from_city : [from_city];
+            const to_city_val = Array.isArray(to_city) ? to_city : [to_city];
 
-            // Delete records from dsr_2
-            const sqlStr3 = "Delete FROM dsr_2 WHERE dsr_date=? and emp_id=?"
-            const params3 = [dsr_date, emp_id];
-            await executeQuery(sqlStr3, params3);
+            for (let i = 0; i < dsr_date.length; i++) {
+                // if (amount_val[i] > 0) {
+                const from_city_title = from_city_val[i] ? titleCase(from_city_val[i]) : null;
+                const to_city_title = to_city_val[i] ? titleCase(to_city_val[i]) : null;
 
-            const allow_id_val = Array.isArray(allow_id) ? allow_id : [allow_id];
-            const amount_val = Array.isArray(amount) ? amount : [amount];
-            const from_km_val = Array.isArray(from_km) ? from_km : [from_km];
-            const to_km_val = Array.isArray(to_km) ? to_km : [to_km];
-
-            for (let i = 0; i < allow_id.length; i++) {
-                if (amount_val[i] > 0) {
-                    let sr_no_val = (i + 1) * 10;
-                    const sqlStr2 = "INSERT INTO dsr_2 (dsr_date, emp_id, sr_no, allow_id, amount, from_km, to_km)" +
-                        " VALUES (?,?,?,?,?,?,?)"
-                    const paramsDt = [dsr_date, emp_id, sr_no_val, allow_id_val[i], amount_val[i], from_km_val[i], to_km_val[i]];
-                    await executeQuery(sqlStr2, paramsDt);
-                }
+                const sqlStrDt = "UPDATE dsr_1 Set tp_route=?, from_city=?, to_city=?,u_at=CURRENT_TIMESTAMP,u_by=? Where dsr_date=? and emp_id=?"
+                const paramsDt = [to_city_title, from_city_title, to_city_title, u_by, dsr_date_val[i], emp_id];
+                await executeQuery(sqlStrDt, paramsDt);
+                // }
             }
 
-            // res.redirect('/dsr/view?alert=Update+Records+successfully');
-            if (postFlag === 'Y') {
-                res.redirect(`/dsr/post-edit?selectedEmpID=${emp_id}`);
-            } else {
-                res.redirect('/dsr/view');
-            }
-
+            res.redirect('/dsrTp/view-pm?alert=Update+Records+successfully');
+            // res.redirect(`/dsr/post-edit?selectedEmpID=${emp_id}`);
 
         } catch (err) {
             console.error(err);
@@ -1414,213 +1355,6 @@ class dsrController {
         }
     };
 
-    static saveLocation = async (req, res) => {
-        var { empID, locLat, locLng, locName, saveLocFlag } = req.body;
-
-        try {
-
-            const frDt = moment().subtract(10, 'minutes')
-            const fromDate = frDt.format('YYYY-MM-DD HH:mm:ss');
-            const toDate = moment().format('YYYY-MM-DD HH:mm:ss');
-            if (saveLocFlag === 'Y') {
-                const sqlStr = "Select * from dsr_loc" +
-                    " Where emp_id=? and loc_date Between ? and ?"; // and loc_lat=? and loc_lng=? 
-                const params = [empID, fromDate, toDate]; //locLat, locLng,
-                const locData = await executeQuery(sqlStr, params);
-                if (locData.length === 0) {
-                    const sqlStr2 = "INSERT INTO dsr_loc (emp_id,loc_date,loc_lat,loc_lng,loc_name)" +
-                        " VALUES(?,CURRENT_TIMESTAMP,?,?,?)";
-                    const params2 = [empID, locLat, locLng, locName];
-                    await executeQuery(sqlStr2, params2);
-
-                    console.log('Save Location:  EmpID: ' + empID + ' Lat: ' + locLat + ' Lng: ' + locLng + ' Location: ' + locName)
-                } else {
-                    console.log('Not Save Location:  EmpID: ' + empID + ' Lat: ' + locLat + ' Lng: ' + locLng + ' Location: ' + locName)
-                }
-            }
-
-            // if (saveLocFlag === 'Y') {
-            //     const sqlStr = "INSERT INTO dsr_loc (emp_id,loc_date,loc_lat,loc_lng,loc_name)" +
-            //         " VALUES(?,CURRENT_TIMESTAMP,?,?,?)";
-            //     const params = [empID, locLat, locLng, locName];
-            //     await executeQuery(sqlStr, params);
-            // }
-
-            const sqlStr1 = "Select DISTINCT loc_name" +  //emp_id, loc_date, loc_lat, loc_lng,
-                " From dsr_loc Where emp_id=? and loc_date >= CURRENT_DATE()" +
-                " Order By loc_date";
-            const params1 = [empID, locLat, locLng, locName];
-            const routeData = await executeQuery(sqlStr1, params1);
-            let locNames = "";
-            if (routeData.length > 0) {
-                locNames = "Today's Journey: " + routeData.map(row => row.loc_name).join(' > ');
-            }
-
-            res.status(200).json({ message: 'Location data saved successfully', locNames });
-
-        } catch (err) {
-            console.error(err);
-            res.status(500).send('Internal server error to save location');
-        }
-    };
-
-    static reportLocation = async (req, res) => {
-        // retrieve the alert message from the query parameters
-        const alert = req.query.alert;
-        const { emp_id, loc_date } = req.query;
-        try {
-
-            var fromDate = null;
-            var toDate = null;
-            if (loc_date === null || loc_date === undefined) {
-                fromDate = moment().startOf('day').format('YYYY-MM-DD HH:mm');
-                toDate = moment().format('YYYY-MM-DD HH:mm');
-            } else {
-                fromDate = moment(loc_date).startOf('day').format('YYYY-MM-DD HH:mm');
-                toDate = moment(loc_date).format('YYYY-MM-DD HH:mm');
-            }
-
-            // const sqlStr0 = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
-            //     " STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y') as month_date" +
-            //     " FROM month_open Where status='O'"
-            // const monData = await executeQuery(sqlStr0);
-            // if (monData.length === 0) {
-            //     res.status(404).send("<h1>Month is not open</h1>");
-            //     return;
-            // }
-
-            //Get current login user details
-            const sqlStr = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
-                " FROM employees as a" +
-                " Where a.status='A' and a.user_id=?"
-            const params = [res.locals.user.user_id];
-            const logUser = await executeQuery(sqlStr, params);
-            // if (logUser.length === 0) {
-            //     res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
-            //     return;
-            // }
-
-            //Get emp list (boss and under emp)
-            var sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
-                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
-                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
-                " FROM employees as a, designations as b, hqs as c, employees as d" +
-                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
-                sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
-            }
-            const empList = await executeQuery(sqlStr1);
-
-            var empID = emp_id === null || emp_id === undefined || emp_id === '' ? 0 : emp_id;
-            //Get emp details with boss details
-            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
-                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
-                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
-                " FROM employees as a, designations as b, hqs as c, employees as d" +
-                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
-            const params2 = [empID];
-            const empData = await executeQuery(sqlStr2, params2);
-
-            let sqlEmp = ""
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
-                sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
-            }
-            let sqlStr3 = "SELECT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
-                " a.loc_date,a.loc_lat,a.loc_lng,a.loc_name,DATE_FORMAT(a.loc_date,'%H:%i') as loc_time" +
-                " FROM dsr_loc as a, employees as b" +
-                " WHERE a.emp_id=b.emp_id " + sqlEmp +
-                " and a.loc_date = (Select Max(x.loc_date) as loc_date From dsr_loc as x" +
-                " Where x.emp_id=a.emp_id and x.loc_date Between ? and ? )"
-            // const params3 = [fromDate.format('YYYY-MM-DD HH:mm'), toDate.format('YYYY-MM-DD HH:mm')];
-            const params3 = [fromDate, toDate];
-            const locData = await executeQuery(sqlStr3, params3);
-
-            res.render('dsr/dsr-report-loc', { layout: 'mobile', locToDate: toDate, emp_list: empList, empData: empData[0], alert, googleApiKey: process.env.GOOGLE_MAPS_API_KEY, locations: JSON.stringify(locData) });
-
-        } catch (error) {
-            console.error(error);
-            // Handle the error
-        }
-    }
-
-    static reportLocationTrack = async (req, res) => {
-        // retrieve the alert message from the query parameters
-        const alert = req.query.alert;
-        const { emp_id, loc_date } = req.query;
-        try {
-
-            var fromDate = null;
-            var toDate = null;
-            if (loc_date === null || loc_date === undefined) {
-                fromDate = moment().startOf('day').format('YYYY-MM-DD HH:mm');
-                // toDate = moment().format('YYYY-MM-DD HH:mm');
-                toDate = moment().endOf('day').format('YYYY-MM-DD HH:mm');
-            } else {
-                fromDate = moment(loc_date).startOf('day').format('YYYY-MM-DD HH:mm');
-                toDate = moment(loc_date).format('YYYY-MM-DD HH:mm');
-            }
-
-            // const sqlStr0 = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
-            //     " STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y') as month_date" +
-            //     " FROM month_open Where status='O'"
-            // const monData = await executeQuery(sqlStr0);
-            // if (monData.length === 0) {
-            //     res.status(404).send("<h1>Month is not open</h1>");
-            //     return;
-            // }
-
-            //Get current login user details
-            const sqlStr = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
-                " FROM employees as a" +
-                " Where a.status='A' and a.user_id=?"
-            const params = [res.locals.user.user_id];
-            const logUser = await executeQuery(sqlStr, params);
-            // if (logUser.length === 0) {
-            //     res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
-            //     return;
-            // }
-
-            //Get emp list (boss and under emp)
-            var sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
-                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
-                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
-                " FROM employees as a, designations as b, hqs as c, employees as d" +
-                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
-                sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
-            }
-            const empList = await executeQuery(sqlStr1);
-
-            var empID = emp_id === null || emp_id === undefined || emp_id === '' ? 0 : emp_id;
-            //Get emp details with boss details
-            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
-                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
-                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
-                " FROM employees as a, designations as b, hqs as c, employees as d" +
-                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
-            const params2 = [empID];
-            const empData = await executeQuery(sqlStr2, params2);
-
-            // let sqlEmp = ""
-            // if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
-            //     sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
-            // }
-            let sqlStr3 = "SELECT DISTINCT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
-                " a.loc_date,a.loc_lat,a.loc_lng,a.loc_name,DATE_FORMAT(a.loc_date,'%H:%i') as loc_time" +
-                " FROM dsr_loc as a, employees as b" +
-                " WHERE a.emp_id=b.emp_id and b.emp_id=? and a.loc_date Between ? and ?"
-            const params3 = [empID, fromDate, toDate];
-            const locData = await executeQuery(sqlStr3, params3);
-
-            res.render('dsr/dsr-report-loc2', { layout: 'mobile', locToDate: toDate, emp_list: empList, empData: empData[0], alert, googleApiKey: process.env.GOOGLE_MAPS_API_KEY, locations: JSON.stringify(locData) });
-
-        } catch (error) {
-            console.error(error);
-            // Handle the error
-        }
-    }
-
-
 };
 
-export default dsrController
+export default dsrTpController

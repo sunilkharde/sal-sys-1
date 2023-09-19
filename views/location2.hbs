@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Display User Location on Google Map</title>
+  {{!--
+  <script src="https://maps.googleapis.com/maps/api/js?key={{googleApiKey}}"></script> --}}
+</head>
+
+<body>
+  {{!-- <form action="/locationCur" method="post"> --}}
+    <button id="getLocationButton">Get Location</button>
+    <div id="map" style="height: 500px;"> </div>
+    <div id="placeName"></div>
+
+    <button type="submit" class="btn btn-primary">Register</button>
+    {{!--
+  </form> --}}
+
+  
+  <script>
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 10,
+        // Your map options
+      });
+
+      const directionsService = new google.maps.DirectionsService();
+      const directionsRenderer = new google.maps.DirectionsRenderer();
+      directionsRenderer.setMap(map);
+
+      const origin = new google.maps.LatLng(19.54243, 74.00041); // Starting point
+      //const destination = new google.maps.LatLng(19.46631, 74.61949); // Ending point
+      const destination = new google.maps.LatLng(19.54310, 74.00541); // Ending point
+
+      const waypoints = [
+        { location: new google.maps.LatLng(19.56985, 74.19319) }, // Additional waypoints
+        { location: new google.maps.LatLng(19.59315, 74.45872) },
+        { location: new google.maps.LatLng(19.46631, 74.61949) },
+
+        { location: new google.maps.LatLng(19.50677, 74.39470) },
+        { location: new google.maps.LatLng(19.50060, 74.19901) }
+        // Add more waypoints as needed
+      ];
+
+      const request = {
+        origin: origin,
+        destination: destination,
+        waypoints: waypoints,
+        travelMode: google.maps.TravelMode.DRIVING // You can use other travel modes like WALKING or TRANSIT
+      };
+
+      directionsService.route(request, (response, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          directionsRenderer.setDirections(response);
+        } else {
+          console.error('Directions request failed:', status);
+        }
+      });
+    }
+  </script>
+  
+
+  {{!-- <script>
+    function initMap() {
+      const locations = JSON.parse('{{{locations}}}');
+      console.log('Location ', locations);
+
+      const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 5,
+        center: { lat: 19.565143, lng: 74.206182 },
+      });
+
+      locations.forEach(location => {
+        console.log("Location: ", location);
+        const marker = new google.maps.Marker({
+          position: new google.maps.LatLng(location.loc_lat, location.loc_lng),
+          map: map,
+          title: location.loc_name,
+          //label: location.loc_name, // Display the name as a label on the marker
+          label: {
+            text: location.loc_name,
+            fontWeight: 'bold', // Make the label text bold
+            fontSize: '18px',   // Change the font size
+            color: 'magenta'        // Change the text color
+          }
+        });
+      });
+    }
+  </script> --}}
+
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key={{googleApiKey}}&callback=initMap">
+  </script>
+
+
+</body>
+
+</html>

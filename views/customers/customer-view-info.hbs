@@ -1,0 +1,47 @@
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style=" margin-bottom: 20px;">List of Dealers</h4>
+
+    </div>
+
+    <table class="table" id="customersInfoTable">
+        <thead>
+            <tr>
+                <th style="width:5%;">CustID</th>
+                <th style="width:30%;">Dealer Name</th>
+                <th style="width:20%;">Nickname</th>
+                <th style="width:20%;">City-Pin</th>
+                <th style="width:10%;">Market Area</th>
+                <th style="width:10%;">SAP Code</th>
+                <th style="width:5%;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each customers}}
+            <tr>
+                <td>{{this.customer_id}}</td>
+                <td>{{this.customer_name}}</td>
+                <td>{{this.nick_name}}</td>
+                <td>{{this.city_pin}}</td>
+                <td>{{this.market_area}}</td>
+                <td>{{this.ext_code}}</td>
+                <td>
+                    <a href="/customer/update-info/{{this.customer_id}}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function () {
+            $('#customersInfoTable').dataTable({
+                pageLength: 10,
+                responsive: true,
+            });
+        });
+    </script>
+
+</div>

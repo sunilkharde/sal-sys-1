@@ -26,7 +26,7 @@ const category_list = [
     }
 }*/
 
-//const conn = await pool.getConnection();
+
 class productController {
 
     static getData = async (req) => {
@@ -66,7 +66,7 @@ class productController {
     }
 
     static create = async (req, res) => {
-        const { product_name, description, unit_id, category_id, rate, ext_code, status, bu_id } = req.body;
+        const { product_name, description, unit_id, category_id, rate, ext_code, status, bu_id, cf_val } = req.body;
         const data = req.body
         const [unit_list, category_list, bu_list] = await this.getData();
 
@@ -120,9 +120,9 @@ class productController {
             // await conn2.beginTransaction();
             var status_new = status !== null && status !== undefined ? status : 'A';
             var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const sqlStr = "INSERT INTO products (product_id,product_name,description,unit_id,category_id,rate,ext_code,status,c_at,c_by)" +
-                " VALUES (?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
-            const params = [nextProductID, product_name, description, unit_id, category_id, rate, ext_code, status_new, c_by];
+            const sqlStr = "INSERT INTO products (product_id,product_name,description,unit_id,category_id,rate,ext_code,status,cf_val,c_at,c_by)" +
+                " VALUES (?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
+            const params = [nextProductID, product_name, description, unit_id, category_id, rate, ext_code, status_new, cf_val, c_by];
             await executeQuery(sqlStr, params);
             // await conn2.commit();
             // conn2.release
@@ -197,7 +197,7 @@ class productController {
 
     static update = async (req, res) => {
         const { id } = req.params;
-        const { product_name, description, unit_id, category_id, rate, ext_code, status, bu_id } = req.body;
+        const { product_name, description, unit_id, category_id, rate, ext_code, status, bu_id, cf_val } = req.body;
         const data = req.body
         const [unit_list, category_list, bu_list] = await this.getData();
 
@@ -245,9 +245,9 @@ class productController {
             // await conn1.beginTransaction();
             var status_new = status !== null && status !== undefined ? status : 'A';
             var u_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const sqlStr = "UPDATE products Set product_name=?,description=?,unit_id=?,category_id=?,rate=?,ext_code=?,status=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
+            const sqlStr = "UPDATE products Set product_name=?,description=?,unit_id=?,category_id=?,rate=?,ext_code=?,status=?,cf_val=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
                 " WHERE product_id=?"
-            const params = [product_name, description, unit_id, category_id, rate, ext_code, status_new, u_by, id];
+            const params = [product_name, description, unit_id, category_id, rate, ext_code, status_new, cf_val, u_by, id];
             await executeQuery(sqlStr, params);
             // await conn1.commit();
             // conn1.release

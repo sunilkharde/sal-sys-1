@@ -17,11 +17,18 @@ import poRoute from "./routes/poRoutes.js";
 import dealerPayRoute from "./routes/dealerPayRoutes.js";
 import dsrRoute from "./routes/dsrRoutes.js";
 import dsrAcRoute from "./routes/dsrAcRoutes.js";
+import dsrTpRoute from "./routes/dsrTpRoutes.js";
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
 import schedule from 'node-schedule';
+import https from "https";
 
+const certsPath = process.cwd() + '/certs';
+const httpsOptions = {
+  key: fs.readFileSync(certsPath + '/server.key'), 
+  cert: fs.readFileSync(certsPath + '/server.crt') 
+};
 
 //import axios from 'axios';
 //import hbs from 'hbs';
@@ -53,6 +60,21 @@ app.use('/api', function (req, res, next) {
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
+
+// // Middleware to log data
+// app.use((req, res, next) => {
+//   const logData = `${new Date().toISOString()} - ${req.method} ${req.url}\n`;
+//   console.log(logData);
+
+//   fs.appendFile('log.txt', logData, (err) => {
+//     if (err) {
+//       console.error('Error writing to log file:', err);
+//     }
+//   });
+
+//   next();
+// });
+
 
 //start-define custome helpers //Use === value match, == string match
 const momentDDDD_HBS = function (date, format) {
@@ -116,7 +138,7 @@ const isEqualHelperHandlerbar = function (variable, ...values) {
 // const addHBS = function(a, b) {
 //   return Number(a) + Number(b);
 // };
-const addHBS = function(...values) {
+const addHBS = function (...values) {
   let sum = 0;
   values.forEach((value) => {
     if (!isNaN(value)) {
@@ -158,6 +180,7 @@ app.use('/po', poRoute);
 app.use('/dealerPay', dealerPayRoute);
 app.use('/dsr', dsrRoute);
 app.use('/dsrAc', dsrAcRoute);
+app.use('/dsrTp', dsrTpRoute);
 
 // Log incoming requests
 /*app.use((req, res, next) => {
@@ -178,10 +201,16 @@ app.get('/location', (req, res) => {
   res.render('location', { location: 'Sangamner', lat: '19.576117', lng: '74.207019' });
   //process.env.GOOGLE_MAPS_API_KEY
 });
-app.get('/locationCur', (req, res) => {
-  res.render('locationCur');
+app.get('/location1', (req, res) => {
+  res.render('location1', { googleApiKey: process.env.GOOGLE_MAPS_API_KEY });
 });
-app.post('/', async (req, res) => {
+app.get('/location2', async (req, res) => {
+  const sqlStr6 = "SELECT a.emp_id, a.loc_date, a.loc_lat, a.loc_lng, a.loc_name FROM dsr_loc as a Where emp_id=7 and loc_date Between '2023-09-06' and '2023-09-07'"
+  const locData = await executeQuery(sqlStr6)
+
+  res.render('location2', { googleApiKey: process.env.GOOGLE_MAPS_API_KEY, locations: JSON.stringify(locData) });
+});
+app.post('/location1', async (req, res) => {
   const { lat, lng } = req.body;
   try {
     //console.log('XXX POST request received');
@@ -301,12 +330,19 @@ const selectAndUploadData = async () => {
 const times = [[9, 32], [10, 2], [10, 32], [11, 2], [11, 32], [12, 2], [12, 32], [13, 2], [13, 32], [14, 2], [14, 32],
 [15, 2], [15, 32], [16, 2], [16, 32], [17, 2], [17, 32], [18, 2], [18, 32], [19, 2], [19, 32], [20, 2], [20, 32],
 [21, 2], [21, 32], [22, 2], [22, 32], [23, 2], [23, 32], [18, 20]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
-times.forEach((time) => {
-  schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
-});
+// times.forEach((time) => {
+//   schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
+// });
 
 //**************************************//
+const server = https.createServer(httpsOptions, app);
 app.set('port', process.env.PORT || 3000);
-var server = app.listen(app.get('port'), function () {
+server.listen(app.get('port'), function () {
   console.log('Express server listening on port ' + server.address().port);
 });
+
+// app.set('port', process.env.PORT || 3000);
+// var server = app.listen(app.get('port'), function () {
+//   console.log('Express server listening on port ' + server.address().port);
+// });
+

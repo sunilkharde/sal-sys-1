@@ -25,5 +25,9 @@ router.get('/export-pdf', dsrController.exportPdf);
 router.get('/report-atten', dsrController.reportAtten);
 router.get('/atten-export-csv', dsrController.attenExportCSV);
 
+router.post('/save-location', dsrController.saveLocation);
+router.get('/report-loc', dsrController.reportLocation);
+router.get('/report-loc2', dsrController.reportLocationTrack);
+
 
 export default router;

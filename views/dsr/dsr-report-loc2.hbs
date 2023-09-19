@@ -1,0 +1,292 @@
+{{!-- <div class="container"> --}}
+    <div style="padding-right: 25px; padding-left: 25px; padding-top: 10px;">
+        <div id="printable-area">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 class="page-title" style=" margin-bottom: 20px;">Employee Location Tracking Report...</h4>
+                {{!-- {{#isEqual user.user_role "Admin" "Dealer"}}
+                <a href="/dealerPay/create" class="btn btn-success">Create New</a>
+                {{else}}
+                <a href="#" class="btn btn-secondary">Create New</a>
+                {{/isEqual}} --}}
+
+                <div>
+                    {{!-- <form id="form2" action="/dsr/loc-export-csv" method="GET" class="d-inline">
+                        <input hidden required type="month" id="exportCSV_curMon" name="exportCSV_curMon"
+                            value="{{curMon}}" min="{{minDate}}" max="{{maxDate}}">
+                        <input hidden id="exportCSV_empID" name="exportCSV_empID" value="{{empData.emp_id}}">
+                        <button type="submit" id="expor-csv" class="btn btn-warning">Export to CSV</button>
+                    </form> --}}
+                    {{!-- {{#isEqual dsrSum.post_mg "Y" }}
+                    <form id="form3" action="/dsr/atten-export-pdf" method="GET" class="d-inline">
+                        <input hidden required type="month" id="exportPDF_curMon" name="exportPDF_curMon"
+                            value="{{curMon}}" min="{{minDate}}" max="{{maxDate}}">
+                        <input hidden required id="exportPDF_empID" name="exportPDF_empID" value="{{empData.emp_id}}">
+                        <button type="submit" id="expor-pdf" class="btn btn-danger">Export to PDF</button>
+                    </form>
+                    {{/isEqual}} --}}
+                </div>
+
+            </div>
+
+            <form id="form1" action="/dsr/report-loc2" method="GET">
+                {{!-- <div class="col-lg-9 border p-4"> --}}
+                    {{!-- <div class="form-group row mb-3"> --}}
+
+                        <div class="row mb-2">
+                            <label for="loc_date" class="col-sm-2 col-form-label">Date&nbsp;<span
+                                    style="color: red;">*</span></label>
+                            <div class="col-sm-4">
+                                <input required type="datetime-local" class="form-control" id="loc_date" name="loc_date"
+                                    value="{{locToDate}}">
+                            </div>
+                            <div class="col-md-4 item-align-start">
+                                <button type="submit" id="getLocationButton" class="btn btn-success">Refresh
+                                    Data</button>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <label for="emp_id" class="col-sm-2 col-form-label">Employee</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input hidden type="text" class="form-control" id="emp_id" name="emp_id"
+                                        value="{{empData.emp_id}}">
+                                    <input readonly type="text" class="form-control" id="emp_name" name="emp_name"
+                                        value="{{#if empData.emp_name}} {{empData.emp_name}} {{else}}---: Select Employee :---{{/if}}">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnEmp"
+                                        data-bs-toggle="modal" data-bs-target="#empModal"> <i
+                                            class="bi bi-list"></i></button>
+                                    <button class="btn btn-outline-secondary" type="button" id="resetBtn">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{!--
+                    </div> --}}
+                    {{!-- </div> --}}
+
+                <br>
+                {{!-- <div id="map" style="height: 800px;"> </div> --}}
+                <div id="map" style="height: 60vh;"></div>
+                <br>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        const locations = JSON.parse('{{{locations}}}');
+        console.log('Location ', locations);
+
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 10,
+                center: { lat: 19.565143, lng: 74.206182 },
+            });
+
+            const directionsService = new google.maps.DirectionsService();
+            const directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+
+            const origin = new google.maps.LatLng(locations[0].loc_lat, locations[0].loc_lng);
+            const destination = new google.maps.LatLng(locations[locations.length - 1].loc_lat, locations[locations.length - 1].loc_lng);
+
+            const waypoints = locations.slice(1, locations.length - 1).map(location => ({
+                location: new google.maps.LatLng(location.loc_lat, location.loc_lng)
+            }));
+
+            const request = {
+                origin: origin,
+                destination: destination,
+                waypoints: waypoints,
+                travelMode: google.maps.TravelMode.DRIVING
+            };
+
+            directionsService.route(request, (response, status) => {
+                if (status === google.maps.DirectionsStatus.OK) {
+                    directionsRenderer.setDirections(response);
+
+                    // Add markers with titles and custom labels
+                    const originMarker = new google.maps.Marker({
+                        position: origin,
+                        map: map,
+                        title: locations[0].emp_name + ' ' + locations[0].loc_time,
+                        icon: {
+                            url: '/favicon.ico', 
+                            scaledSize: new google.maps.Size(1, 1)
+                        },
+                        label: {
+                            text: locations[0].loc_time, //locations[0].emp_name + ' ' + locations[0].loc_time,
+                            fontWeight: 'bold',
+                            fontSize: '15px',
+                            color: 'blue'
+                        }
+                    });
+
+                    const destinationMarker = new google.maps.Marker({
+                        position: destination,
+                        map: map,
+                        title: locations[locations.length - 1].emp_name + ' ' + locations[locations.length - 1].loc_time,
+                        icon: {
+                            url: '/favicon.ico', 
+                            scaledSize: new google.maps.Size(1, 1)
+                        },
+                        label: {
+                            text: locations[locations.length - 1].loc_time, //locations[locations.length - 1].emp_name + ' ' + locations[locations.length - 1].loc_time,
+                            fontWeight: 'bold',
+                            fontSize: '15px',
+                            color: 'blue'
+                        }
+                    });
+
+                    // Add markers for waypoints if needed
+                    waypoints.forEach((waypoint, index) => {
+                        const waypointMarker = new google.maps.Marker({
+                            position: waypoint.location,
+                            map: map,
+                            title: locations[index + 1].emp_name + ' ' + locations[index + 1].loc_time,
+                            icon: {
+                                url: '/favicon.ico', 
+                                scaledSize: new google.maps.Size(1, 1)
+                            },
+                            label: {
+                                text: locations[index + 1].loc_time, // locations[index + 1].emp_name + ' ' + locations[index + 1].loc_time,
+                                fontWeight: 'bold',
+                                fontSize: '15px',
+                                color: 'blue'
+                            }
+                        });
+                    });
+                } else {
+                    console.error('Directions request failed:', status);
+                }
+            });
+        }
+    </script>
+
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{googleApiKey}}&callback=initMap">
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            /*$('#attenDataTable').dataTable({
+                pageLength: 50,
+                responsive: true,
+                "order": [[2, "asc"], [0, "asc"]]
+            });*/
+
+            /*$('#resetBtn').on('click', function () {
+                $('#emp_id').val('');
+                $('#emp_name').val('---: All Employee :---');
+            });*/
+
+        });
+
+        // Update the hidden input fields when the form is submitted
+        $('#form1').on('submit', function (event) {
+            event.preventDefault();
+            var loc_date = $('#loc_date').val();
+            var emp_id = $('#emp_id').val();
+            $('#exportCSV_curMon').val(loc_date);
+            $('#exportCSV_empID').val(emp_id);
+            this.submit();
+        });
+    </script>
+
+    <script>
+        function adjustFontSize() {
+            var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+            var frmLabels = document.getElementsByClassName('col-form-label');
+            for (var i = 0; i < frmLabels.length; i++) {
+                var frmLabel = frmLabels[i];
+                if (screenWidth < 768) {
+                    frmLabel.style.fontSize = '25px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    frmLabel.style.fontSize = '25px';
+                } else {
+                    frmLabel.style.fontSize = '20px';
+                }
+            }
+
+            var frmLabels = document.getElementsByClassName('form-label');
+            for (var i = 0; i < frmLabels.length; i++) {
+                var frmLabel = frmLabels[i];
+                if (screenWidth < 768) {
+                    frmLabel.style.fontSize = '25px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    frmLabel.style.fontSize = '25px';
+                } else {
+                    frmLabel.style.fontSize = '20px';
+                }
+            }
+
+            var frmControls = document.getElementsByClassName('form-control');
+            for (var i = 0; i < frmControls.length; i++) {
+                var frmControl = frmControls[i];
+                if (screenWidth < 768) {
+                    frmControl.style.fontSize = '25px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    frmControl.style.fontSize = '25px';
+                } else {
+                    frmControl.style.fontSize = '20px';
+                }
+            }
+
+            var frmControls = document.getElementsByClassName('form-select');
+            for (var i = 0; i < frmControls.length; i++) {
+                var frmControl = frmControls[i];
+                if (screenWidth < 768) {
+                    frmControl.style.fontSize = '25px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    frmControl.style.fontSize = '25px';
+                } else {
+                    frmControl.style.fontSize = '20px';
+                }
+            }
+
+            var frmBtns = document.getElementsByClassName('btn');
+            for (var i = 0; i < frmBtns.length; i++) {
+                var frmBtn = frmBtns[i];
+                if (screenWidth < 768) {
+                    frmBtn.style.fontSize = '25px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    frmBtn.style.fontSize = '25px';
+                } else {
+                    frmBtn.style.fontSize = '20px';
+                }
+            }
+
+            var txtItems = document.getElementsByClassName('table');
+            for (var i = 0; i < txtItems.length; i++) {
+                var txtItem = txtItems[i];
+                if (screenWidth < 768) {
+                    txtItem.style.fontSize = '25px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    txtItem.style.fontSize = '25px';
+                } else {
+                    txtItem.style.fontSize = '20px';
+                }
+            }
+
+            var txtItems = document.getElementsByClassName('page-title');
+            for (var i = 0; i < txtItems.length; i++) {
+                var txtItem = txtItems[i];
+                if (screenWidth < 768) {
+                    txtItem.style.fontSize = '30px';
+                } else if (screenWidth >= 768 && screenWidth < 1024) {
+                    txtItem.style.fontSize = '30px';
+                } else {
+                    txtItem.style.fontSize = '25px';
+                }
+            }
+
+        }
+
+        window.addEventListener('DOMContentLoaded', adjustFontSize);
+        window.addEventListener('resize', adjustFontSize);
+    </script>
+
+    {{> _lov-emp}}
