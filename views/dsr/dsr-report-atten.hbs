@@ -12,7 +12,8 @@
 
             <div>
                 <form id="form2" action="/dsr/atten-export-csv" method="GET" class="d-inline">
-                    <input hidden required type="month" id="exportCSV_curMon" name="exportCSV_curMon" value="{{curMon}}" min="{{minDate}}" max="{{maxDate}}">
+                    <input hidden required type="month" id="exportCSV_curMon" name="exportCSV_curMon" value="{{curMon}}"
+                        min="{{minDate}}" max="{{maxDate}}">
                     <input hidden id="exportCSV_empID" name="exportCSV_empID" value="{{empData.emp_id}}">
                     <button type="submit" id="expor-csv" class="btn btn-warning">Export to CSV</button>
                 </form>
@@ -33,7 +34,8 @@
                 <div class="form-group row mb-3"> --}}
 
                     <div class="row mb-2">
-                        <label for="mon_date" class="col-sm-2 col-form-label">Month&nbsp;<span style="color: red;">*</span></label>
+                        <label for="mon_date" class="col-sm-2 col-form-label">Month&nbsp;<span
+                                style="color: red;">*</span></label>
                         <div class="col-sm-2">
                             <input required type="month" class="form-control" id="mon_date" name="mon_date"
                                 value="{{curMon}}" min="{{minDate}}" max="{{maxDate}}">
@@ -47,9 +49,9 @@
                         <label for="emp_id" class="col-sm-2 col-form-label">Employee</label>
                         <div class="col-sm-6">
                             <div class="input-group">
-                                <input hidden  type="text" class="form-control" id="emp_id" name="emp_id"
+                                <input hidden type="text" class="form-control" id="emp_id" name="emp_id"
                                     value="{{empData.emp_id}}">
-                                <input readonly type="text" class="form-control" id="emp_name" name="emp_name" 
+                                <input readonly type="text" class="form-control" id="emp_name" name="emp_name"
                                     value="{{#if empData.emp_name}} {{empData.emp_name}} {{else}}---: All Employee :---{{/if}}">
                                 <button class="btn btn-outline-secondary" type="button" id="btnEmp"
                                     data-bs-toggle="modal" data-bs-target="#empModal"> <i
@@ -91,14 +93,20 @@
                 <thead>
                     <tr>
                         <th hidden>Date1</th>
-                        <th style="width:10%;">Date</th>
-                        <th style="width:10%;">EmpID</th>
-                        <th style="width:30%;">Employee</th>
-                        <th style="width:10%;">Comp Code</th>
-                        <th style="width:10%;">Emp Code</th>
-                        <th style="width:10%;">Atten Flage</th>
-                        <th style="width:10%;">HR Flag</th>
-                        <th style="width:10%;">Post</th>
+                        <th>Date</th>
+                        <th>EmpID</th>
+                        <th>Employee</th>
+                        <th>Comp Code</th>
+                        <th>Emp Code</th>
+                        <th>Atten Flage</th>
+                        <th>HR Flag</th>
+                        <th>Post</th>
+                        <th>In</th>
+                        <th>Out</th>
+                        <th>In City</th>
+                        <th>Out City</th>
+                        <th>In Lat/Lng</th>
+                        <th>Out Lat/Lng</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -113,6 +121,12 @@
                         <td>{{this.atten_flag}}</td>
                         <td>{{this.hr_flag}}</td>
                         <td>{{this.post_mg}}</td>
+                        <td>{{this.in_time}}</td>
+                        <td>{{this.out_time}}</td>
+                        <td>{{this.in_city}}</td>
+                        <td>{{this.out_city}}</td>
+                        <td>{{this.in_LatLng}}</td>
+                        <td>{{this.out_LatLng}}</td>
                     </tr>
                     {{/each}}
                 </tbody>
@@ -232,13 +246,32 @@
 
     <br>
 
+    <style>
+        .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+
     <script>
         $(document).ready(function () {
             $('#attenDataTable').dataTable({
-                pageLength: 50,
-                responsive: true,
-                "order": [[2, "asc"], [0, "asc"]]
+                pageLength: 25,
+                scrollX: true,
+                order: [[2, "asc"], [0, "asc"]]
             });
+
+            /*$('#attenDataTable').DataTable({
+                "searching": true,
+                "scrollX": true,
+                "paging": true,
+                "pageLength": 10,
+                "ordering": true,
+                "info": true,
+                "responsive": true,
+                "order": [[2, "asc"], [0, "asc"]]
+            });*/
 
             $('#resetBtn').on('click', function () {
                 $('#emp_id').val('');

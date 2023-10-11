@@ -22,7 +22,11 @@ import dsrTpRoute from "./routes/dsrTpRoutes.js";
 import ftp from 'basic-ftp';
 import fs from 'fs';
 import schedule from 'node-schedule';
+
+import vhost from "vhost";
 import https from "https";
+import http from "http";
+import enforce from "express-sslify";
 
 const certsPath = process.cwd() + '/certs';
 const httpsOptions = {
@@ -41,6 +45,11 @@ const httpsOptions = {
 
 const app = express();
 //const PORT = 3000;
+
+const subdomain1App = express();
+app.use(vhost("sales.malpani.com", subdomain1App));
+// Redirect HTTP to HTTPS (Enable this middleware to force HTTPS)
+app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
 // uncomment after placing your favicon in /public
 app.use(favicon(join(process.cwd(), 'public/favicon.ico')));

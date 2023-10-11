@@ -1233,12 +1233,33 @@ class dsrController {
             const params2 = [empID];
             const empData = await executeQuery(sqlStr2, params2);
 
-            let sqlStr3 = "SELECT a.emp_id,CONCAT(b.last_name,' ',b.first_name,' ',b.middle_name) as emp_name," +
-                " a.dsr_date,b.vc_comp_code,b.vc_emp_code,a.atten_flag,a.hr_flag,a.post_mg" +
-                " FROM dsr_1 as a, employees as b WHERE a.emp_id=b.emp_id and a.dsr_date Between ? and ?"
-            if (empID !== 0) {
+            // let sqlStr3 = "SELECT a.emp_id,CONCAT(b.last_name,' ',b.first_name,' ',b.middle_name) as emp_name," +
+            //     " a.dsr_date,b.vc_comp_code,b.vc_emp_code,a.atten_flag,a.hr_flag,a.post_mg," +
+            //     " c.in_time, d.out_time, c.loc_name as in_city, d.loc_name as out_city, CONCAT(c.loc_lat,',',c.loc_lng) as in_LatLng, CONCAT(d.loc_lat,',',d.loc_lng) as out_LatLng" +
+            //     " FROM dsr_1 as a LEFT JOIN employees AS b ON a.emp_id = b.emp_id" +
+            //     " LEFT JOIN (SELECT x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d') AS loc_date, DATE_FORMAT(MIN(x.loc_date),'%H:%i') AS in_time, x.loc_name, x.loc_lat, x.loc_lng FROM dsr_loc AS x GROUP BY x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d')) AS c ON a.emp_id = c.emp_id AND a.dsr_date = c.loc_date" +
+            //     " LEFT JOIN (SELECT x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d') AS loc_date, DATE_FORMAT(MAX(x.loc_date),'%H:%i') AS out_time, x.loc_name, x.loc_lat, x.loc_lng FROM dsr_loc AS x GROUP BY x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d')) AS d ON a.emp_id = d.emp_id AND a.dsr_date = d.loc_date" +
+            //     " WHERE a.dsr_date BETWEEN ? AND ?";
+            
+            let sqlStr3 = "SELECT a.emp_id, CONCAT(b.last_name, ' ', b.first_name, ' ', b.middle_name) AS emp_name,  a.dsr_date," +
+                " b.vc_comp_code, b.vc_emp_code, a.atten_flag, a.hr_flag, a.post_mg, c.in_time, c.in_city, c.in_LatLng, d.out_time, d.out_city, d.out_LatLng" +
+                " FROM dsr_1 AS a LEFT JOIN employees AS b ON a.emp_id = b.emp_id" +
+                " LEFT JOIN (SELECT x.emp_id, x.loc_date AS in_loc_date, DATE_FORMAT(x.loc_date, '%Y-%m-%d') AS loc_date," +
+                " DATE_FORMAT(x.loc_date, '%H:%i') AS in_time, x.loc_name AS in_city, CONCAT(x.loc_lat, ',', x.loc_lng) AS in_LatLng" +
+                " FROM dsr_loc AS x WHERE x.loc_date = (SELECT MIN(loc_date) FROM dsr_loc AS y WHERE y.emp_id = x.emp_id AND DATE(y.loc_date) = DATE(x.loc_date))" +
+                " ) AS c ON a.emp_id = c.emp_id AND a.dsr_date = c.loc_date" +
+                " LEFT JOIN (SELECT x.emp_id, x.loc_date AS out_loc_date, DATE_FORMAT(x.loc_date, '%Y-%m-%d') AS loc_date," +
+                " DATE_FORMAT(x.loc_date, '%H:%i') AS out_time, x.loc_name AS out_city, CONCAT(x.loc_lat, ',', x.loc_lng) AS out_LatLng" +
+                " FROM dsr_loc AS x WHERE x.loc_date = (SELECT MAX(loc_date) FROM dsr_loc AS y WHERE y.emp_id = x.emp_id AND DATE(y.loc_date) = DATE(x.loc_date))" +
+                " ) AS d ON a.emp_id = d.emp_id AND a.dsr_date = d.loc_date" +
+                " WHERE a.dsr_date BETWEEN ? AND ? "
+
+                if (empID !== 0) {
                 sqlStr3 = sqlStr3 + ` and a.emp_id=${empID}`;
             }
+            
+            // console.log('Query: ' + sqlStr3)
+
             const params3 = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')];
             const attenData = await executeQuery(sqlStr3, params3);
 
@@ -1325,9 +1346,26 @@ class dsrController {
             // const params2 = [empID];
             // const empData = await executeQuery(sqlStr2, params2);
 
-            let sqlStr3 = "SELECT DATE_FORMAT(a.dsr_date,'%d/%M/%Y') as dsr_date,a.emp_id,CONCAT(b.last_name,' ',b.first_name,' ',b.middle_name) as emp_name," +
-                " CONCAT(\"'\", b.vc_comp_code) as vc_comp_code,b.vc_emp_code,a.atten_flag,a.hr_flag,a.post_mg" +
-                " FROM dsr_1 as a, employees as b WHERE a.emp_id=b.emp_id and a.dsr_date Between ? and ?"
+            // let sqlStr3 = "SELECT DATE_FORMAT(a.dsr_date,'%d/%M/%Y') as dsr_date,a.emp_id,CONCAT(b.last_name,' ',b.first_name,' ',b.middle_name) as emp_name," +
+            //     " CONCAT(\"'\", b.vc_comp_code) as vc_comp_code,b.vc_emp_code,a.atten_flag,a.hr_flag,a.post_mg," +
+            //     " c.in_time, d.out_time, c.loc_name as in_city, d.loc_name as out_city, CONCAT(c.loc_lat,',',c.loc_lng) as in_LatLng, CONCAT(d.loc_lat,',',d.loc_lng) as out_LatLng" +
+            //     " FROM dsr_1 as a LEFT JOIN employees AS b ON a.emp_id = b.emp_id" +
+            //     " LEFT JOIN (SELECT x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d') AS loc_date, DATE_FORMAT(MIN(x.loc_date),'%H:%i') AS in_time, x.loc_name, x.loc_lat, x.loc_lng FROM dsr_loc AS x GROUP BY x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d')) AS c ON a.emp_id = c.emp_id AND a.dsr_date = c.loc_date" +
+            //     " LEFT JOIN (SELECT x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d') AS loc_date, DATE_FORMAT(MAX(x.loc_date),'%H:%i') AS out_time, x.loc_name, x.loc_lat, x.loc_lng FROM dsr_loc AS x GROUP BY x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d')) AS d ON a.emp_id = d.emp_id AND a.dsr_date = d.loc_date" +
+            //     " WHERE a.dsr_date BETWEEN ? AND ?";
+            let sqlStr3 = "SELECT DATE_FORMAT(a.dsr_date,'%d/%M/%Y') as `Att Date`,a.emp_id as `EmpID`, CONCAT(b.last_name, ' ', b.first_name, ' ', b.middle_name) AS `Emp Name`," +
+                " CONCAT(\"'\", b.vc_comp_code) as `ERP Comp`, b.vc_emp_code as `ERP Emp`, a.atten_flag as `Status`, a.hr_flag as `HR Flag`, a.post_mg as `Post`," +
+                " c.in_time as `In Time`, d.out_time  as `Out Time`, c.in_city as `In City`, d.out_city as `Out City`, c.in_LatLng as `In LatLng`, d.out_LatLng as `Out LatLng`" +
+                " FROM dsr_1 AS a LEFT JOIN employees AS b ON a.emp_id = b.emp_id" +
+                " LEFT JOIN (SELECT x.emp_id, x.loc_date AS in_loc_date, DATE_FORMAT(x.loc_date, '%Y-%m-%d') AS loc_date," +
+                " DATE_FORMAT(x.loc_date, '%H:%i') AS in_time, x.loc_name AS in_city, CONCAT(x.loc_lat, ',', x.loc_lng) AS in_LatLng" +
+                " FROM dsr_loc AS x WHERE x.loc_date = (SELECT MIN(loc_date) FROM dsr_loc AS y WHERE y.emp_id = x.emp_id AND DATE(y.loc_date) = DATE(x.loc_date))" +
+                " ) AS c ON a.emp_id = c.emp_id AND a.dsr_date = c.loc_date" +
+                " LEFT JOIN (SELECT x.emp_id, x.loc_date AS out_loc_date, DATE_FORMAT(x.loc_date, '%Y-%m-%d') AS loc_date," +
+                " DATE_FORMAT(x.loc_date, '%H:%i') AS out_time, x.loc_name AS out_city, CONCAT(x.loc_lat, ',', x.loc_lng) AS out_LatLng" +
+                " FROM dsr_loc AS x WHERE x.loc_date = (SELECT MAX(loc_date) FROM dsr_loc AS y WHERE y.emp_id = x.emp_id AND DATE(y.loc_date) = DATE(x.loc_date))" +
+                " ) AS d ON a.emp_id = d.emp_id AND a.dsr_date = d.loc_date" +
+                " WHERE a.dsr_date BETWEEN ? AND ? "
             if (empID !== 0) {
                 sqlStr3 = sqlStr3 + ` and a.emp_id=${empID}`;
             }
