@@ -155,9 +155,7 @@ class authController {
       console.error(error);
       //res.status(500).json({ message: 'Internal server error.' });
       return res.render('auth/login', { title: 'Register User', layout: 'global', alert: `Authentication failed. Internal server error.` });
-    } finally {
-      //conn.release
-    }
+    } 
   }
 
   static logout = (req, res) => {

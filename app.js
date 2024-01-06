@@ -1,6 +1,5 @@
 import express from "express";
 import { executeQuery } from './db.js';
-// const conn = await pool.getConnection();
 
 import cookieParser from "cookie-parser";
 import { join } from 'path';
@@ -18,6 +17,7 @@ import dealerPayRoute from "./routes/dealerPayRoutes.js";
 import dsrRoute from "./routes/dsrRoutes.js";
 import dsrAcRoute from "./routes/dsrAcRoutes.js";
 import dsrTpRoute from "./routes/dsrTpRoutes.js";
+import apiRoute from "./routes/apiRoutes.js";
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
@@ -30,8 +30,8 @@ import enforce from "express-sslify";
 
 const certsPath = process.cwd() + '/certs';
 const httpsOptions = {
-  key: fs.readFileSync(certsPath + '/server.key'), 
-  cert: fs.readFileSync(certsPath + '/server.crt') 
+  key: fs.readFileSync(certsPath + '/server.key'),
+  cert: fs.readFileSync(certsPath + '/server.crt')
 };
 
 //import axios from 'axios';
@@ -63,7 +63,7 @@ app.use(cookieParser());
 app.use(express.static(join(process.cwd(), 'public')));
 
 app.use(cors());
-app.use('/api', function (req, res, next) {
+app.use('/cors-api', function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -181,6 +181,7 @@ app.engine('hbs', exphbs.engine({
 }));
 
 // Load auth routes
+app.use('/api', apiRoute);
 app.use('/auth', authRoute);
 app.use('/', authController.checkToken); //chekToken applicable all follwoing routes
 app.use('/product', productRoute);
@@ -257,7 +258,6 @@ app.get('/lov', async (req, res) => {
   res.render('lov', { users });
   // return res.status(400).json({ users });
 });
-
 
 //**************************************//
 app.all('*', (req, res) => {
