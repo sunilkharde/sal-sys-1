@@ -196,9 +196,11 @@
                     </label>
                     <div class="col-sm-10">
                         <div class="input-group">
-                            <input hidden type="text" class="form-control" id="mg_id" name="mg_id" value="{{data.mg_id}}">
+                            <input hidden type="text" class="form-control" id="mg_id" name="mg_id"
+                                value="{{data.mg_id}}">
                             <input readonly type="text" class="form-control" id="mg_name" name="mg_name"
-                                value="{{data.mg_name}}" placeholder="Mapping manager name" minlength="1"  maxlength="50">
+                                value="{{data.mg_name}}" placeholder="Mapping manager name" minlength="1"
+                                maxlength="50">
                             <button class="btn btn-outline-info" type="button" id="btnMG" data-bs-toggle="modal"
                                 data-bs-target="#salesMgModal"> <i class="bi bi-list"></i></button>
                         </div>
@@ -211,9 +213,11 @@
                     </label>
                     <div class="col-sm-10">
                         <div class="input-group">
-                            <input hidden type="text" class="form-control" id="se_id" name="se_id" value="{{data.se_id}}">
+                            <input hidden type="text" class="form-control" id="se_id" name="se_id"
+                                value="{{data.se_id}}">
                             <input readonly type="text" class="form-control" id="se_name" name="se_name"
-                                value="{{data.se_name}}" placeholder="Mapping sales username" minlength="1" maxlength="50">
+                                value="{{data.se_name}}" placeholder="Mapping sales username" minlength="1"
+                                maxlength="50">
                             <button class="btn btn-outline-info" type="button" id="btnSE" data-bs-toggle="modal"
                                 data-bs-target="#seModal"> <i class="bi bi-list"></i></button>
                         </div>
@@ -221,7 +225,8 @@
                 </div>
 
                 <div class="col-md-3 d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary mx-1">Submit</button>
+                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"
+                        class="btn btn-primary mx-1">Submit</button>
                     <div class="col-sm-10">
                         <button type="button" class="btn btn-secondary mx-1"
                             onclick="window.location.href='/customer/view'">Cancel</button>

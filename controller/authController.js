@@ -1,6 +1,7 @@
 import { executeQuery } from '../db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import moment from 'moment';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -155,7 +156,7 @@ class authController {
       console.error(error);
       //res.status(500).json({ message: 'Internal server error.' });
       return res.render('auth/login', { title: 'Register User', layout: 'global', alert: `Authentication failed. Internal server error.` });
-    } 
+    }
   }
 
   static logout = (req, res) => {
@@ -223,6 +224,110 @@ class authController {
       //conn.release
     }
   }
+
+
+  //***OTP base reset user password */
+  static resetPwd = async (req, res) => {
+    try {
+      if (!res.locals.user.user_id) {
+        res.status(500).json({ success: false, message: 'Not login user' });
+      }
+
+      const sqlStr = "Select * From users Where user_id=?"
+      const params = [res.locals.user.user_id];
+      const result = await executeQuery(sqlStr, params);
+      const userData = result.length > 0 ? result[0] : null;
+
+      res.render('auth/reset-pwd', { title: 'Reset Password', userData });
+
+    } catch (error) {
+      console.error(error);
+      // res.status(500).json({ success: false, message: 'Internal Server Error' });
+      return res.render('auth/reset-pwd', { alert: `Internal server error`, title: 'Reset Password', userData });
+    }
+  }
+
+  static sendOTP = async (req, res) => {
+    const { mobile_no } = req.body;
+    const userData = req.body
+    try {
+      var errors = [];
+      if (!mobile_no || mobile_no.length !== 10) {
+        errors.push({ message: 'Enter valid mobile number' });
+      }
+      if (errors.length) {
+        return res.render('auth/reset-pwd', { errors, title: 'Reset Password', userData });
+      }
+
+      // Template ID – 1707170609322119024
+      // Content - Dear {#var#}, your OTP for password reset is {#var#}, which is valid for 10 minutes. MALPANI
+      // Template ID -  1707170609314821433 
+      // Content -  Dear SalesSwift user, your OTP for password reset is {#var#}, which is valid for 10 minutes. MALPANI
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expTime = moment().format('YYYY-MM-DD HH:mm:ss'); // moment().add(30, 'minutes').toDate();
+      console.log('OTP: ' + otp + ' User ID: '  + res.locals.user.user_id + ' Mobile: ' +  mobile_no);
+
+      const message = `Dear SalesSwift user, your OTP for password reset is ${otp}, which is valid for 10 minutes. MALPANI`
+      const baseURL = `https://nimbusit.co.in/api/swsend.asp?username=t1malpani&password=maplani&sender=MALPNI&sendto=${mobile_no}&message=${message}&entityID=1201159436561584634&TemplateID=1707170609314821433`;
+
+      const response = await fetch(baseURL);
+      if (response.ok) {
+
+        const sqlStr = "Update users Set otp=?, exp_time=? Where user_id=?"
+        const params = [otp, expTime, res.locals.user.user_id];
+        await executeQuery(sqlStr, params);
+
+        return res.render('auth/reset-pwd', { title: 'Reset Password', userData, otpData: { otp, expTime } });
+
+      } else {
+        return res.render('auth/reset-pwd', { alert: `Failed to send messages`, title: 'Reset Password', userData });
+      }
+
+    } catch (error) {
+      console.error(error);
+      return res.render('auth/reset-pwd', { alert: `Internal server error`, title: 'Reset Password', userData });
+    }
+  }
+
+  static validateOTP = async (req, res) => {
+    const { input_otp } = req.body;
+    try {
+      const sqlStr = "Select * From users Where user_id=?"
+      const params = [res.locals.user.user_id];
+      const result = await executeQuery(sqlStr, params);
+      const userData = result.length > 0 ? result[0] : null;
+
+      var errors = [];
+      if (userData.length === 0) {
+        errors.push({ message: 'Not valid user' });
+      }
+      if (!input_otp || input_otp.length !== 6) {
+        errors.push({ message: 'Invalid OTP!' });
+      }
+      if (errors.length) {
+        res.render('auth/reset-pwd', { errors, title: 'Reset Password', userData });
+        return
+      }
+
+      const userDataExpTime = moment(userData.exp_time).format('YYYY-MM-DD HH:mm:ss');
+      const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
+      const diffMin = Math.abs(moment(userDataExpTime).diff(moment(currentTime), 'minutes'));
+      // console.log('Diff Minutes ...' + diffMin);
+
+      if (userData.otp == input_otp && diffMin < 15) {
+        return res.render('auth/reset-password', { title: 'Reset Password', data: userData });
+      } else {
+        return res.render('auth/reset-pwd', { alert: 'Invalid OTP or Expired!', title: 'Reset Password', userData });
+      }
+
+    } catch (error) {
+      console.error(error);
+      return res.render('auth/reset-pwd', { alert: `Internal server error`, title: 'Reset Password' });
+    }
+  }
+
+
 
 };
 

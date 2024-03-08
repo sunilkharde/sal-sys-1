@@ -22,4 +22,9 @@ router.post('/logout', authController.logout);
 router.post('/reset-password', authController.resetPassword);
 router.post('/check-token', authController.checkToken);
 
+router.get('/reset-pwd', authController.checkToken, authController.resetPwd);
+router.post('/send-otp', authController.checkToken, authController.sendOTP);
+router.post('/reset-pwd', authController.checkToken, authController.validateOTP);
+
+
 export default router;

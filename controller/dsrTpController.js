@@ -229,7 +229,7 @@ class dsrTpController {
                 " Where a.status='A'"
             const sqlGroupBy = " Group By a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name)," +
                 " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day,a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name)"
-            if (!["Admin", "Support"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support"].includes(res.locals.user.user_role)) {
                 sqlStr2 = sqlStr2 + ` and (a.boss_id=${mgID})`;
             }
             // console.log('MySQL Query : ' + sqlStr2 + sqlGroupBy)
@@ -763,7 +763,7 @@ class dsrTpController {
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
                 " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
                 sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUserID} or a.boss_id=${logUserID})`;
             }
             // const params1 = [logUserID, logUserID];
@@ -1159,7 +1159,7 @@ class dsrTpController {
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
                 " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
                 sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
             }
             // const params1 = [logUser[0].emp_id, logUser[0].emp_id];
@@ -1251,7 +1251,7 @@ class dsrTpController {
             //     " FROM employees as a, designations as b, hqs as c, employees as d" +
             //     " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
             // // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            // if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            // if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
             //     sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
             // }
             // // const params1 = [logUser[0].emp_id, logUser[0].emp_id];

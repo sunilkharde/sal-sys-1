@@ -149,7 +149,7 @@ class dealerPayController {
                 " from dealer_payment as a, customers as b, business_units as c" +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and a.ref_date Between ? and ?";
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
             }
             var params = null;
@@ -303,7 +303,7 @@ class dealerPayController {
                 " from dealer_payment as a, customers as b, business_units as c, users as d" +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and b.user_id=d.user_id and a.ref_date Between ? and ?";
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
             }
             var params = null;
@@ -355,7 +355,7 @@ class dealerPayController {
                 " from dealer_payment as a, customers as b, business_units as c, users as d " +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and b.user_id=d.user_id and a.ref_date Between ? and ?";
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
             }
             var params = null;
@@ -402,7 +402,7 @@ class dealerPayController {
                 " from dealer_payment as a, customers as b, business_units as c, users as d" +
                 " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id and b.user_id=d.user_id and a.ref_date Between ? and ?";
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            if (!["Admin", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account", "Bank"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and a.c_by=${res.locals.user.user_id}`;
             }
             var params = null;

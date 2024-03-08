@@ -84,7 +84,7 @@
                 </div>
 
                 <div class="col-md-3 d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary mx-1">Submit</button>
+                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" class="btn btn-primary mx-1">Submit</button>
                     <button type="button" class="btn btn-secondary mx-1"
                         onclick="window.location.href='/product/view'">Cancel</button>
                 </div>

@@ -1,5 +1,7 @@
 import { executeQuery } from '../db.js';
 import moment from 'moment';
+import { join } from 'path';
+import fs from 'fs';
 
 // import xlsx from 'xlsx';
 import csv from 'fast-csv';
@@ -285,7 +287,25 @@ class dsrController {
             }
             //******Notification End******
 
-            res.render('dsr/dsr-view-pm', { layout: 'mobile', data: results[0], data2: results2[0], dataNote, showNote: showNote, googleApiKey: process.env.GOOGLE_MAPS_API_KEY });
+            //Get route location names
+            const sqlStr6 = "Select DISTINCT loc_name" +  //emp_id, loc_date, loc_lat, loc_lng,
+                " From dsr_loc Where emp_id=? and loc_date >= CURRENT_DATE()" +
+                " Order By loc_date";
+            const params6 = [results[0].emp_id];
+            const routeData = await executeQuery(sqlStr6, params6);
+            let locNames = "";
+            if (routeData.length > 0) {
+                locNames = "Route: " + routeData.map(row => row.loc_name).join(' > ');
+            }
+            //
+            const sqlStr7 = "Select DATE_FORMAT(Max(loc_date), '%Y-%m-%d %H:%i:%s') as loc_date" +  //emp_id, loc_date, loc_lat, loc_lng,
+                " From dsr_loc Where emp_id=? and loc_date >= CURRENT_DATE()" +
+                " Order By loc_date";
+            const params7 = [results[0].emp_id];
+            const locData = await executeQuery(sqlStr7, params7);
+            const toDate = locData[0].loc_date ? moment(locData[0].loc_date).format('YYYY-MM-DD HH:mm:ss')  : moment('2000-01-01 12:00:00').format('YYYY-MM-DD HH:mm:ss');
+            //
+            res.render('dsr/dsr-view-pm', { layout: 'mobile', data: results[0], data2: results2[0], dataNote, showNote: showNote, googleApiKey: process.env.GOOGLE_MAPS_API_KEY, locNames, toDate });
 
         } catch (error) {
             console.error(error);
@@ -822,7 +842,7 @@ class dsrController {
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
                 " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
                 sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUserID} or a.boss_id=${logUserID})`;
             }
             // const params1 = [logUserID, logUserID];
@@ -1218,7 +1238,7 @@ class dsrController {
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
                 " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
             // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
                 sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
             }
             // const params1 = [logUser[0].emp_id, logUser[0].emp_id];
@@ -1240,7 +1260,7 @@ class dsrController {
             //     " LEFT JOIN (SELECT x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d') AS loc_date, DATE_FORMAT(MIN(x.loc_date),'%H:%i') AS in_time, x.loc_name, x.loc_lat, x.loc_lng FROM dsr_loc AS x GROUP BY x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d')) AS c ON a.emp_id = c.emp_id AND a.dsr_date = c.loc_date" +
             //     " LEFT JOIN (SELECT x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d') AS loc_date, DATE_FORMAT(MAX(x.loc_date),'%H:%i') AS out_time, x.loc_name, x.loc_lat, x.loc_lng FROM dsr_loc AS x GROUP BY x.emp_id, DATE_FORMAT(x.loc_date,'%Y-%m-%d')) AS d ON a.emp_id = d.emp_id AND a.dsr_date = d.loc_date" +
             //     " WHERE a.dsr_date BETWEEN ? AND ?";
-            
+
             let sqlStr3 = "SELECT a.emp_id, CONCAT(b.last_name, ' ', b.first_name, ' ', b.middle_name) AS emp_name,  a.dsr_date," +
                 " b.vc_comp_code, b.vc_emp_code, a.atten_flag, a.hr_flag, a.post_mg, c.in_time, c.in_city, c.in_LatLng, d.out_time, d.out_city, d.out_LatLng" +
                 " FROM dsr_1 AS a LEFT JOIN employees AS b ON a.emp_id = b.emp_id" +
@@ -1254,10 +1274,10 @@ class dsrController {
                 " ) AS d ON a.emp_id = d.emp_id AND a.dsr_date = d.loc_date" +
                 " WHERE a.dsr_date BETWEEN ? AND ? "
 
-                if (empID !== 0) {
+            if (empID !== 0) {
                 sqlStr3 = sqlStr3 + ` and a.emp_id=${empID}`;
             }
-            
+
             // console.log('Query: ' + sqlStr3)
 
             const params3 = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')];
@@ -1331,7 +1351,7 @@ class dsrController {
             //     " FROM employees as a, designations as b, hqs as c, employees as d" +
             //     " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
             // // if (res.locals.user.user_role !== "Admin" && res.locals.user.user_role !== "Support") {
-            // if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            // if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
             //     sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
             // }
             // // const params1 = [logUser[0].emp_id, logUser[0].emp_id];
@@ -1453,36 +1473,32 @@ class dsrController {
     };
 
     static saveLocation = async (req, res) => {
-        var { empID, locLat, locLng, locName, saveLocFlag } = req.body;
+        var { empID, locLat, locLng, locName, saveLocFlag, locAdd, dataURL1, dataURL2, dataURL3 } = req.body;
 
         try {
-
-            const frDt = moment().subtract(10, 'minutes')
+            const row = await executeQuery("SELECT DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s') AS current_datetime;");
+            const curDatetime = row[0].current_datetime;
+            const frDt = moment(curDatetime).subtract(10, 'minutes')//10
             const fromDate = frDt.format('YYYY-MM-DD HH:mm:ss');
-            const toDate = moment().format('YYYY-MM-DD HH:mm:ss');
+            const toDate = moment(curDatetime).format('YYYY-MM-DD HH:mm:ss');
             if (saveLocFlag === 'Y') {
                 const sqlStr = "Select * from dsr_loc" +
                     " Where emp_id=? and loc_date Between ? and ?"; // and loc_lat=? and loc_lng=? 
-                const params = [empID, fromDate, toDate]; //locLat, locLng,
+                const params = [empID, fromDate, toDate]; //locLat, locLng, 
                 const locData = await executeQuery(sqlStr, params);
                 if (locData.length === 0) {
-                    const sqlStr2 = "INSERT INTO dsr_loc (emp_id,loc_date,loc_lat,loc_lng,loc_name)" +
-                        " VALUES(?,CURRENT_TIMESTAMP,?,?,?)";
-                    const params2 = [empID, locLat, locLng, locName];
+                    const sqlStr2 = "INSERT INTO dsr_loc (emp_id,loc_date,loc_lat,loc_lng,loc_name,loc_add)" +
+                        " VALUES(?,?,?,?,?,?)"; //CURRENT_TIMESTAMP
+                    const params2 = [empID, toDate, locLat, locLng, locName, locAdd];
                     await executeQuery(sqlStr2, params2);
 
-                    console.log('Save Location:  EmpID: ' + empID + ' Lat: ' + locLat + ' Lng: ' + locLng + ' Location: ' + locName)
+                    await this.uploadSelfie(req, res, dataURL1, dataURL2, dataURL3, toDate, empID);
+                    // console.log('Save Location:  EmpID: ' + empID + ' Lat: ' + locLat + ' Lng: ' + locLng + ' Location: ' + locName)
+
                 } else {
                     console.log('Not Save Location:  EmpID: ' + empID + ' Lat: ' + locLat + ' Lng: ' + locLng + ' Location: ' + locName)
                 }
             }
-
-            // if (saveLocFlag === 'Y') {
-            //     const sqlStr = "INSERT INTO dsr_loc (emp_id,loc_date,loc_lat,loc_lng,loc_name)" +
-            //         " VALUES(?,CURRENT_TIMESTAMP,?,?,?)";
-            //     const params = [empID, locLat, locLng, locName];
-            //     await executeQuery(sqlStr, params);
-            // }
 
             const sqlStr1 = "Select DISTINCT loc_name" +  //emp_id, loc_date, loc_lat, loc_lng,
                 " From dsr_loc Where emp_id=? and loc_date >= CURRENT_DATE()" +
@@ -1491,14 +1507,100 @@ class dsrController {
             const routeData = await executeQuery(sqlStr1, params1);
             let locNames = "";
             if (routeData.length > 0) {
-                locNames = "Today's Journey: " + routeData.map(row => row.loc_name).join(' > ');
+                locNames = "Route: " + routeData.map(row => row.loc_name).join(' > ');
             }
 
-            res.status(200).json({ message: 'Location data saved successfully', locNames });
+            res.status(200).json({ message: 'Location data saved successfully', locNames, toDate}); //toDate-for prevent next click
 
         } catch (err) {
             console.error(err);
             res.status(500).send('Internal server error to save location');
+        }
+    };
+
+    //******uploadSelfie */
+    static uploadSelfie = async (req, res, dataURL1, dataURL2, dataURL3, toDate, empID) => {
+        try {
+            // const { dataURL1, dataURL2 } = req.body;
+            const photo1 = 'A_' + empID + moment(toDate).format('_YYYY-MM-DD HH.mm.ss');
+            const photo2 = 'B_' + empID + moment(toDate).format('_YYYY-MM-DD HH.mm.ss');
+            const photo3 = 'X_' + empID + moment(toDate).format('_YYYY-MM-DD HH.mm.ss');
+
+            const imagePath1 = join(process.cwd(), 'public', 'userData', photo1 + '.jpeg');
+            const imagePath2 = join(process.cwd(), 'public', 'userData', photo2 + '.jpeg');
+            const imagePath3 = join(process.cwd(), 'public', 'userData', photo3 + '.jpeg');
+
+            let filesSavedCount = 0;
+
+            if (dataURL1) {
+                const base64Data1 = dataURL1.replace(/^data:image\/\w+;base64,/, '');
+                const buffer1 = Buffer.from(base64Data1, 'base64');
+
+                fs.writeFile(imagePath1, buffer1, (err) => {
+                    if (err) {
+                        console.error('Error saving selfie:', err);
+                        return res.status(500).json({ error: 'Error saving selfie' });
+                    } else {
+                        // console.log('Selfie saved successfully');
+                        filesSavedCount++;
+
+                        /*if (filesSavedCount === 2) {
+                            console.log('2 Images saved successfully')
+                            // return res.status(200).json({ message: 'Images saved successfully' });
+                        }*/
+                    }
+                });
+            } else {
+                // console.log('dataURL1 is empty, skipping saving selfie');
+            }
+
+            if (dataURL2) {
+                const base64Data2 = dataURL2.replace(/^data:image\/\w+;base64,/, '');
+                const buffer2 = Buffer.from(base64Data2, 'base64');
+
+                fs.writeFile(imagePath2, buffer2, (err) => {
+                    if (err) {
+                        console.error('Error saving km image:', err);
+                        return res.status(500).json({ error: 'Error saving km image' });
+                    } else {
+                        //console.log('KM image saved successfully');
+                        filesSavedCount++;
+
+                        /*if (filesSavedCount === 2) {
+                            console.log('2 Images saved successfully')
+                            // return res.status(200).json({ message: 'Images saved successfully' });
+                        }*/
+                    }
+                });
+            } else {
+                // console.log('dataURL2 is empty, skipping saving KM image');
+            }
+
+            if (dataURL3) {
+                const base64Data3 = dataURL3.replace(/^data:image\/\w+;base64,/, '');
+                const buffer3 = Buffer.from(base64Data3, 'base64');
+
+                fs.writeFile(imagePath3, buffer3, (err) => {
+                    if (err) {
+                        console.error('Error saving invoice image:', err);
+                        return res.status(500).json({ error: 'Error saving invoice image' });
+                    } else {
+                        // console.log('Invoice image saved successfully');
+                        filesSavedCount++;
+
+                        /*if (filesSavedCount === 3) {
+                            console.log('3 Images saved successfully')
+                            // return res.status(200).json({ message: 'Images saved successfully' });
+                        }*/
+                    }
+                });
+            } else {
+                // console.log('dataURL3 is empty, skipping saving invoice image');
+            }
+
+        } catch (error) {
+            console.error('Error uploading images:', error);
+            return res.status(500).json({ error: 'Error uploading images' });
         }
     };
 
@@ -1544,7 +1646,7 @@ class dsrController {
                 " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
                 " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
                 sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
             }
             const empList = await executeQuery(sqlStr1);
@@ -1560,16 +1662,16 @@ class dsrController {
             const empData = await executeQuery(sqlStr2, params2);
 
             let sqlEmp = ""
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
                 sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
             }
+
             let sqlStr3 = "SELECT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
                 " a.loc_date,a.loc_lat,a.loc_lng,a.loc_name,DATE_FORMAT(a.loc_date,'%H:%i') as loc_time" +
                 " FROM dsr_loc as a, employees as b" +
                 " WHERE a.emp_id=b.emp_id " + sqlEmp +
                 " and a.loc_date = (Select Max(x.loc_date) as loc_date From dsr_loc as x" +
                 " Where x.emp_id=a.emp_id and x.loc_date Between ? and ? )"
-            // const params3 = [fromDate.format('YYYY-MM-DD HH:mm'), toDate.format('YYYY-MM-DD HH:mm')];
             const params3 = [fromDate, toDate];
             const locData = await executeQuery(sqlStr3, params3);
 
@@ -1624,7 +1726,7 @@ class dsrController {
                 " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
                 " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
-            if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
                 sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
             }
             const empList = await executeQuery(sqlStr1);
@@ -1640,7 +1742,7 @@ class dsrController {
             const empData = await executeQuery(sqlStr2, params2);
 
             // let sqlEmp = ""
-            // if (!["Admin", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+            // if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
             //     sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
             // }
             let sqlStr3 = "SELECT DISTINCT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
@@ -1658,6 +1760,234 @@ class dsrController {
         }
     }
 
+    static reportLocationRegular = async (req, res) => {
+        const alert = req.query.alert;
+        const { emp_id, loc_date } = req.query;
+        try {
+
+            var fromDate = null;
+            var toDate = null;
+            if (loc_date === null || loc_date === undefined) {
+                fromDate = moment().startOf('day').format('YYYY-MM-DD HH:mm');
+                // toDate = moment().format('YYYY-MM-DD HH:mm');
+                toDate = moment().endOf('day').format('YYYY-MM-DD HH:mm');
+            } else {
+                fromDate = moment(loc_date).startOf('day').format('YYYY-MM-DD HH:mm');
+                toDate = moment(loc_date).format('YYYY-MM-DD HH:mm');
+            }
+
+            //Get current login user details
+            const sqlStr = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
+                " FROM employees as a" +
+                " Where a.status='A' and a.user_id=?"
+            const params = [res.locals.user.user_id];
+            const logUser = await executeQuery(sqlStr, params);
+            // if (logUser.length === 0) {
+            //     res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
+            //     return;
+            // }
+
+            //Get emp list (boss and under emp)
+            var sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+                sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
+            }
+            const empList = await executeQuery(sqlStr1);
+
+            var empID = emp_id === null || emp_id === undefined || emp_id === '' ? 0 : emp_id;
+            //Get emp details with boss details
+            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
+            const params2 = [empID];
+            const empData = await executeQuery(sqlStr2, params2);
+
+            let sqlEmp = ""
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+                sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
+            }
+
+            let seleEmp = "";
+            if (emp_id && emp_id !== null && emp_id !== undefined) {
+                seleEmp = ` and a.emp_id=${emp_id}`;
+            }
+            // console.log('emp id...', emp_id, ' seleEmp... ', seleEmp)
+
+            let sqlStr3 = "SELECT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
+                " a.loc_date,a.loc_lat,a.loc_lng,a.loc_name,a.loc_add,DATE_FORMAT(a.loc_date,'%H:%i') as loc_time," +
+                " b.desg_id,c.desg_name,b.hq_id,d.hq_name,b.off_day," +
+                " b.boss_id, CONCAT(e.last_name,' ',e.first_name,' ',e.middle_name) as boss_name," +
+                " CONCAT('/userData/A_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img1," +
+                " CONCAT('/userData/B_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img2," +
+                " CONCAT('/userData/X_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img3" +
+                " FROM dsr_loc as a, employees as b, designations as c, hqs as d, employees as e" +
+                " WHERE a.emp_id=b.emp_id " + sqlEmp + seleEmp +
+                " and a.loc_date Between ? and ? " +
+                " and b.desg_id=c.desg_id and b.hq_id=d.hq_id and b.boss_id=e.emp_id "
+            // console.log('sql', sqlStr3, fromDate, toDate)
+            
+            const params3 = [fromDate, toDate];
+            const locData = await executeQuery(sqlStr3, params3);
+            // console.log('Data', locData)
+
+            res.render('dsr/dsr-report-loc3', { layout: 'mobile', locToDate: toDate, emp_list: empList, empData: empData[0], alert, locData }); // googleApiKey: process.env.GOOGLE_MAPS_API_KEY, locations: JSON.stringify(locData) 
+
+        } catch (error) {
+            console.error(error);
+            // Handle the error
+        }
+    }
+
+    static exportCSVLocationRegular = async (req, res) => {
+        const { exportCSV_locDate, exportCSV_empID } = req.query;
+        try {
+
+            var fromDate = null;
+            var toDate = null;
+            if (exportCSV_locDate === null || exportCSV_locDate === undefined) {
+                fromDate = moment().startOf('day').format('YYYY-MM-DD HH:mm');
+                toDate = moment().endOf('day').format('YYYY-MM-DD HH:mm');
+            } else {
+                fromDate = moment(exportCSV_locDate).startOf('day').format('YYYY-MM-DD HH:mm');
+                toDate = moment(exportCSV_locDate).format('YYYY-MM-DD HH:mm');
+            }
+
+            //Get current login user details
+            const sqlStr = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
+                " FROM employees as a" +
+                " Where a.status='A' and a.user_id=?"
+            const params = [res.locals.user.user_id];
+            const logUser = await executeQuery(sqlStr, params);
+            // if (logUser.length === 0) {
+            //     res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
+            //     return;
+            // }
+
+            let sqlEmp = ""
+            if (["Employee"].includes(res.locals.user.user_role)) {
+                sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
+            }
+            let seleEmp = "";
+            if (exportCSV_empID && exportCSV_empID !== null && exportCSV_empID !== undefined) {
+                seleEmp = ` and a.emp_id=${exportCSV_empID}`;
+            }
+
+            let sqlStr3 = "SELECT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
+                " DATE_FORMAT(a.loc_date,'%d/%M/%Y') as loc_date, DATE_FORMAT(a.loc_date,'%H:%i') as loc_time," +
+                " a.loc_lat, a.loc_lng, a.loc_name, a.loc_add," +
+                " b.desg_id, c.desg_name, b.hq_id, d.hq_name, b.off_day," +
+                " b.boss_id, CONCAT(e.last_name,' ',e.first_name,' ',e.middle_name) as boss_name" +
+                " FROM dsr_loc as a, employees as b, designations as c, hqs as d, employees as e" +
+                " WHERE a.emp_id=b.emp_id " + sqlEmp + seleEmp +
+                " and a.loc_date Between ? and ? " +
+                " and b.desg_id=c.desg_id and b.hq_id=d.hq_id and b.boss_id=e.emp_id "
+            const params3 = [fromDate, toDate];
+            const rows = await executeQuery(sqlStr3, params3);
+
+            const fileName = `EmpLoc_${moment().format('YYYYMMDDHHmm')}.csv`
+            const csvStream = csv.format({ headers: true });
+            res.setHeader('Content-disposition', `attachment; filename=${fileName}`); // Replace "users.csv" with your desired filename
+            res.set('Content-Type', 'text/csv');
+            csvStream.pipe(res);
+            rows.forEach((row) => csvStream.write(row));
+            csvStream.end();
+
+            const now = new Date().toLocaleString();
+            console.log(`User location data exported successfully to CSV file!... user: '${res.locals.user.username} on '${moment().format('DD-MMM-YYYY HH:mm')}'`);
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    static reportLocationEmployee = async (req, res) => {//This function is copy of 'reportLocationRegular'
+        const alert = req.query.alert;
+        const { emp_id, loc_date } = req.query;
+        try {
+
+            var fromDate = null;
+            var toDate = null;
+            if (loc_date === null || loc_date === undefined) {
+                fromDate = moment().startOf('day').format('YYYY-MM-DD HH:mm');
+                // toDate = moment().format('YYYY-MM-DD HH:mm');
+                toDate = moment().endOf('day').format('YYYY-MM-DD HH:mm');
+            } else {
+                fromDate = moment(loc_date).startOf('day').format('YYYY-MM-DD HH:mm');
+                toDate = moment(loc_date).format('YYYY-MM-DD HH:mm');
+            }
+
+            //Get current login user details
+            const sqlStr = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
+                " FROM employees as a" +
+                " Where a.status='A' and a.user_id=?"
+            const params = [res.locals.user.user_id];
+            const logUser = await executeQuery(sqlStr, params);
+            // if (logUser.length === 0) {
+            //     res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
+            //     return;
+            // }
+
+            //Get emp list (boss and under emp)
+            var sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+                sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
+            }
+            const empList = await executeQuery(sqlStr1);
+
+            var empID = emp_id === null || emp_id === undefined || emp_id === '' ? 0 : emp_id;
+            //Get emp details with boss details
+            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
+            const params2 = [empID];
+            const empData = await executeQuery(sqlStr2, params2);
+
+            let sqlEmp = ""
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+                sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
+            }
+
+            let seleEmp = "";
+            if (emp_id && emp_id !== null && emp_id !== undefined) {
+                seleEmp = ` and a.emp_id=${emp_id}`;
+            }
+            // console.log('emp id...', emp_id, ' seleEmp... ', seleEmp)
+
+            let sqlStr3 = "SELECT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
+                " a.loc_date,a.loc_lat,a.loc_lng,a.loc_name,a.loc_add,DATE_FORMAT(a.loc_date,'%H:%i') as loc_time," +
+                " b.desg_id,c.desg_name,b.hq_id,d.hq_name,b.off_day," +
+                " b.boss_id, CONCAT(e.last_name,' ',e.first_name,' ',e.middle_name) as boss_name," +
+                " CONCAT('/userData/A_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img1," +
+                " CONCAT('/userData/B_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img2," +
+                " CONCAT('/userData/X_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img3" +
+                " FROM dsr_loc as a, employees as b, designations as c, hqs as d, employees as e" +
+                " WHERE a.emp_id=b.emp_id " + sqlEmp + seleEmp +
+                " and a.loc_date Between ? and ? " +
+                " and b.desg_id=c.desg_id and b.hq_id=d.hq_id and b.boss_id=e.emp_id "
+            // console.log('sql', sqlStr3, fromDate, toDate)
+            const params3 = [fromDate, toDate];
+            const locData = await executeQuery(sqlStr3, params3);
+            // console.log('Data', locData)
+
+            res.render('dsr/dsr-report-loc-emp', { layout: 'mobile', locToDate: toDate, emp_list: empList, empData: empData[0], alert, locData }); // googleApiKey: process.env.GOOGLE_MAPS_API_KEY, locations: JSON.stringify(locData) 
+
+        } catch (error) {
+            console.error(error);
+            // Handle the error
+        }
+    }
 
 };
 

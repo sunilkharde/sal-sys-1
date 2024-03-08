@@ -120,7 +120,7 @@ class poController {
             const poDate = row[0].po_date
             const minDate = moment(poDate);
             const maxDate = moment(poDate).add(15, 'days');
-            const data = {...req.body, po_date: poDate, po_no: '*****', exp_date: minDate, minDate, maxDate };
+            const data = { ...req.body, po_date: poDate, po_no: '*****', exp_date: minDate, minDate, maxDate };
 
             res.render('po/po-create', { errors, data, customer_list, bu_list });
             return;
@@ -180,21 +180,35 @@ class poController {
     };
 
     static viewAll = async (req, res) => {
-        // retrieve the alert message from the query parameters
         const alert = req.query.alert;
-        try {//DATE_FORMAT(a.po_date,'%d/%m/%Y') as po_date2, DATE_FORMAT(a.exp_date,'%d/%m/%Y') as exp_date
-            //const conn = await pool.getConnection();
+        const { from_date, to_date } = req.query;
+        try {
+            var fromDate = null;
+            var toDate = null;
+            if (from_date === null || from_date === undefined) {
+                // fromDate = moment().startOf('month');
+                // toDate = fromDate.clone().endOf('month');
+                const frDt = moment().subtract(15, 'days')
+                fromDate = frDt.format('YYYY-MM-DD');
+                toDate = moment().format('YYYY-MM-DD');
+            } else {
+                fromDate = from_date
+                toDate = to_date
+            }
+            const data = { from_date: fromDate, to_date: toDate }
+
             var sqlStr = "Select a.po_date,a.po_no,a.po_no_new,b.customer_name,a.exp_date,CONCAT(c.bu_code,' | ',c.bu_short) as bu_name,a.posted,a.ftp_date,a.status" +
                 " FROM po_hd as a, customers as b, business_units as c" +
-                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id" //+
+                " Where a.customer_id=b.customer_id and a.bu_id=c.bu_id" +
+                " and a.po_date Between ? and ?"
             //" Order By a.po_date desc, a.po_no desc";
             if (res.locals.user.user_role !== "Admin") {
                 sqlStr = sqlStr + " and a.c_by=?";
             }
-            const params = [res.locals.user.user_id];
+            const params = [fromDate, toDate, res.locals.user.user_id];
             const results = await executeQuery(sqlStr, params);
 
-            res.render('po/po-view', { po: results, alert });
+            res.render('po/po-view', { po: results, alert, data });
 
         } catch (error) {
             console.error(error);

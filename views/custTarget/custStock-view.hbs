@@ -1,0 +1,245 @@
+<div class="container">
+    {{!-- <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style=" margin-bottom: 20px;">Dealers Inventory...</h4>
+    </div> --}}
+
+    <form id="form1" action="/custTarget/view-stock" method="POST"> {{!-- enctype="multipart/form-data" --}}
+        {{!-- <div class="col-lg-12 border p-4"> --}}
+            <div class="form-group row mb-3">
+                <label for="stock_date" class="col-sm-2 col-form-label text-end">Stock Date
+                    {{!-- {{momentYMD stock_date}} --}}
+                    <span style="color: red;">*</span></label>
+                <div class="col-sm-2">
+                    <input type="date" class="form-control" id="stock_date" name="stock_date"
+                        value="{{momentYMD stock_date}}">
+                </div>
+                <div class="col-md-2 item-align-start">
+                    <button type="button" id="btnRefresh" class="btn btn-success" onclick="refreshData()">Refresh
+                        Data</button>
+                </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label for="customer_id" class="col-sm-2 col-form-label text-end">Dealer<span
+                        style="color: red;">*</span></label>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
+                            value="{{custData.customer_id}}">
+                        <input disabled type="text" class="form-control" id="customer_name" name="customer_name"
+                            value="{{custData.customer_name}}" required>
+                        <button class="btn btn-outline-info" type="button" id="btnCustomer" data-bs-toggle="modal"
+                            data-bs-target="#customersModal2">
+                            <i class="bi bi-list"></i></button>
+                    </div>
+                </div>
+
+                <label for="mg_id" class="col-sm-2 col-form-label text-end">Sales Person</label>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <input hidden type="text" class="form-control" id="mg_id" name="mg_id"
+                            value="{{custData.mg_id}}">
+                        <input disabled type="text" class="form-control" id="mg_name" name="mg_name"
+                            value="{{custData.mg_name}}">
+                    </div>
+                </div>
+
+            </div>
+
+        {{!-- </div> --}}
+        {{!-- <br> --}}
+
+        <table class="table dataTable" id="custStockTable" style="width:100%">
+            <thead>
+                <tr>
+                    <th hidden>Seq</th>
+                    <th hidden>BuId</th>
+                    <th hidden>GroupId</th>
+                    <th hidden>ProductId</th>
+                    <th>BU</th>
+                    <th>Group</th>
+                    <th>Product</th>
+                    <th style="text-align: end;">Stock</th>
+                    <th style="text-align:left;">...</th>
+                </tr>
+            </thead>
+            <tbody id="stockItemsBody">
+                {{#each stockData}}
+                <tr>
+                    <td hidden><input type="text" class="form-control" id="seq_sr" name="seq_sr[]" value="{{this.seq_sr}}"></td>
+                    <td hidden><input type="text" class="form-control" id="bu_id" name="bu_id[]" value="{{this.bu_id}}"></td>
+                    <td hidden><input type="text" class="form-control" id="group_id" name="group_id[]" value="{{this.group_id}}"></td>
+                    <td hidden><input type="text" class="form-control" id="product_id" name="product_id[]" value="{{this.product_id}}"></td>
+                    <td><input readonly style="width: 100px;background-color: rgb(235, 245, 234);" type="text" class="form-control" id="bu_name" name="bu_name[]" value="{{this.bu_name}}"></td>
+                    <td><input readonly style="width: 250px;text-wrap:nowrap; background-color: rgb(235, 245, 234);" type="text" class="form-control" id="group_name" name="group_name[]" value="{{this.group_name}}"></td>
+                    <td><input readonly style="width: 600px;text-wrap:nowrap; background-color: rgb(235, 245, 234);" type="text" class="form-control" id="product_name" name="product_name[]" value="{{this.product_name}}"></td>
+                    <td><input style="width: 150px;" type="number" class="form-control text-end" id="stock_qty" name="stock_qty[]" value="{{this.stock_qty}}"></td>
+                    <td>
+                        <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
+                            class="btn btn-danger"> <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+        <div class="col-md-3 d-flex justify-content-between">
+            <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"
+                class="btn btn-primary mx-1">Submit</button>
+            <div class="col-sm-5">
+                <button type="button" class="btn btn-secondary mx-1"
+                    onclick="window.location.href='/custTarget/view-stock'">Cancel</button>
+            </div>
+            <div class="col-sm-5">
+                {{#isEqual user.user_role "Admin"}}
+                <button type="button" id="btnDelete" class="btn btn-danger" onclick="deleteData()">
+                    <i class="bi bi-trash"></i>&nbsp;&nbsp;Remove</button>
+                {{else}}
+                <a href="#" class="btn btn-secondary" style="pointer-events:none;">
+                    <i class="bi bi-trash"></i>&nbsp;&nbsp;Remove
+                </a>
+                {{/isEqual}}
+            </div>
+        </div>
+
+    </form>
+
+    
+    <style>
+        .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            /*$('#custStockTable').dataTable({
+                pageLength: 10,
+                //responsive: true,
+                scrollX: true,
+                "order": [4, "desc"],
+            });*/
+
+            const dataTable = $("#custStockTable").DataTable();
+            dataTable.destroy();
+            $("#custStockTable").DataTable({
+                "bDestroy": true,
+                "order": [],
+                "fixedHeader": true,
+                paging: false,
+                "scrollY": 385,
+                /*"scrollX": true,*/
+                "scrollCollapse": true,
+                "searching": false,
+                /*"fixedColumns": {
+                    leftColumns: 5,
+                    rightColumns: 0,
+                },*/
+            });
+
+        });
+    </script>
+
+    <script>
+        function refreshData() {
+            var customer_id = document.getElementById('customer_id').value;
+            var stock_date = document.getElementById('stock_date').value;
+            var mg_name = document.getElementById('mg_name').value;
+
+            window.location.href = '/custTarget/view-stock?customer_id=' + customer_id + '&stock_date=' + stock_date + '&mg_name=' + mg_name;
+        }
+
+        function deleteData() {
+            var customer_id = document.getElementById('customer_id').value;
+            var stock_date = document.getElementById('stock_date').value;
+            var mg_name = document.getElementById('mg_name').value;
+
+            // Ask for user confirmation
+            var userConfirmed = confirm("Are you sure you want to delete this data?");
+
+            if (userConfirmed) {
+                window.location.href = '/custTarget/delete-stock?customer_id=' + customer_id + '&stock_date=' + stock_date + '&mg_name=' + mg_name;
+            } else {
+                // User clicked cancel, do nothing or handle accordingly
+            }
+        }
+    </script>
+
+    <script>
+        const stockItemsBody = document.getElementById("stockItemsBody");
+
+        stockItemsBody.addEventListener("input", async (event) => {
+            const stock = event.stock;
+
+            if (stock.matches("#apr1,#may1,#jun1,#jul1,#aug1,#sep1,#oct1,#nov1,#dec1,#jan1,#feb1,#mar1")) {
+
+                const row = stock.closest("tr");
+                //const allowTypeVal = row.querySelector("#type").value;
+                const apr1 = isNaN(parseFloat(row.querySelector("#apr1").value)) ? 0 : parseFloat(row.querySelector("#apr1").value);
+                const may1 = isNaN(parseFloat(row.querySelector("#may1").value)) ? 0 : parseFloat(row.querySelector("#may1").value);
+                const jun1 = isNaN(parseFloat(row.querySelector("#jun1").value)) ? 0 : parseFloat(row.querySelector("#jun1").value);
+                const jul1 = isNaN(parseFloat(row.querySelector("#jul1").value)) ? 0 : parseFloat(row.querySelector("#jul1").value);
+                const aug1 = isNaN(parseFloat(row.querySelector("#aug1").value)) ? 0 : parseFloat(row.querySelector("#aug1").value);
+                const sep1 = isNaN(parseFloat(row.querySelector("#sep1").value)) ? 0 : parseFloat(row.querySelector("#sep1").value);
+                const oct1 = isNaN(parseFloat(row.querySelector("#oct1").value)) ? 0 : parseFloat(row.querySelector("#oct1").value);
+                const nov1 = isNaN(parseFloat(row.querySelector("#nov1").value)) ? 0 : parseFloat(row.querySelector("#nov1").value);
+                const dec1 = isNaN(parseFloat(row.querySelector("#dec1").value)) ? 0 : parseFloat(row.querySelector("#dec1").value);
+                const jan1 = isNaN(parseFloat(row.querySelector("#jan1").value)) ? 0 : parseFloat(row.querySelector("#jan1").value);
+                const feb1 = isNaN(parseFloat(row.querySelector("#feb1").value)) ? 0 : parseFloat(row.querySelector("#feb1").value);
+                const mar1 = isNaN(parseFloat(row.querySelector("#mar1").value)) ? 0 : parseFloat(row.querySelector("#mar1").value);
+
+                rowstock = apr1 + may1 + jun1 + jul1 + aug1 + sep1 + oct1 + nov1 + dec1 + jan1 + feb1 + mar1;
+                console.log('change.... 2', rowstock)
+                row.querySelector("#total").value = rowstock;
+
+                // Calculate the total stock
+                const stockInputs = stockItemsBody.querySelectorAll("#total");
+                let totalstock = 0;
+                stockInputs.forEach((input) => {
+                    const inputValue = parseFloat(input.value);
+                    if (!isNaN(inputValue)) {
+                        totalstock += inputValue;
+                    }
+                });
+                //document.getElementById("totalstock").value = totalAmount.toFixed(0);
+            }
+
+        });
+
+        function removeSelectedItem(element) {
+            const row = element.closest("tr");
+            if (row.rowIndex === 1) {
+                alert("First row can't be deleted!");
+                return;
+            }
+            const userConfirmed = confirm("Are you sure you want to delete this row?");
+            if (userConfirmed) {
+                row.remove();
+                //calculateTotal();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Calculate the total stock
+            const stockInputs = stockItemsBody.querySelectorAll("#total");
+            let totalstock = 0;
+            stockInputs.forEach((input) => {
+                const inputValue = parseFloat(input.value);
+                if (!isNaN(inputValue)) {
+                    totalstock += inputValue;
+                }
+            });
+            //document.getElementById("totalstock").value = totalAmount.toFixed(0);
+        });
+
+
+    </script>
+
+
+</div>
+
+
+{{> _lov-customers2}}

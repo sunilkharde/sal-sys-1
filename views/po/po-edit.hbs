@@ -131,7 +131,7 @@
                     {{#if data.ftp_date}}
                     <button disabled type="submit" id="submitBtnDisabled" class="btn btn-secondary mx-1">Submit</button>
                     {{else}}
-                    <button type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
+                    <button {{#isEqual ../user.user_role "Read" }} disabled {{/isEqual}} type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
                     {{/if}}
                     {{!-- {{#isEqual data.htp_date ""}}
                     <button type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>

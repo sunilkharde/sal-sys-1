@@ -38,7 +38,8 @@
                     <div class="input-group">
                         <input required type="password" class="form-control" name="password" id="password"
                             value="{{data.password}}" placeholder="Enter your password"
-                            pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$"
+                            {{!-- pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$" --}}
+                            pattern="^(?=.*[a-z]+)(?=.*[A-Z]+)(?=.*\d)(?=.*[@#$%^&+=]).{6,20}$"
                             aria-describedby="passwordHelp" onpaste="return false;">
                         <button class="btn btn-outline-secondary" type="button" id="password-toggle">
                             <i class="bi bi-eye"></i></button>
@@ -54,7 +55,9 @@
                     <div class="input-group">
                         <input required type="password" class="form-control" id="confPassword" name="confPassword"
                             value="{{data.confPassword}}" placeholder="Confirm your password"
-                            pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$" onpaste="return false;">
+                            {{!-- pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$"  --}}
+                            pattern="^(?=.*[a-z]+)(?=.*[A-Z]+)(?=.*\d)(?=.*[@#$%^&+=]).{6,20}$"
+                            onpaste="return false;">
                         <button class="btn btn-outline-secondary" type="button" id="confPassword-toggle">
                             <i class="bi bi-eye"></i></button>
                     </div>

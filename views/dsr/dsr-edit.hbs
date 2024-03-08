@@ -184,7 +184,7 @@
 
             <div class="row">
                 <div class="col-sm">
-                    <button type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
+                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
 
                     {{#if (eq postFlag 'Y')}}
                     <button type="button" class="btn btn-secondary mx-5"

@@ -26,8 +26,33 @@ router.get('/report-atten', dsrController.reportAtten);
 router.get('/atten-export-csv', dsrController.attenExportCSV);
 
 router.post('/save-location', dsrController.saveLocation);
-router.get('/report-loc', dsrController.reportLocation);
-router.get('/report-loc2', dsrController.reportLocationTrack);
+router.post('/uploadSelfie', dsrController.uploadSelfie);
+
+
+const checkUserRole = (req, res, next) => {
+    const userRole = res.locals.user.user_role;
+    if (userRole && ["Admin", "Read"].includes(userRole)) {
+        // If user has Admin or Read role, allow access to these routes
+        next(); // Proceed to the next middleware/route handler
+    } else {
+        // If user does not have Admin or Read role, handle accordingly
+        next("route"); // Skip to the next route (e.g., routes for regular users)
+    }
+};
+// Define routes for Admin and Read roles
+router.get('/report-loc', checkUserRole, dsrController.reportLocation);
+router.get('/report-loc2', checkUserRole, dsrController.reportLocationTrack);
+
+// Define routes for regular users
+router.get('/report-loc', dsrController.reportLocationRegular);
+router.get('/report-loc2', dsrController.reportLocationRegular);
+
+router.get('/report-loc-emp', dsrController.reportLocationEmployee);
+
+router.get('/loc-export-csv', dsrController.exportCSVLocationRegular);
+
+
+
 
 
 export default router;

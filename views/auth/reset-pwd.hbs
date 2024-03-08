@@ -1,0 +1,67 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+            <h2>Reset Password</h2>
+
+            {{!-- {{#if alert}}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{alert}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {{/if}} --}}
+
+            {{!-- <p> User Role {{user.user_role}}</p> --}}
+
+            <form id="formSendOTP" action="/auth/send-otp" method="POST">
+                <div class="mb-3">
+                    <p> Hi,&nbsp;{{userData.username}}</p>
+                    <input hidden retype="text" class="form-control" id="username" name="username"
+                        value="{{userData.username}}">
+
+                    <label for="mobile_no">Mobile No</label>
+                    <input readonly retype="text" class="form-control" id="mobile_no" name="mobile_no"
+                        inputmode="numeric" style="width: 200px" value="{{userData.mobile_no}}" pattern="[0-9]{1,10}"
+                        aria-describedby="mobileNoHelp">
+                    {{!-- <div id="mobileNoHelp" class="form-text">Please enter a valid mobile number with a maximum of
+                        10
+                        digits.</div> --}}
+
+                    <label for="email_id">Email</label>
+                    <input readonly type="email" class="form-control" id="email_id" name="email_id" style="width: 400px"
+                        value="{{userData.email_id}}" aria-describedby="emailIDHelp">
+                    {{!-- <div id="emailIDHelp" class="form-text">Please enter a valid email</div> --}}
+
+                </div>
+
+                <button type="submit" class="btn btn-success">{{#if otpData.otp}}Resend OTP{{else}}Send
+                    OTP{{/if}}</button>
+                <div>
+                    <p>One-Time Password will be sent to your registered mobile number and email.</p>
+                </div>
+
+            </form>
+
+            <br>
+            <br>
+
+            <form id="formResetPwd" action="/auth/reset-pwd" method="POST">
+                <div {{#if otpData.otp}}{{else}} hidden {{/if}}class="mb-3">
+
+                    <label for="otp">Validate OTP</label>
+                    <input hidden retype="text" class="form-control" id="otp" name="otp" inputmode="numeric"
+                        style="width: 200px" value="{{otpData.otp}}">
+                    <input required retype="text" class="form-control" id="input_otp" name="input_otp"
+                        inputmode="numeric" style="width: 200px" value="" pattern="[0-9]{1,6}"
+                        aria-describedby="inputOtpHelp">
+                    <div id="inputOtpHelp" class="form-text">Please enter the 6-digit OTP received on your registered
+                        mobile number.
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Validate</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>

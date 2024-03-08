@@ -9,7 +9,7 @@
             </div> --}}
             {{!-- <div style="background-color: white; padding: 2px; display: inline-block; border-radius: 3px;">
                 <img id="imgLogo" src="/images/malpani-logo-2020.webp" width="42" height="60"
-                    class="d-inline-block align-bottom" alt="">  rgb(235, 238, 243)
+                    class="d-inline-block align-bottom" alt=""> rgb(235, 238, 243)
             </div> --}}
 
             <div style="background-color: white ; padding: 2px; display: inline-block; border-radius: 3px;">
@@ -27,13 +27,13 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                {{#isEqual user.user_role "Admin" "Dealer"}}
+                {{#isEqual user.user_role "Admin" "Read" "Dealer"}}
                 <li class="nav-item">
                     <a class="nav-link {{#isEqual activePage '/'}}active{{/isEqual}}" href="/">Home</a>
                 </li>
                 {{/isEqual}}
 
-                {{#isEqual user.user_role "Admin"}}
+                {{#isEqual user.user_role "Admin" "Read"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -50,20 +50,29 @@
                 </li>
                 {{/isEqual}}
 
-                {{#isEqual user.user_role "Admin"}}
+                {{#isEqual user.user_role "Admin" "Read" "Support"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         Masters
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown2">
+                        {{#isEqual user.user_role "Admin" "Read"}}
                         <li><a class="dropdown-item" href="/product/view">Products</a></li>
                         <li><a class="dropdown-item" href="/customer/view">Dealers</a></li>
+                        {{/isEqual}}
+                        {{#isEqual user.user_role "Admin" "Read" "Support"}}
+                        <li><a class="dropdown-item" href="/custTarget/view">Targets</a></li>
+                        {{/isEqual}}
+                        {{#isEqual user.user_role "Admin" "Read"}}
+                        <li><a class="dropdown-item" href="/custTarget/upload">Import Targets</a></li>
+                        <li><a class="dropdown-item" href="/custTarget/target-report">Targets Report</a></li>
+                        {{/isEqual}}
                     </ul>
                 </li>
                 {{/isEqual}}
 
-                {{#isEqual user.user_role "Admin" "Dealer"}}
+                {{#isEqual user.user_role "Admin" "Read" "Dealer"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -73,18 +82,19 @@
                         <li><a class="dropdown-item" href="/po/view">Purchase Order</a></li>
                         <li><a class="dropdown-item" href="/dealerPay/view">Dealer Payment</a></li>
                         <li><a class="dropdown-item" href="/dealerPay/view-bal">Dealer Balance</a></li>
+                        <li><a class="dropdown-item" href="/custTarget/view-stock">Dealer Stock</a></li>
                     </ul>
                 </li>
                 {{/isEqual}}
 
-                {{#isEqual user.user_role "Admin" "Employee" "Account"}}
+                {{#isEqual user.user_role "Admin" "Read" "Employee" "Account"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         Sales Zone
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown3">
-                        {{#isEqual user.user_role "Admin" "Employee"}}
+                        {{#isEqual user.user_role "Admin" "Read" "Employee"}}
                         <li><a class="dropdown-item" href="/dsrTp/view-pm">Fix Routes</a></li>
                         <div class="dropdown-divider"></div>
                         <li><a class="dropdown-item" href="/dsr/view-pm">Work Entry</a></li>
@@ -95,7 +105,7 @@
                         <div class="dropdown-divider"></div>
                         <li><a class="dropdown-item" href="/customer/view-info">Dealer Info</a></li>
                         {{/isEqual}}
-                        {{#isEqual user.user_role "Admin" "Account"}}
+                        {{#isEqual user.user_role "Admin" "Read" "Account"}}
                         <div class="dropdown-divider"></div>
                         <li><a class="dropdown-item" href="/dsrAc/view">Exp Posting</a></li>
                         {{/isEqual}}
@@ -103,21 +113,24 @@
                 </li>
                 {{/isEqual}}
 
-                {{#isEqual user.user_role "Admin" "Support" "Audit" "Account" "Bank"}}
+                
+
+                {{#isEqual user.user_role "Admin" "Read" "Support" "Audit" "Account" "Bank"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown4" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         Reports
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown4">
-                        {{#isEqual user.user_role "Admin" "Support" "Audit" "Bank"}}
+                    <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="navbarDropdown4">
+                        {{#isEqual user.user_role "Admin" "Read" "Support" "Audit" "Bank"}}
                         <li><a class="dropdown-item" href="/dealerPay/view">Dealer Payment</a></li>
                         {{/isEqual}}
-                        {{#isEqual user.user_role "Admin" "Support" "Audit" "Account"}}
+                        {{#isEqual user.user_role "Admin" "Read" "Support" "Audit" "Account"}}
                         <li><a class="dropdown-item" href="/dsr/report">Expenses</a></li>
                         <li><a class="dropdown-item" href="/dsr/report-atten">Attendance</a></li>
                         <li><a class="dropdown-item" href="/dsr/report-loc">Locate Team</a></li>
                         <li><a class="dropdown-item" href="/dsr/report-loc2">Route Map</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report-loc-emp">Employee Location</a></li>
                         {{/isEqual}}
                     </ul>
                 </li>
@@ -129,7 +142,9 @@
 
             </ul>
 
-            <div class="d-flex">
+
+
+            {{!-- <div class="d-flex">
                 {{#if user.username}}
                 <span class="navbar-text2" style="color:Yellow">Hi, {{user.username}}</span>
                 {{else}}
@@ -140,7 +155,36 @@
                         Logout
                     </button>
                 </form>
+            </div> --}}
+
+
+            <div class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownProfile" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    {{#if user.username}}
+                    <span class="navbar-text2" style="color:Yellow">Hi, {{user.username}}</span>
+                    {{else}}
+                    <span class="navbar-text2">Hi, Guest</span>
+                    {{/if}}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown1">
+                    <li><a class="dropdown-item" href="/auth/reset-pwd">Reset Password</a></li>
+                    <li><a class="dropdown-item" href="/auth/profile">Profile</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <form method="POST" action="/auth/logout">
+                                <button class="btn btn-outline-danger" type="submit" style="width: 100%;">
+                                    Logout
+                                </button>
+                            </form>
+                        </a>
+                    </li>
+                </ul>
             </div>
+
 
         </div>
     </div>

@@ -125,7 +125,7 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="remark" class="col-sm-2 col-form-label">Remarsk</label>
+                    <label for="remark" class="col-sm-2 col-form-label">Remarks</label>
                     <div class="col-sm-10">
                         <textarea class="form-control" id="remarks" name="remarks" rows="3" maxlength="50"
                             placeholder="Enter remark" aria-describedby="remarkHelp">{{postData.remarks}}</textarea>
@@ -134,7 +134,7 @@
                 </div>
 
                 <div class="col-md-3 d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary mx-1">Submit</button>
+                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" class="btn btn-primary mx-1">Submit</button>
                     <div class="col-sm-10">
                         <button type="button" class="btn btn-secondary mx-1"
                             onclick="window.location.href='/dsrAc/view?mon_date={{yearMon}}'">Cancel</button>

@@ -1,0 +1,114 @@
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin-bottom: 0px;">Dealer Targets...</h4>
+    </div>
+    <p style="margin-top: 1px; color: grey ;">Sales targets ensure a healthy business lifecycle. Initially, having sales goals helps to create a sense of accountability and responsibility amongst your sales team.
+    </p>
+
+    <form id="formCustTargetUpload" action="/custTarget/upload" method="POST" enctype="multipart/form-data">
+        <div class="row mb-2">
+            <label for="filePan" class="col-sm-2 col-form-label">Upload Excel File</label>
+            <div class="col-sm-10">
+                <div class="input-group">
+                    <input type="file" name="file" accept=".xlsx" required>&nbsp;&nbsp;&nbsp;
+                    <button class="btn btn-outline-success" type="submit" id="btnPan">Upload</button>
+                </div>
+                <span style="color:red;">Excel file format requires a column titled 'Dealer Code', 'BU Code', 'Group Code', 'Year' and 'Monthly Target Value'.</span>
+            </div>
+        </div>
+    </form>
+
+
+    <form id="formCustTargetCSV" action="/custTarget/upload-csv" method="POST" class="d-inline">
+
+        <input type="hidden" name="custTargetData" id="custTargetData" value="{{json custTargetData}}">
+
+        <div class="mb-3">
+            <br>
+            {{#if custTargetData }}
+            <div class="row col-sm-6">
+                <div class="input-group">
+                    <label for="custTargetTable" class="form-label"><strong>Dealer Target List...</strong></label>
+                    &nbsp;&nbsp;<button type="submit" id="btnCSV" class="btn btn-warning">Export to CSV</button>
+                </div>
+            </div>
+            <table class="table" id="custTargetTable">
+                <thead>
+                    <tr>
+                        <th>Req Type</th>
+                        <th>Acc Status</th>
+                        <th>Acc Number</th>
+                        <th>IFSC Code</th>
+                        <th>Acc Name</th>
+                        <th>City</th>
+                        <th>UTR</th>
+                        <th>MICR</th>
+                        <th>Bank Name</th>
+                        <th>Branch</th>
+                        <th>Req By</th>
+                        <th>Req Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each custTargetData}}
+                    <tr>
+                        <td style="font-style: italic; color:{{#isEqual this.reqType null}}red{{else}}green{{/isEqual}};">
+                            {{#isEqual this.reqType null}}Historic{{else}}Recent{{/isEqual}}</td>
+                        <td>{{this.accountStatus}}</td>
+                        <td>{{this.custTargetountNumber}}</td>
+                        <td>{{this.ifscCode}}</td>
+                        <td>{{this.nameAtBank}}</td>
+                        <td>{{this.city}}</td>
+                        <td>{{this.utr}}</td>
+                        <td>{{this.micr}}</td>
+                        <td>{{this.bankName}}</td>
+                        <td>{{this.branch}}</td>
+                        <td>{{this.username}}</td>
+                        <td>{{momentDMYHm this.reqAt}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="row mb-2  border p-4">
+                <span style="display: flex; justify-content: center;  align-items: center;">
+                    ---: No data found :---</span>
+            </div>
+            {{/if}}
+        </div>
+    </form>
+
+    <div class="mb-3">
+        {{#if invalidCustTargetList.length}}
+        <div>
+            {{!-- <h4>Invalid PANs:</h4> --}}
+            <label for="custTargetTable" class="form-label"><strong>Invalid Target Values...</strong></label>
+            <ul>
+                {{#each invalidCustTargetList}}
+                <li>{{this}}</li>
+                {{/each}}
+            </ul>
+        </div>
+        {{/if}}
+    </div>
+
+
+    <style>
+        .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $('#custTargetTable').dataTable({
+                pageLength: 25,
+                scrollX: true,
+                order: [[0, "asc"], [1, "asc"], [2, "asc"]]
+            });
+        });
+    </script>
+
+</div>

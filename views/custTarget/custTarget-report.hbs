@@ -1,0 +1,202 @@
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style=" margin-bottom: 20px;">Dealer Targets Report...</h4>
+        <div>
+            <form id="form2" action="/custTarget/target-export-csv" method="GET" class="d-inline">
+                <input hidden type="txt" id="exportCSV_targetYear" name="exportCSV_targetYear" value="{{year_select}}">
+                <input hidden type="text" id="exportCSV_custID" name="exportCSV_custID" value="{{custData.customer_id}}">
+                <button type="submit" id="expor-csv" class="btn btn-warning">Export to CSV</button>
+            </form>
+        </div>
+    </div>
+
+    <form id="form1" action="/custTarget/target-report" method="POST">
+        {{!-- enctype="multipart/form-data" --}}
+        {{!-- <div class="col-lg-12 border p-4"> --}}
+            <div class="form-group row mb-3">
+                <label for="year_select" class="col-sm-2 col-form-label text-end">Target Entry Year<span
+                        style="color: red;">*</span></label>
+                <div class="col-sm-2">
+                    <select class="form-select" id="year_select" name="year_select">
+                        {{!-- <option value="">Select Year</option> --}}
+                        {{#each years}}
+                        <option value="{{this}}" {{#if (eq this ../year_select)}}selected{{/if}}>{{this}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <div class="col-md-2 item-align-start">
+                    <button type="button" id="btnRefresh" class="btn btn-success" onclick="refreshData()">Refresh
+                        Data</button>
+                </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label for="customer_id" class="col-sm-2 col-form-label text-end">Dealer<span
+                        style="color: red;">*</span></label>
+                <div class="col-sm-6">
+                    <div class="input-group">
+                        <input hidden  type="text" class="form-control" id="customer_id" name="customer_id"
+                            value="{{custData.customer_id}}">
+                        <input readonly type="text" class="form-control" id="customer_name" name="customer_name"
+                            value="{{#if custData.customer_name}} {{custData.customer_name}} {{else}}---: Select Customer :---{{/if}}">
+                        <button class="btn btn-outline-info" type="button" id="btnCustomer" data-bs-toggle="modal"
+                            data-bs-target="#customersModal2">
+                            <i class="bi bi-list"></i></button>
+                        <button class="btn btn-outline-secondary" type="button" id="resetBtn">All</button>
+                    </div>
+                </div>
+
+                <label for="mg_id" class="col-sm-2 col-form-label text-end">Sales Person</label>
+                <div class="col-sm-2">
+                    <div class="input-group">
+                        <input hidden type="text" class="form-control" id="mg_id" name="mg_id"
+                            value="{{custData.mg_id}}">
+                        <input disabled type="text" class="form-control" id="mg_name" name="mg_name"
+                            value="{{custData.mg_name}}">
+                    </div>
+                </div>
+
+            </div>
+
+            {{!--
+        </div> --}}
+        {{!-- <br> --}}
+
+        <table class="table dataTable" id="custTargetReportTable" style="width:100%">
+            <thead>
+                <tr>
+                    <th hidden>CustomerID</th>
+                    <th style="width: 400px;">Customer Name</th>
+                    <th style="width: 10%;">City</th>
+                    <th hidden>Seq</th>
+                    <th hidden>BuId</th>
+                    <th hidden>GroupId</th>
+                    <th>BU</th>
+                    <th>Group</th>
+                    <th style="text-align: end;">Total</th>
+                    <th style="text-align: end;">Apr</th>
+                    <th style="text-align: end;">May</th>
+                    <th style="text-align: end;">Jun</th>
+                    <th style="text-align: end;">Jul</th>
+                    <th style="text-align: end;">Aug</th>
+                    <th style="text-align: end;">Sep</th>
+                    <th style="text-align: end;">Oct</th>
+                    <th style="text-align: end;">Nov</th>
+                    <th style="text-align: end;">Dec</th>
+                    <th style="text-align: end;">Jan</th>
+                    <th style="text-align: end;">Feb</th>
+                    <th style="text-align: end;">Mar</th>
+                </tr>
+            </thead>
+            <tbody id="targetItemsBody">
+                {{#each targetData}}
+                <tr>
+                    <td hidden>{{this.customer_id}}</td>
+                    <td style="width: 500px;">{{this.customer_name}}</td>
+                    <td style="width: 10%;">{{this.city_pin}}</td>
+                    <td hidden>{{this.seq_sr}}</td>
+                    <td hidden>{{this.bu_id}}</td>
+                    <td hidden>{{this.group_id}}</td>
+                    <td>{{this.bu_name}}</td>
+                    <td>{{this.group_name}}</td>
+                    <td id="total" style="text-align: end;">{{this.total}}</td>
+                    <td id="apr1" style="text-align: end;">{{this.apr1}}</td>
+                    <td id="may1" style="text-align: end;">{{this.may1}}</td>
+                    <td id="jun1" style="text-align: end;">{{this.jun1}}</td>
+                    <td id="jul1" style="text-align: end;">{{this.jul1}}</td>
+                    <td id="aug1" style="text-align: end;">{{this.aug1}}</td>
+                    <td id="sep1" style="text-align: end;">{{this.sep1}}</td>
+                    <td id="oct1" style="text-align: end;">{{this.oct1}}</td>
+                    <td id="nov1" style="text-align: end;">{{this.nov1}}</td>
+                    <td id="dec1" style="text-align: end;">{{this.dec1}}</td>
+                    <td id="jan1" style="text-align: end;">{{this.jan1}}</td>
+                    <td id="feb1" style="text-align: end;">{{this.feb1}}</td>
+                    <td id="mar1" style="text-align: end;">{{this.mar1}}</td>
+
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+    </form>
+
+    <style>
+        .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+
+
+    <script>
+        $(document).ready(function () {
+            $('#custTargetReportTable').dataTable({
+                pageLength: 25,
+                scrollX: true,
+                //order: [[2, "asc"], [0, "asc"]]
+            });
+
+            $('#resetBtn').on('click', function () {
+                $('#customer_id').val('0');
+                $('#customer_name').val('---: All Customer :---');
+            });
+        });
+    </script>
+
+    <script>
+        function refreshData() {
+            var customer_id = document.getElementById('customer_id').value;
+            var customer_name = document.getElementById('customer_name').value;
+            var year_select = document.getElementById('year_select').value;
+            var mg_name = document.getElementById('mg_name').value;  + '&mg_name=' + mg_name
+
+            window.location.href = '/custTarget/target-report?customer_id=' + customer_id + '&customer_name=' + customer_name + '&year_select=' + year_select + '&mg_name=' + mg_name;
+        }
+    </script>
+
+    <script>
+        const targetItemsBody = document.getElementById("targetItemsBody");
+        document.addEventListener("DOMContentLoaded", () => {
+            const rows = targetItemsBody.querySelectorAll("tr");
+            rows.forEach(row => {
+                const parseFloatSafe = (text) => {
+                    return parseFloat(text) || 0;
+                };
+
+                const getElementTextContent = (selector) => {
+                    const element = row.querySelector(selector);
+                    return element ? element.textContent : "";
+                };
+
+                const apr1 = parseFloatSafe(getElementTextContent("#apr1"));
+                const may1 = parseFloatSafe(getElementTextContent("#may1"));
+                const jun1 = parseFloatSafe(getElementTextContent("#jun1"));
+                const jul1 = parseFloatSafe(getElementTextContent("#jul1"));
+                const aug1 = parseFloatSafe(getElementTextContent("#aug1"));
+                const sep1 = parseFloatSafe(getElementTextContent("#sep1"));
+                const oct1 = parseFloatSafe(getElementTextContent("#oct1"));
+                const nov1 = parseFloatSafe(getElementTextContent("#nov1"));
+                const dec1 = parseFloatSafe(getElementTextContent("#dec1"));
+                const jan1 = parseFloatSafe(getElementTextContent("#jan1"));
+                const feb1 = parseFloatSafe(getElementTextContent("#feb1"));
+                const mar1 = parseFloatSafe(getElementTextContent("#mar1"));
+
+                const total = apr1 + may1 + jun1 + jul1 + aug1 + sep1 + oct1 + nov1 + dec1 + jan1 + feb1 + mar1;
+
+                const totalCell = row.querySelector("#total");
+                if (totalCell) {
+                    totalCell.textContent = total.toFixed(0);
+                } //else {
+                //console.error("Total cell not found for row:", row);
+                //console.log("Row HTML:", row.outerHTML);
+                //}
+            });
+        });
+
+    </script>
+
+</div>
+
+
+{{> _lov-customers2}}

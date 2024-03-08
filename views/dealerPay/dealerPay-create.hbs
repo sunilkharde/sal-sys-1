@@ -104,7 +104,7 @@
                 </div>
 
                 <div class="col-md-3 d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary mx-1">Submit</button>
+                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" class="btn btn-primary mx-1">Submit</button>
                     <div class="col-sm-10">
                         <button type="button" class="btn btn-secondary mx-1"
                             onclick="window.location.href='/dealerPay/view'">Cancel</button>

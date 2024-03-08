@@ -160,7 +160,7 @@ class customerController {
         const alert = req.query.alert;
         try {
 
-            const sqlStr = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area,a.ext_code" +
+            const sqlStr = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,a.district,a.ext_code" +
                 " from customers as a, market_area as b " +
                 " Where a.market_area_id=b.market_area_id";
             const results = await executeQuery(sqlStr)//, params);
@@ -356,7 +356,7 @@ class customerController {
             let sqlStr = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area,a.ext_code" +
                 " From customers as a, market_area as b " +
                 " Where a.market_area_id=b.market_area_id";
-            if (!["Admin", "Support"].includes(res.locals.user.user_role)) {
+            if (!["Admin", "Read", "Support"].includes(res.locals.user.user_role)) {
                 sqlStr = sqlStr + ` and (mg_id = ${empID} or se_id = ${empID})`;
             }
             // const paramsVeh = [empData[0].emp_id, empData[0].emp_id];

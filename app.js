@@ -1,6 +1,6 @@
 import express from "express";
 import { executeQuery } from './db.js';
-
+import bodyParser from 'body-parser'
 import cookieParser from "cookie-parser";
 import { join } from 'path';
 import favicon from 'serve-favicon';
@@ -18,11 +18,11 @@ import dsrRoute from "./routes/dsrRoutes.js";
 import dsrAcRoute from "./routes/dsrAcRoutes.js";
 import dsrTpRoute from "./routes/dsrTpRoutes.js";
 import apiRoute from "./routes/apiRoutes.js";
+import custTargetRoute from "./routes/custTargetRoutes.js";
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
 import schedule from 'node-schedule';
-
 import vhost from "vhost";
 import https from "https";
 import http from "http";
@@ -30,8 +30,8 @@ import enforce from "express-sslify";
 
 const certsPath = process.cwd() + '/certs';
 const httpsOptions = {
-  key: fs.readFileSync(certsPath + '/server.key'),
-  cert: fs.readFileSync(certsPath + '/server.crt')
+  key: fs.readFileSync(certsPath + '/server.key'), 
+  cert: fs.readFileSync(certsPath + '/server.crt') 
 };
 
 //import axios from 'axios';
@@ -45,6 +45,9 @@ const httpsOptions = {
 
 const app = express();
 //const PORT = 3000;
+
+// Increase payload size limit (e.g., 10MB)
+app.use(bodyParser.json({ limit: '1mb' }));
 
 const subdomain1App = express();
 app.use(vhost("sales.malpani.com", subdomain1App));
@@ -156,7 +159,9 @@ const addHBS = function (...values) {
   });
   return sum;
 };
-
+const jsonHelper = function (context) {
+  return JSON.stringify(context);
+};
 // view engine setup
 app.set('views', join(process.cwd(), 'views'));
 app.set('view engine', 'hbs');
@@ -176,7 +181,8 @@ app.engine('hbs', exphbs.engine({
     momentDMYHm: momentDMYHm_HBS,
     momentDDDD: momentDDDD_HBS,
     momentDDD: momentDDD_HBS,
-    add: addHBS
+    add: addHBS,
+    json: jsonHelper,
   }
 }));
 
@@ -191,6 +197,7 @@ app.use('/dealerPay', dealerPayRoute);
 app.use('/dsr', dsrRoute);
 app.use('/dsrAc', dsrAcRoute);
 app.use('/dsrTp', dsrTpRoute);
+app.use('/custTarget', custTargetRoute);
 
 // Log incoming requests
 /*app.use((req, res, next) => {
@@ -258,6 +265,7 @@ app.get('/lov', async (req, res) => {
   res.render('lov', { users });
   // return res.status(400).json({ users });
 });
+
 
 //**************************************//
 app.all('*', (req, res) => {
@@ -345,7 +353,7 @@ const times = [[9, 32], [10, 2], [10, 32], [11, 2], [11, 32], [12, 2], [12, 32],
 
 //**************************************//
 const server = https.createServer(httpsOptions, app);
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 80);
 server.listen(app.get('port'), function () {
   console.log('Express server listening on port ' + server.address().port);
 });

@@ -9,7 +9,7 @@
     </div>
 
     <form id="form1" action="/dealerPay/view" method="GET">
-        <div class="col-lg-9 border p-4">
+        <div class="col-lg-9">             {{!-- border p-4 --}}
             <div class="form-group row mb-3">
                 <label for="from_date" class="col-sm-2 col-form-label text-end">Pay Ref Date From</label>
                 <div class="col-sm-3">
@@ -22,12 +22,11 @@
                         value="{{momentYMD data.to_date}}">
                 </div>
                 <div class="col-md-2 item-align-start">
-                    {{!-- <button type="button" id="btnRefresh" class="btn btn-success">Refresh Data</button> --}}
                     <button type="submit" id="btnRefresh" class="btn btn-success">Refresh Data</button>
                 </div>
             </div>
         </div>
-        <br>
+        {{!-- <br> --}}
 
         <table class="table" id="dealerPayTable">
             <thead>
