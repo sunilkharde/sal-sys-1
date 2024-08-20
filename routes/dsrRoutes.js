@@ -47,6 +47,7 @@ router.get('/report-loc2', checkUserRole, dsrController.reportLocationTrack);
 router.get('/report-loc', dsrController.reportLocationRegular);
 router.get('/report-loc2', dsrController.reportLocationRegular);
 
+
 router.get('/report-loc-emp', dsrController.reportLocationEmployee);
 
 router.get('/loc-export-csv', dsrController.exportCSVLocationRegular);

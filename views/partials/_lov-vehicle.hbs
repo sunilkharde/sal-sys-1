@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<body>
+    <!-- customersModal -->
+    <div class="modal fade" id="vehModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Select Vehicle No from list...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table" id="VehicleListTable">
+                        <thead>
+                            <tr>
+                                <th>Vehicle No</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each Vehicle_list}}
+                            <tr>
+                                <td class="col-4">{{this.veh_no}}</td>
+                                 <td class="col-1" style="text-align: center;">
+                                    <button type="button" class="btn btn-info btn-sm"
+                                        onclick="handleSelectButtonVehicleList(this)">
+                                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+
+                </div>
+               
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #VehModal.modal-dialog {
+            max-width: 1350px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $('#VehicleListTable').DataTable({
+                pageLength: 10
+            });
+        });
+    </script>
+
+    <script>
+        function handleSelectButtonVehicleList(button) {
+            // Get the table row that contains the button
+            const row = button.closest('tr');
+
+            // Get the values of the columns in the row
+        const vehicle_no = row.querySelector('td:nth-child(1)').textContent;
+            
+        document.getElementById('veh_no').value = vehicle_no;
+
+        const modal = document.getElementById('vehModal');
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        modalInstance.hide();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<body>
+    <!-- customersModal -->
+    <div class="modal fade" id="ItemGroupModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Select Item Group from list...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table" id="ItemGroupTable">
+                        <thead>
+                            <tr>
+                                <th>Item ID</th>
+                                <th>Item Group</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each ItemGroup_Edit}}
+                            <tr>
+                                <td class="col-4">{{this.item_id}}</td>
+                                <td class="col-4">{{this.itemgroup_name}}</td>
+                                <td class="col-1" style="text-align: center;">
+                                 <button type="button" class="btn btn-info btn-sm"
+                                      onclick="handleSelectButtonItemGroup(this)">
+                                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #ItemGroupModal.modal-dialog {
+            max-width: 400px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $('#ItemGroupTable').DataTable({
+                pageLength: 10
+            });
+        });
+    </script>
+
+    <script>
+        function handleSelectButtonItemGroup(button) {
+            // Get the table row that contains the button
+              const row = button.closest('tr'); 
+
+            // Get the values of the columns in the row
+            const Item_id = row.querySelector('td:nth-child(1)').textContent;
+            const ItemGroup_name = row.querySelector('td:nth-child(2)').textContent;
+
+              console.log('Item ID' , Item_id) ;
+              console.log('Item Group Name' , ItemGroup_name) ;
+              
+           document.getElementById('item_id').value = Item_id;    
+           document.getElementById('ItemGroup_name').value = ItemGroup_name;
+            
+
+            // Hide the modal
+            const modal = document.getElementById('ItemGroupModal');
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            modalInstance.hide();
+        }
+    </script>
+</body>
+</html>

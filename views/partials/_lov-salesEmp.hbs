@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<body>
+    <!-- customersModal -->
+    <div class="modal fade" id="salesempModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Select Vehicle No from list...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table" id="salesempListTable">
+                        <thead>
+                            <tr>
+                                <th>Emp Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each salesemp_list}}
+                            <tr>
+                                <td class="col-4">{{this.sp_name}}</td>
+                                 <td class="col-1" style="text-align: center;">
+                                    <button type="button" class="btn btn-info btn-sm"
+                                        onclick="handleSelectButtonsalesempList(this)">
+                                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+
+                </div>
+               
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #salesempModal.modal-dialog {
+            max-width: 1350px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $('#salesempListTable').DataTable({
+                pageLength: 10
+            });
+        });
+    </script>
+
+    <script>
+        function handleSelectButtonsalesempList(button) {
+            // Get the table row that contains the button
+            const row = button.closest('tr');
+
+            // Get the values of the columns in the row
+        const sales_emp = row.querySelector('td:nth-child(1)').textContent;
+            
+        document.getElementById('emp_name').value = sales_emp;
+
+        const modal = document.getElementById('salesempModal');
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        modalInstance.hide();
+        }
+    </script>
+</body>
+</html>

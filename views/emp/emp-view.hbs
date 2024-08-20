@@ -1,0 +1,57 @@
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style=" margin-bottom: 20px;">List of Employees</h4>
+        <a href="/emp/create" class="btn btn-success">Create New</a>
+    </div>
+
+    <table class="table" id="empTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Employee Name</th>
+                <th>Desg</th>
+                <th>HQ</th>
+                <th>Company</th>
+                <th>Off Day</th>
+                <th>Boss</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each employees}}
+            <tr>
+                <td>{{this.emp_id}}</td>
+                <td>{{this.emp_name}}</td>
+                <td>{{this.desg_name}}</td>
+                <td>{{this.hq_name}}</td>
+                <td>{{this.bu_name}}</td>
+                <td>{{this.off_day}}</td>
+                <td>{{this.boss_name}}</td>
+                <td>
+                    <!-- <a href="/emp/viewByID/{{this.emp_id}}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-eye"></i>
+                    </a> -->
+                    <a href="/emp/update/{{this.emp_id}}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    {{#isEqual ../user.user_role "Admin"}}
+                    <a href="/emp/delete/{{this.emp_id}}" class="btn btn-danger btn-sm"
+                        onclick="return confirm('Are you sure?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                    {{/isEqual}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function () {
+            $('#empTable').dataTable({
+                pageLength: 10
+            });
+        });
+    </script>
+
+</div>

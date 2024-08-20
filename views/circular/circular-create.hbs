@@ -1,0 +1,152 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 border p-4"> {{!-- border-secondary --}}
+            <h4 class="mb-3">Create Circular</h4>
+
+            <form id="circularForm" action="/circular/create" method="post">
+
+                <div class="form-group row mb-3">
+                    <label for="customer_id" class="col-sm-2 col-form-label">Vendor Name<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
+                                value="{{data.customer_id}}">
+                            <input readonly type="text" class="form-control" id="customer_name" name="customer_name"
+                                value="{{data.customer_name}}">
+                            <button class="btn btn-outline-info" type="button" id="btnCustomer" data-bs-toggle="modal"
+                                data-bs-target="#vendorModal">
+                                <i class="bi bi-list"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label for="circular_date" class="col-sm-2 col-form-label">Circular Date<span
+                            style="color: red;">*</span> </label>
+                    <div class="col-sm-4">
+                        <input type="date" class="form-control" id="circular_date" name="circular_date"
+                            value="{{momentYMD data.circular_date}}" placeholder="Enter Circular Date"
+                            aria-describedby="circular_dateHelp">
+                        <div id="circular_dateHelp" class="form-text">Enter Cirular Date </div>
+                    </div>
+
+                    <label for="circular_no" class="col-sm-2 col-form-label">Circular No<span
+                            style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" id="circular_no" name="circular_no"
+                            value="{{data.circular_no}}" placeholder="Enter Circular No" minlength="1" maxlength="20"
+                            aria-describedby="circular_nameHelp">
+                        <div id="circular_noHelp" class="form-text">Cirular No cannot exceed 20 characters.</div>
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label for="veh_allow" class="col-sm-2 col-form-label">Veh Allowance<span
+                            style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-4">
+                        <input type="number" class="form-control" id="veh_allow" name="veh_allow"
+                            value="{{data.veh_allow}}" required placeholder="Enter Vehicle Allowance"
+                            style="text-align: right;">
+                    </div>
+                    <label for="days_allow" class="col-sm-2 col-form-label">Days Allowed</label>
+                    <div class="col-sm-4">
+                        <input type="number" class="form-control" id="days_allow" name="days_allow"
+                            value="{{data.days_allow}}" placeholder="Enter Days Allowed" min="1" max="31" minlength="1"
+                            maxlength="10" style="text-align: right;" aria-describedby="daysAllowHelp">
+                        <div id="add1Help" class="form-text">Days Allowed cannot exceed 31.</div>
+                    </div>
+                </div>
+
+
+                <div class="form-group row mb-3">
+                    <label for="km_perday" class="col-sm-2 col-form-label"> KM / Day</label>
+                    <div class="col-sm-4">
+                        <input type="number" class="form-control" id="km_perday" name="km_perday"
+                            value="{{data.km_perday}}" placeholder="Enter KM / Day" minlength="1" maxlength="10"
+                            style="text-align: right;" aria-describedby="km_perdayHelp">
+                        <div id="km_perdayHelp" class="form-text"> KM / Day cannot exceed 10.</div>
+                    </div>
+                    <label for="rent_perday" class="col-sm-2 col-form-label"> Vehicle Rent / Day </label>
+                    <div class="col-sm-4">
+                        <input type="number" class="form-control" id="rent_perday" name="rent_perday"
+                            value="{{data.rent_perday}}" placeholder="Enter Rent / Day" minlength="1" maxlength="10"
+                            style="text-align: right;" aria-describedby="rent_perdayHelp">
+                        <div id="rent_perdayHelp" class="form-text">Rent / Day can not exceed 10 characters.</div>
+                    </div>
+                </div>
+
+
+                <div class="form-group row mb-3">
+                    <label for="driver_perday" class="col-sm-2 col-form-label">Driver / Day<span
+                            style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-4">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="driver_perday" name="driver_perday"
+                                value="{{data.driver_perday}}" style="text-align: right;"
+                                placeholder="Enter Driver / Day" minlength="1" maxlength="10"
+                                aria-describedby="cityHelp">
+                        </div>
+                        <div id="driver_perdayHelp" class="form-text">Driver / Day cannot exceed 10 characters.
+                        </div>
+                    </div>
+
+                    <label for="diesel_avg" class="col-sm-2 col-form-label"> Diesel Avg <span
+                            style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-4">
+                        <input type="number" class="form-control" id="diesel_avg" name="diesel_avg"
+                            value="{{data.diesel_avg}}" style="text-align: right;" placeholder="Enter Diesel Average "
+                            required>
+                    </div>
+
+                </div>
+
+
+                <div class="form-group row mb-3">
+                    <label for="toll_tax" class="col-sm-2 col-form-label"> Toll Tax <span style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-4">
+                        <input type="number" class="form-control" id="toll_tax" name="toll_tax"
+                            value="{{data.toll_tax}}" style="text-align: right;" placeholder="Enter Toll Tax "
+                            minlength="1" maxlength="5">
+                    </div>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-md-3 d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary mx-1">Submit</button>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-secondary mx-1"
+                                onclick="window.location.href='/circular/view'">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const daysAllowInput = document.getElementById('days_allow');
+    const errorMessage = document.getElementById('error-message');
+
+    daysAllowInput.addEventListener('input', function () {
+        const enteredValue = parseInt(daysAllowInput.value, 10);
+        if (enteredValue > 31) {
+            errorMessage.textContent = 'Value cannot exceed 31.';
+            daysAllowInput.setCustomValidity('Value cannot exceed 31.');
+        } else {
+            errorMessage.textContent = '';
+            daysAllowInput.setCustomValidity('');
+        }
+    });
+</script>
+
+
+
+{{> _lov-vendor}}

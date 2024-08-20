@@ -46,6 +46,7 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li><a class="dropdown-item" href="#">Users Master</a></li>
+                        <li><a class="dropdown-item" href="/emp/view">Employees</a></li>
                     </ul>
                 </li>
                 {{/isEqual}}
@@ -67,6 +68,7 @@
                         {{#isEqual user.user_role "Admin" "Read"}}
                         <li><a class="dropdown-item" href="/custTarget/upload">Import Targets</a></li>
                         <li><a class="dropdown-item" href="/custTarget/target-report">Targets Report</a></li>
+                        <li><a class="dropdown-item" href="/circular/view">Circular</a></li>
                         {{/isEqual}}
                     </ul>
                 </li>
@@ -83,6 +85,7 @@
                         <li><a class="dropdown-item" href="/dealerPay/view">Dealer Payment</a></li>
                         <li><a class="dropdown-item" href="/dealerPay/view-bal">Dealer Balance</a></li>
                         <li><a class="dropdown-item" href="/custTarget/view-stock">Dealer Stock</a></li>
+                        <li><a class="dropdown-item" href="/custTarget/view-sale">Dealer Sale</a></li>
                     </ul>
                 </li>
                 {{/isEqual}}
@@ -104,6 +107,9 @@
                         <li><a class="dropdown-item" href="/dsr/report-loc2">Route Map</a></li>
                         <div class="dropdown-divider"></div>
                         <li><a class="dropdown-item" href="/customer/view-info">Dealer Info</a></li>
+                        <li><a class="dropdown-item" href="/custTarget/view-stock">Dealer Stock</a></li>
+                        <li><a class="dropdown-item" href="/custTarget/view-sale">Dealer Sale</a></li>
+                        <li><a class="dropdown-item" href="/vanclaim/view">Van Claim</a></li>
                         {{/isEqual}}
                         {{#isEqual user.user_role "Admin" "Read" "Account"}}
                         <div class="dropdown-divider"></div>
@@ -113,7 +119,7 @@
                 </li>
                 {{/isEqual}}
 
-                
+
 
                 {{#isEqual user.user_role "Admin" "Read" "Support" "Audit" "Account" "Bank"}}
                 <li class="nav-item dropdown">

@@ -9,6 +9,8 @@ import xlsx from 'xlsx';
 import csv from 'fast-csv';
 import dotenv from 'dotenv';
 
+import mysql from 'mysql2';
+
 dotenv.config();
 
 const storage = multer.memoryStorage();
@@ -27,7 +29,7 @@ class custTargetController {
             // const paramsCust = [xyz];
             const customer_list = await executeQuery(sqlCust) //, params);
 
-            return { customer_list };
+            return [customer_list];
 
         } catch (error) {
             console.error(error);
@@ -492,62 +494,118 @@ class custTargetController {
         const alert = req.query.alert;
 
         try {
-            var { customer_id, mg_name, stock_date } = req.query;
+            var { customer_id, stock_date, bu_id, bu_name } = req.query;
             // const { customer_list } = await this.getData(req, res.locals.user);
             var user_role = res.locals.user.user_role !== null && res.locals.user.user_role !== undefined ? res.locals.user.user_role : 'User';
-            var sqlCust = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area," +
-                " a.ext_code,a.customer_type,a.mg_id,CONCAT(c.first_name,' ',c.middle_name,' ',c.last_name) as mg_name" +
-                " From customers as a " +
-                " LEFT JOIN market_area as b ON (a.market_area_id=b.market_area_id) " +
-                " LEFT JOIN employees as c ON (a.mg_id=c.emp_id)"
+
+            var sqlCust = `SELECT a.customer_id, a.customer_name, a.nick_name, CONCAT(a.city, ' ', a.pin_code) AS city_pin,
+                b.market_area, c.bu_id, CONCAT(d.bu_code, ' | ', d.bu_name) AS bu_name, 
+                a.mg_id, CONCAT(e.first_name,' ',e.middle_name,' ',e.last_name) as mg_name
+                FROM customers AS a
+                LEFT JOIN market_area AS b ON a.market_area_id = b.market_area_id
+                LEFT JOIN customers_bu AS c ON a.customer_id = c.customer_id
+                LEFT JOIN business_units AS d ON c.bu_id = d.bu_id
+                LEFT JOIN employees AS e ON a.mg_id = e.emp_id
+                WHERE a.status = 'A'`;
             if (user_role !== "Admin") {
-                sqlCust = sqlCust + ` Where a.user_id=${res.locals.user.user_id}`;
+                sqlCust += ` AND (a.user_id = ${mysql.escape(res.locals.user.user_id)} OR e.user_id = ${mysql.escape(res.locals.user.user_id)})`;
             }
+            // var sqlCust = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area," +
+            //     " a.ext_code,a.customer_type,a.mg_id,CONCAT(c.first_name,' ',c.middle_name,' ',c.last_name) as mg_name" +
+            //     " From customers as a " +
+            //     " LEFT JOIN market_area as b ON (a.market_area_id=b.market_area_id) " +
+            //     " LEFT JOIN employees as c ON (a.mg_id=c.emp_id)"
+            // if (user_role !== "Admin") {
+            //     sqlCust = sqlCust + ` Where a.user_id=${res.locals.user.user_id}`;
+            // }
             const customer_list = await executeQuery(sqlCust);
+
+            var mg_id = null;
+            var mg_name = null;
+            if (customer_id !== null && customer_id !== undefined) {
+                const sqlMg = `Select a.customer_id,a.customer_name,
+                    a.mg_id, CONCAT(b.first_name,' ',b.middle_name,' ',b.last_name) as mg_name
+                    From customers as a LEFT JOIN employees as b ON (a.mg_id=b.emp_id)
+                    Where a.customer_id = ${mysql.escape(customer_id)}`
+                const mgData = await executeQuery(sqlMg);
+                if (mgData.length > 0) {
+                    mg_id = mgData[0].mg_id
+                    mg_name = mgData[0].mg_name
+                }
+            }
 
             if (stock_date === null || stock_date === undefined) {
                 stock_date = moment().format('YYYY-MM-DD');
             }
 
-            const sqlStock = "SELECT d.seq_sr, a.customer_id,b.customer_name,b.nick_name,CONCAT(b.city, ' ', b.pin_code) AS city_pin," +
-                " e.bu_id,f.bu_code,CONCAT(f.bu_code, '-', f.bu_short) AS bu_name,d.group_id,d.group_name," +
-                " a.product_id,c.product_name,a.stock_qty" +
-                " FROM cust_stock as a, customers as b, products as c, groups d, products_bu e, business_units f" +
-                " WHERE a.customer_id=? and a.stock_date=?" +
-                " and a.customer_id=b.customer_id and a.product_id=c.product_id and c.group_id = d.group_id" +
-                " and c.product_id = e.product_id and e.bu_id=f.bu_id" +
-                " Union" +
-                " SELECT g.seq_sr,b.customer_id,b.customer_name,b.nick_name,CONCAT(b.city, ' ', b.pin_code) AS city_pin," +
-                " c.bu_id,d.bu_code,CONCAT(d.bu_code, '-', d.bu_short) AS bu_name,g.group_id,g.group_name," +
-                " f.product_id,f.product_name, 0 as stock_qty" +
-                " FROM customers as b, customers_bu as c, business_units as d, products_bu as e, products as f, groups as g" +
-                " WHERE b.customer_id=? and f.group_id > 0 " +
-                " and b.customer_id=c.customer_id" +
-                " and c.bu_id=d.bu_id and e.bu_id=c.bu_id and f.product_id=e.product_id and g.group_id=f.group_id" +
-                " and f.product_id Not IN (SELECT x.product_id FROM cust_stock as x WHERE x.customer_id = ? and x.stock_date = ?)" +
-                " ORDER BY `seq_sr` ASC, `group_name` ASC"
-            const paramsStock = [customer_id, stock_date, customer_id, customer_id, stock_date];
-            const stockData = await executeQuery(sqlStock, paramsStock);
+            // const sqlStock = "SELECT d.seq_sr, a.customer_id, b.customer_name, b.nick_name, CONCAT(b.city, ' ', b.pin_code) AS city_pin," +
+            //     " e.bu_id, f.bu_code,CONCAT(f.bu_code, '-', f.bu_short) AS bu_name, d.group_id, d.group_name," +
+            //     " a.product_id, c.product_name, a.stock_qty" +
+            //     " FROM cust_stock as a, customers as b, products as c, groups d, products_bu e, business_units f" +
+            //     " WHERE a.customer_id=? and a.stock_date=? and f.bu_id=?" +
+            //     " and a.customer_id=b.customer_id and a.product_id=c.product_id and c.group_id = d.group_id" +
+            //     " and c.product_id = e.product_id and e.bu_id=f.bu_id" +
+            //     " Union " +
+            //     " SELECT g.seq_sr, b.customer_id, b.customer_name, b.nick_name,CONCAT(b.city, ' ', b.pin_code) AS city_pin," +
+            //     " c.bu_id, d.bu_code,CONCAT(d.bu_code, '-', d.bu_short) AS bu_name, g.group_id, g.group_name," +
+            //     " f.product_id, f.product_name, 0 as stock_qty" +
+            //     " FROM customers as b, customers_bu as c, business_units as d, products_bu as e, products as f, groups as g" +
+            //     " WHERE b.customer_id=? and f.group_id > 0 and d.bu_id=? " +
+            //     " and b.customer_id=c.customer_id" +
+            //     " and c.bu_id=d.bu_id and e.bu_id=c.bu_id and f.product_id=e.product_id and g.group_id=f.group_id" +
+            //     " and f.product_id Not IN (SELECT x.product_id FROM cust_stock as x WHERE x.customer_id = ? and x.stock_date = ?)" +
+            //     " ORDER BY `seq_sr` ASC, `group_name` ASC"
+            // const paramsStock = [customer_id, stock_date, bu_id, customer_id, bu_id, customer_id, stock_date];
+            // const stockData = await executeQuery(sqlStock, paramsStock);
 
+            const sqlStock = `
+            SELECT d.seq_sr, a.customer_id, b.customer_name, b.nick_name, CONCAT(b.city, ' ', b.pin_code) AS city_pin,
+                e.bu_id, f.bu_code, CONCAT(f.bu_code, '-', f.bu_short) AS bu_name, d.group_id, d.group_name,
+                a.product_id, c.product_name, a.stock_qty
+            FROM cust_stock AS a
+                JOIN customers AS b ON a.customer_id = b.customer_id
+                JOIN products AS c ON a.product_id = c.product_id
+                JOIN groups AS d ON c.group_id = d.group_id
+                JOIN products_bu AS e ON c.product_id = e.product_id
+                JOIN business_units AS f ON e.bu_id = f.bu_id
+            WHERE a.customer_id = ${mysql.escape(customer_id)} AND a.stock_date = ${mysql.escape(stock_date)} AND f.bu_id = ${mysql.escape(bu_id)}
+            UNION
+            SELECT g.seq_sr, b.customer_id, b.customer_name, b.nick_name, CONCAT(b.city, ' ', b.pin_code) AS city_pin,
+                c.bu_id, d.bu_code, CONCAT(d.bu_code, '-', d.bu_short) AS bu_name, g.group_id, g.group_name,
+                f.product_id, f.product_name, 0 AS stock_qty
+            FROM customers AS b
+                JOIN customers_bu AS c ON b.customer_id = c.customer_id
+                JOIN business_units AS d ON c.bu_id = d.bu_id
+                JOIN products_bu AS e ON c.bu_id = e.bu_id
+                JOIN products AS f ON e.product_id = f.product_id
+                JOIN groups AS g ON f.group_id = g.group_id
+            WHERE b.customer_id = ${mysql.escape(customer_id)} AND f.group_id > 0 AND d.bu_id = ${mysql.escape(bu_id)}
+                AND f.product_id NOT IN (
+                    SELECT x.product_id
+                    FROM cust_stock AS x
+                    WHERE x.customer_id = ${mysql.escape(customer_id)} AND x.stock_date = ${mysql.escape(stock_date)}
+                )
+            ORDER BY seq_sr ASC, group_name ASC, product_name ASC`;
+            const stockData = await executeQuery(sqlStock);
             const custData = stockData.length > 0
-                ? { customer_id, customer_name: stockData[0].customer_name, mg_name }
-                : { customer_id: 0, customer_name: '-- Select --', mg_name: '' };
+                ? { customer_id, customer_name: stockData[0].customer_name, mg_name, bu_id_hdn: bu_id, bu_name }
+                : { customer_id: 0, customer_name: '-- Select --', mg_name, bu_id_hdn: bu_id, bu_name };
 
             res.render('custTarget/custStock-view', { alert, customer_list, custData, stock_date, stockData });
 
         } catch (error) {
             console.error(error);
-            // Handle the error
+            res.status(500).send('An error occurred while processing your request.');
         }
     }
 
     static saveStock = async (req, res) => {
-        const { stock_date, customer_id, customer_name, mg_name, bu_id, bu_name, group_id, group_name,
+        const { stock_date, customer_id, customer_name, mg_name, bu_id_hdn, bu_id, bu_name, group_id, group_name,
             product_id, product_name, stock_qty } = req.body;
         const { customer_list } = await this.getData(req, res.locals.user);
 
         if (stock_qty === undefined || stock_qty === null) {
-            const custData = { customer_id, customer_name, mg_name };
+            const custData = { customer_id, customer_name, mg_name, bu_id: bu_id_hdn, bu_name };
             const errors = [{ message: 'No data found for save!' }];
             return res.render('custTarget/custStock-view', { errors, customer_list, custData, stock_date });
         }
@@ -579,16 +637,21 @@ class custTargetController {
         if (!customer_id) {
             errors.push({ message: 'Customer name is required' });
         }
+        if (!bu_id_hdn) {
+            errors.push({ message: 'Customer business unit is required' });
+        }
         if (errors.length) {
-            const custData = { customer_id, customer_name, mg_name };
+            const custData = { customer_id, customer_name, mg_name, bu_id: bu_id_hdn, bu_name };
             return res.render('custTarget/custStock-view', { errors, customer_list, custData, stock_date, stockData });
         }
 
         try {
             const c_by = res.locals.user ? res.locals.user.user_id : 0;
 
-            const sqlStockDelete = "DELETE FROM cust_stock WHERE stock_date = ? AND customer_id=?";
-            const paramsStockDelete = [stock_date, customer_id];
+            const sqlStockDelete = `DELETE FROM cust_stock 
+                WHERE stock_date = ? AND customer_id = ? 
+                AND product_id IN (SELECT product_id FROM products_bu WHERE bu_id = ?)`;
+            const paramsStockDelete = [stock_date, customer_id, bu_id_hdn];
             await executeQuery(sqlStockDelete, paramsStockDelete);
 
             for (let i = 0; i < stock_qty.length; i++) {
@@ -609,7 +672,7 @@ class custTargetController {
     }
 
     static deleteStock = async (req, res) => {
-        const { customer_id, stock_date, mg_name } = req.query;
+        const { customer_id, stock_date, mg_name, bu_id_hdn, bu_name } = req.query;
 
         try {
             var errors = [];
@@ -619,6 +682,7 @@ class custTargetController {
             // if (rows.length > 0) {
             //     errors.push({ message: "Reference exist, master entry can't delete" });
             // }
+
             if (stock_date === null || stock_date === undefined) {
                 errors.push({ message: "Reference exist, master entry can't delete" });
             }
@@ -627,15 +691,236 @@ class custTargetController {
                 return;
             }
 
-            const sqlStr = "Delete from cust_stock WHERE customer_id=? and stock_date = ? "
-            const params = [customer_id, stock_date];
-            await executeQuery(sqlStr, params);
+            const sqlStockDelete = `DELETE FROM cust_stock 
+                WHERE stock_date = ? AND customer_id = ? 
+                AND product_id IN (SELECT product_id FROM products_bu WHERE bu_id = ?)`;
+            const paramsStockDelete = [stock_date, customer_id, bu_id_hdn];
+            await executeQuery(sqlStockDelete, paramsStockDelete);
 
             res.redirect('/custTarget/view-stock?alert=Stock+removed+successfully');
 
         } catch (err) {
             console.error(err);
             return res.render('custTarget/custStock-view', { alert: `Internal server error` });
+        }
+    };
+
+
+    //************************** */
+    //***Customer Stock********* */
+    //************************** */
+    static viewSale = async (req, res) => {
+        const alert = req.query.alert;
+
+        try {
+            var { customer_id, sale_date, bu_id, bu_name } = req.query;
+            // const { customer_list } = await this.getData(req, res.locals.user);
+            var user_role = res.locals.user.user_role !== null && res.locals.user.user_role !== undefined ? res.locals.user.user_role : 'User';
+
+            var sqlCust = `SELECT a.customer_id, a.customer_name, a.nick_name, CONCAT(a.city, ' ', a.pin_code) AS city_pin,
+                b.market_area, c.bu_id, CONCAT(d.bu_code, ' | ', d.bu_name) AS bu_name, 
+                a.mg_id, CONCAT(e.first_name,' ',e.middle_name,' ',e.last_name) as mg_name
+                FROM customers AS a
+                LEFT JOIN market_area AS b ON a.market_area_id = b.market_area_id
+                LEFT JOIN customers_bu AS c ON a.customer_id = c.customer_id
+                LEFT JOIN business_units AS d ON c.bu_id = d.bu_id
+                LEFT JOIN employees AS e ON a.mg_id = e.emp_id
+                WHERE a.status = 'A'`;
+            if (user_role !== "Admin") {
+                sqlCust += ` AND (a.user_id = ${mysql.escape(res.locals.user.user_id)} OR e.user_id = ${mysql.escape(res.locals.user.user_id)})`;
+            }
+            // var sqlCust = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area," +
+            //     " a.ext_code,a.customer_type,a.mg_id,CONCAT(c.first_name,' ',c.middle_name,' ',c.last_name) as mg_name" +
+            //     " From customers as a " +
+            //     " LEFT JOIN market_area as b ON (a.market_area_id=b.market_area_id) " +
+            //     " LEFT JOIN employees as c ON (a.mg_id=c.emp_id)"
+            // if (user_role !== "Admin") {
+            //     sqlCust = sqlCust + ` Where a.user_id=${res.locals.user.user_id}`;
+            // }
+            const customer_list = await executeQuery(sqlCust);
+
+            var mg_id = null;
+            var mg_name = null;
+            if (customer_id !== null && customer_id !== undefined) {
+                const sqlMg = `Select a.customer_id,a.customer_name,
+                    a.mg_id, CONCAT(b.first_name,' ',b.middle_name,' ',b.last_name) as mg_name
+                    From customers as a LEFT JOIN employees as b ON (a.mg_id=b.emp_id)
+                    Where a.customer_id = ${mysql.escape(customer_id)}`
+                const mgData = await executeQuery(sqlMg);
+                if (mgData.length > 0) {
+                    mg_id = mgData[0].mg_id
+                    mg_name = mgData[0].mg_name
+                }
+            }
+
+            if (sale_date === null || sale_date === undefined) {
+                sale_date = moment().format('YYYY-MM-DD');
+            }
+
+            // const sqlSale = "SELECT d.seq_sr, a.customer_id, b.customer_name, b.nick_name, CONCAT(b.city, ' ', b.pin_code) AS city_pin," +
+            //     " e.bu_id, f.bu_code,CONCAT(f.bu_code, '-', f.bu_short) AS bu_name, d.group_id, d.group_name," +
+            //     " a.product_id, c.product_name, a.sale_qty" +
+            //     " FROM cust_sale as a, customers as b, products as c, groups d, products_bu e, business_units f" +
+            //     " WHERE a.customer_id=? and a.sale_date=? and f.bu_id=?" +
+            //     " and a.customer_id=b.customer_id and a.product_id=c.product_id and c.group_id = d.group_id" +
+            //     " and c.product_id = e.product_id and e.bu_id=f.bu_id" +
+            //     " Union " +
+            //     " SELECT g.seq_sr, b.customer_id, b.customer_name, b.nick_name,CONCAT(b.city, ' ', b.pin_code) AS city_pin," +
+            //     " c.bu_id, d.bu_code,CONCAT(d.bu_code, '-', d.bu_short) AS bu_name, g.group_id, g.group_name," +
+            //     " f.product_id, f.product_name, 0 as sale_qty" +
+            //     " FROM customers as b, customers_bu as c, business_units as d, products_bu as e, products as f, groups as g" +
+            //     " WHERE b.customer_id=? and f.group_id > 0 and d.bu_id=? " +
+            //     " and b.customer_id=c.customer_id" +
+            //     " and c.bu_id=d.bu_id and e.bu_id=c.bu_id and f.product_id=e.product_id and g.group_id=f.group_id" +
+            //     " and f.product_id Not IN (SELECT x.product_id FROM cust_sale as x WHERE x.customer_id = ? and x.sale_date = ?)" +
+            //     " ORDER BY `seq_sr` ASC, `group_name` ASC"
+            // const paramsSale = [customer_id, sale_date, bu_id, customer_id, bu_id, customer_id, sale_date];
+            // const saleData = await executeQuery(sqlSale, paramsSale);
+
+            const sqlSale = `
+            SELECT d.seq_sr, a.customer_id, b.customer_name, b.nick_name, CONCAT(b.city, ' ', b.pin_code) AS city_pin,
+                e.bu_id, f.bu_code, CONCAT(f.bu_code, '-', f.bu_short) AS bu_name, d.group_id, d.group_name,
+                a.product_id, c.product_name, a.sale_qty
+            FROM cust_sale AS a
+                JOIN customers AS b ON a.customer_id = b.customer_id
+                JOIN products AS c ON a.product_id = c.product_id
+                JOIN groups AS d ON c.group_id = d.group_id
+                JOIN products_bu AS e ON c.product_id = e.product_id
+                JOIN business_units AS f ON e.bu_id = f.bu_id
+            WHERE a.customer_id = ${mysql.escape(customer_id)} AND a.sale_date = ${mysql.escape(sale_date)} AND f.bu_id = ${mysql.escape(bu_id)}
+            UNION
+            SELECT g.seq_sr, b.customer_id, b.customer_name, b.nick_name, CONCAT(b.city, ' ', b.pin_code) AS city_pin,
+                c.bu_id, d.bu_code, CONCAT(d.bu_code, '-', d.bu_short) AS bu_name, g.group_id, g.group_name,
+                f.product_id, f.product_name, 0 AS sale_qty
+            FROM customers AS b
+                JOIN customers_bu AS c ON b.customer_id = c.customer_id
+                JOIN business_units AS d ON c.bu_id = d.bu_id
+                JOIN products_bu AS e ON c.bu_id = e.bu_id
+                JOIN products AS f ON e.product_id = f.product_id
+                JOIN groups AS g ON f.group_id = g.group_id
+            WHERE b.customer_id = ${mysql.escape(customer_id)} AND f.group_id > 0 AND d.bu_id = ${mysql.escape(bu_id)}
+                AND f.product_id NOT IN (
+                    SELECT x.product_id
+                    FROM cust_sale AS x
+                    WHERE x.customer_id = ${mysql.escape(customer_id)} AND x.sale_date = ${mysql.escape(sale_date)}
+                )
+            ORDER BY seq_sr ASC, group_name ASC, product_name ASC`;
+            const saleData = await executeQuery(sqlSale);
+
+            const custData = saleData.length > 0
+                ? { customer_id, customer_name: saleData[0].customer_name, mg_name, bu_id_hdn: bu_id, bu_name }
+                : { customer_id: 0, customer_name: '-- Select --', mg_name, bu_id_hdn: bu_id, bu_name };
+
+            res.render('custTarget/custSale-view', { alert, customer_list, custData, sale_date, saleData });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('An error occurred while processing your request.');
+        }
+    }
+
+    static saveSale = async (req, res) => {
+        const { sale_date, customer_id, customer_name, mg_name, bu_id_hdn, bu_id, bu_name, group_id, group_name,
+            product_id, product_name, sale_qty } = req.body;
+        const { customer_list } = await this.getData(req, res.locals.user);
+
+        if (sale_qty === undefined || sale_qty === null) {
+            const custData = { customer_id, customer_name, mg_name, bu_id: bu_id_hdn, bu_name };
+            const errors = [{ message: 'No data found for save!' }];
+            return res.render('custTarget/custSale-view', { errors, customer_list, custData, sale_date });
+        }
+
+        const bu_idVal = Array.isArray(bu_id) ? bu_id : [bu_id];
+        const bu_nameVal = Array.isArray(bu_name) ? bu_name : [bu_name];
+        const group_idVal = Array.isArray(group_id) ? group_id : [group_id];
+        const group_nameVal = Array.isArray(group_name) ? group_name : [group_name];
+        const product_idVal = Array.isArray(product_id) ? product_id : [product_id];
+        const product_nameVal = Array.isArray(product_name) ? product_name : [product_name];
+        const sale_qtyVal = Array.isArray(sale_qty) ? sale_qty : [sale_qty];
+
+        //************ */
+        const saleData = sale_qty.map((sr, i) => ({
+            bu_id: bu_idVal[i],
+            bu_name: bu_nameVal[i],
+            group_id: group_idVal[i],
+            group_name: group_nameVal[i],
+            product_id: product_idVal[i],
+            product_name: product_nameVal[i],
+            sale_qty: sale_qtyVal[i],
+        }));
+        //************ */
+
+        const errors = [];
+        if (!sale_date) {
+            errors.push({ message: 'Select period for Sale entry' });
+        }
+        if (!customer_id) {
+            errors.push({ message: 'Customer name is required' });
+        }
+        if (!bu_id_hdn) {
+            errors.push({ message: 'Customer business unit is required' });
+        }
+        if (errors.length) {
+            const custData = { customer_id, customer_name, mg_name, bu_id: bu_id_hdn, bu_name };
+            return res.render('custTarget/custSale-view', { errors, customer_list, custData, sale_date, saleData });
+        }
+
+        try {
+            const c_by = res.locals.user ? res.locals.user.user_id : 0;
+
+            const sqlSaleDelete = `DELETE FROM cust_sale 
+                WHERE sale_date = ? AND customer_id = ? 
+                AND product_id IN (SELECT product_id FROM products_bu WHERE bu_id = ?)`;
+            const paramsSaleDelete = [sale_date, customer_id, bu_id_hdn];
+            await executeQuery(sqlSaleDelete, paramsSaleDelete);
+
+            for (let i = 0; i < sale_qty.length; i++) {
+                const sqlSaleAdd = "INSERT INTO cust_sale (customer_id, sale_date, product_id, sale_qty, c_at, c_by)" +
+                    " VALUES (?,?,?,?,CURRENT_TIMESTAMP(),?)"
+                const paramsSaleAdd = [customer_id, sale_date, product_idVal[i], sale_qtyVal[i], c_by]; //.format('YYYY-MM-DD')
+                await executeQuery(sqlSaleAdd, paramsSaleAdd);
+                // targetDate.setMonth(targetDate.getMonth() + 1);
+            }
+
+            res.redirect('/custTarget/view-Sale?alert=Sale+added+successfully');
+
+        } catch (err) {
+            console.error(err);
+            return res.render('custTarget/custSale-view', { alert: `Internal server error` });
+        }
+
+    }
+
+    static deleteSale = async (req, res) => {
+        const { customer_id, sale_date, mg_name, bu_id, bu_name } = req.query;
+        try {
+            var errors = [];
+            // const sqlStr1 = "Select * from cust_target Where customer_id=? and target_date Between ? and ?"
+            // const params1 = [customer_id, startDate, endDate];
+            // const rows = await executeQuery(sqlStr1, params1);
+            // if (rows.length > 0) {
+            //     errors.push({ message: "Reference exist, master entry can't delete" });
+            // }
+
+            if (sale_date === null || sale_date === undefined) {
+                errors.push({ message: "Reference exist, master entry can't delete" });
+            }
+            if (errors.length) {
+                res.redirect(`/custTarget/view-Sale?${errors.map(error => `alert=${error.message}`).join('&')}`);
+                return;
+            }
+
+            const sqlSaleDelete = `DELETE FROM cust_sale 
+                WHERE sale_date = ? AND customer_id = ? 
+                AND product_id IN (SELECT product_id FROM products_bu WHERE bu_id = ?)`;
+            const paramsSaleDelete = [sale_date, customer_id, bu_id];
+            await executeQuery(sqlSaleDelete, paramsSaleDelete);
+
+            res.redirect('/custTarget/view-Sale?alert=Sale+removed+successfully');
+
+        } catch (err) {
+            console.error(err);
+            return res.render('custTarget/custSale-view', { alert: `Internal server error` });
         }
     };
 
@@ -680,7 +965,7 @@ class custTargetController {
             } else if (customer_id > 0) {
                 custParam = ` and a.customer_id = ${customer_id}`;
             }
-            
+
             const sqlTarget = "SELECT e.seq_sr,a.customer_id,b.customer_name,b.nick_name,CONCAT(b.city, ' ', b.pin_code) AS city_pin," +
                 " d.bu_id,d.bu_code,CONCAT(d.bu_code, '-', d.bu_short) AS bu_name,e.group_id,e.group_name," +
                 " SUM(CASE WHEN MONTH(a.target_date) = 4 THEN a.target_value END) as apr1," +
@@ -759,7 +1044,7 @@ class custTargetController {
             }
 
             const sqlTarget = "SELECT a.customer_id,Trim(b.customer_name) as customer_name,b.nick_name,CONCAT(b.city, ' ', b.pin_code) AS city_pin," +
-                " d.bu_id,d.bu_code,CONCAT(d.bu_code, '-', d.bu_short) AS bu_name,e.seq_sr,e.group_id,e.group_name," +
+                " d.bu_id,d.bu_code,CONCAT(d.bu_code, '-', d.bu_short) AS bu_name,CONCAT(f.first_name,' ',f.last_name) AS mg_name, e.seq_sr,e.group_id,e.group_name," +
                 " SUM(CASE WHEN MONTH(a.target_date) = 4 THEN a.target_value END) as apr1," +
                 " SUM(CASE WHEN MONTH(a.target_date) = 5 THEN a.target_value END) AS may1," +
                 " SUM(CASE WHEN MONTH(a.target_date) = 6 THEN a.target_value END) AS jun1," +
@@ -778,6 +1063,7 @@ class custTargetController {
                 " JOIN customers_bu AS c ON a.customer_id = c.customer_id and a.bu_id = c.bu_id" +
                 " JOIN business_units AS d ON c.bu_id = d.bu_id" +
                 " JOIN groups e ON a.group_id = e.group_id" +
+                " LEFT JOIN employees f ON b.mg_id = f.emp_id" +
                 " WHERE a.target_date BETWEEN ? and ? " + custParam +
                 " GROUP BY e.seq_sr, a.customer_id,b.customer_name,b.nick_name,CONCAT(b.city, ' ', b.pin_code),d.bu_id,d.bu_code," +
                 " CONCAT(d.bu_code, '-', d.bu_short),e.group_id,e.group_name" +

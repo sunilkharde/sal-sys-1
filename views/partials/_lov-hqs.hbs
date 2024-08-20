@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <!-- hqsModal -->
+    <div class="modal fade" id="hqsModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Select HQ name from list...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table" id="hqTable">
+                        <thead>
+                            <tr>
+                                <th>HQ Name</th>
+                                <th>HQ-ID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each hq_list}}
+                            <tr>
+                                <td>{{this.hq_name}}</td>
+                                <td>{{this.hq_id}}</td>
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn-info btn-sm"
+                                        onclick="handleSelectButtonHqs(this)">
+                                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+
+                </div>
+                {{!-- <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div> --}}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #hqsModal .modal-dialog {
+            max-width: 550px;
+        }
+        .modal-lg .modal-dialog {
+            max-width: 500px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $('#hqTable').DataTable({
+                pageLength: 10
+            });
+        });
+    </script>
+
+    <script>
+        function handleSelectButtonHqs(button) {
+            // Get the table row that contains the button
+            const row = button.closest('tr');
+
+            // Get the values of the columns in the row
+            const hq_id = row.querySelector('td:nth-child(2)').textContent;
+            const hq_name = row.querySelector('td:nth-child(1)').textContent;
+
+            // Set the values of the form fields with the row values
+            /*document.getElementById('cityForm').querySelector('#hq_id').value = hq_id;
+            document.getElementById('cityForm').querySelector('#hq_name').value = hq_name;*/
+            document.getElementById('hq_id').value = hq_id;
+            document.getElementById('hq_name').value = hq_name;
+
+            // Hide the modal
+            const hqsModal = document.getElementById('hqsModal');
+            const hqsModalInstance = bootstrap.Modal.getInstance(hqsModal);
+            hqsModalInstance.hide();
+        }
+    </script>
+
+</body>
+
+</html>

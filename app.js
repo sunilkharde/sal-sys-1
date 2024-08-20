@@ -19,6 +19,10 @@ import dsrAcRoute from "./routes/dsrAcRoutes.js";
 import dsrTpRoute from "./routes/dsrTpRoutes.js";
 import apiRoute from "./routes/apiRoutes.js";
 import custTargetRoute from "./routes/custTargetRoutes.js";
+import xController from "./controller/xController.js";
+import empRoute from "./routes/empRoutes.js";
+import circularRoute from "./routes/circularRoute.js";
+import vanclaimRoute from "./routes/vanclaimRoutes.js"
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
@@ -30,8 +34,8 @@ import enforce from "express-sslify";
 
 const certsPath = process.cwd() + '/certs';
 const httpsOptions = {
-  key: fs.readFileSync(certsPath + '/server.key'), 
-  cert: fs.readFileSync(certsPath + '/server.crt') 
+  key: fs.readFileSync(certsPath + '/server.key'),
+  cert: fs.readFileSync(certsPath + '/server.crt')
 };
 
 //import axios from 'axios';
@@ -198,6 +202,9 @@ app.use('/dsr', dsrRoute);
 app.use('/dsrAc', dsrAcRoute);
 app.use('/dsrTp', dsrTpRoute);
 app.use('/custTarget', custTargetRoute);
+app.use('/emp', empRoute);
+app.use('/circular', circularRoute);
+app.use('/vanclaim', vanclaimRoute);
 
 // Log incoming requests
 /*app.use((req, res, next) => {
@@ -209,6 +216,17 @@ app.use('/custTarget', custTargetRoute);
 app.get('/', (req, res) => {
   res.render('home', { title: 'Home', message: 'Welcome, to app!' });
 });
+
+app.get('/updateImageRecords', async (req, res) => {
+  try {
+    console.log('updateImageRecords Process is start........')
+    await xController.updateImageRecords(req, res);
+  } catch (error) {
+    console.error('Error in /updateImageRecords route:', error);
+    res.status(500).send('An internal server error occurred');
+  }
+});
+
 app.get('/about', async (req, res) => {
   res.render('error', { title: 'Error' });
 });
@@ -346,7 +364,7 @@ const selectAndUploadData = async () => {
 //setInterval(selectAndUploadData, 1 * 60 * 1000); // schedule job every hour
 const times = [[9, 32], [10, 2], [10, 32], [11, 2], [11, 32], [12, 2], [12, 32], [13, 2], [13, 32], [14, 2], [14, 32],
 [15, 2], [15, 32], [16, 2], [16, 32], [17, 2], [17, 32], [18, 2], [18, 32], [19, 2], [19, 32], [20, 2], [20, 32],
-[21, 2], [21, 32], [22, 2], [22, 32], [23, 2], [23, 32], [18, 20]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
+[21, 2], [21, 32], [22, 2], [22, 32], [23, 2], [23, 32], [18, 20], [15, 39]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
 // times.forEach((time) => {
 //   schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
 // });

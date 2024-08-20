@@ -1,6 +1,5 @@
 import { executeQuery } from '../db.js';
 
-//const conn = await pool.getConnection();
 class customerController {
 
     static getData = async () => {
@@ -468,8 +467,9 @@ class customerController {
 
             for (let i = 0; i < reg_no.length; i++) {
                 let sr_no_val = i + 1;
+                const regNoUpper = regNoVal[i].toUpperCase();
                 const sqlVeh = "Insert into cust_veh (customer_id,sr_no,reg_no,veh_type,ins_no,ins_date) values (?,?,?,?,?,?)";
-                const paramsVeh = [cust_id, sr_no_val, regNoVal[i], vehTypeVal[i], insNoVal[i], insDateVal[i]];
+                const paramsVeh = [cust_id, sr_no_val, regNoUpper, vehTypeVal[i], insNoVal[i], insDateVal[i]];
                 await executeQuery(sqlVeh, paramsVeh);
             }
 

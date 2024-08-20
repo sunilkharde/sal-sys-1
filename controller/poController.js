@@ -7,9 +7,9 @@ class poController {
     static getData = async (req, user) => {
         try {
             var user_role = user.user_role !== null && user.user_role !== undefined ? user.user_role : 'User';
-            //const conn = await pool.getConnection();
+            
             var sqlCust = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area,c.bu_id,CONCAT(d.bu_code,' | ',d.bu_name) as bu_name" +
-                " from customers as a, market_area as b, customers_bu as c, business_units as d " +
+                " From customers as a, market_area as b, customers_bu as c, business_units as d " +
                 " Where a.market_area_id=b.market_area_id and a.status='A'" +
                 " and a.customer_id=c.customer_id and c.bu_id=d.bu_id"
             if (user_role !== "Admin") {
@@ -17,9 +17,7 @@ class poController {
             }
             const customer_list = await executeQuery(sqlCust);
 
-            //const conn1 = await pool.getConnection();
             const bu_list = await executeQuery("SELECT bu_id, CONCAT(bu_code,' | ',bu_name) as bu_name FROM business_units Where status='A'")
-            // conn1.release
 
             //const [product_list] = await executeQuery("SELECT * FROM products as a Where a.status='A'");
 

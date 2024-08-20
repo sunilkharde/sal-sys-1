@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+
+<body>
+    <!-- customersModal -->
+    <div class="modal fade" id="vendorModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Select Vendor name from list...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table" id="VendorTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>ID</th>
+                                <th>City</th>
+                                <th>SAP Code</th>
+                                 <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each customer_list}}
+                            <tr>
+                                <td class="col-4">{{this.customer_name}}</td>
+                                <td class="col-0" style = "text-align: centre;">{{this.customer_id}}</td>
+                                <td class="col-2">{{this.city_pin}}</td>
+                                <td class="col-2">{{this.SAP_Code}}</td>
+                                                         
+                                {{!-- <td class="col-1">{{this.market_area}}</td> --}}
+                                 <td class="col-1" style="text-align: center;">
+                                    <button type="button" class="btn btn-info btn-sm"
+                                        onclick="handleSelectButtonvendor(this)">
+                                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+
+                </div>
+                {{!-- <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div> --}}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #vendorModal .modal-dialog {
+            max-width: 1350px;
+        }
+    </style>
+
+    
+
+
+    <script>
+        $(document).ready(function () {
+            $('#VendorTable').DataTable({
+                pageLength: 10
+            });
+        });
+    </script>
+
+    <script>
+        function handleSelectButtonvendor(button) {
+            // Get the table row that contains the button
+            const row = button.closest('tr');
+
+            // Get the values of the columns in the row
+            const customer_id = row.querySelector('td:nth-child(2)').textContent;
+            const customer_name = row.querySelector('td:nth-child(1)').textContent;
+            
+
+            // Set the values of the form fields with the row values
+            /*document.getElementById('customersForm').querySelector('#customers').value = customers;
+            document.getElementById('customersForm').querySelector('#pin_code').value = pin_code;*/
+            document.getElementById('customer_id').value = customer_id;
+            document.getElementById('customer_name').value = customer_name;
+
+            // Hide the modal
+            const modal = document.getElementById('vendorModal');
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            modalInstance.hide();
+        }
+    </script>
+</body>
+</html>

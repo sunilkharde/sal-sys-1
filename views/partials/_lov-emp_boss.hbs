@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 
 <body>
-    <!-- salesMgModal -->
-    <div class="modal fade" id="salesMgModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"
+    <!-- bossModal -->
+    <div class="modal fade" id="bossModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"
         data-bs-backdrop="static">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -12,11 +12,11 @@
                 </div>
                 <div class="modal-body">
 
-                    <table class="table" id="empMgTable">
+                    <table class="table" id="bossTable">
                         <thead>
                             <tr>
-                                <th>Employee Name</th>
-                                <th>Emp-ID</th>
+                                <th>Manager Name</th>
+                                <th>Mg-ID</th>
                                 <th>Desg</th>
                                 <th>HQ</th>
                                 <th>Week Off</th>
@@ -25,10 +25,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{#each emp_list}}
+                            {{#each boss_list}}
                             <tr>
-                                <td class="col-4">{{this.emp_name}}</td>
-                                <td class="col-2">{{this.emp_id}}</td>
+                                <td class="col-4">{{this.boss_name}}</td>
+                                <td class="col-2">{{this.boss_id}}</td>
                                 <td class="col-1">{{this.desg_name}}</td>
                                 <td class="col-2">{{this.hq_name}}</td>
                                 <td class="col-1">{{this.off_day}}</td>
@@ -53,18 +53,18 @@
     </div>
 
     <style>
-        #salesMgModal .modal-dialog {
+        #bossModal .modal-dialog {
             max-width: 950px;
         }
     </style>
 
     <script>
         $(document).ready(function () {
-            $('#empMgTable').DataTable({
+            $('#bossTable').DataTable({
                 pageLength: 10
             });
 
-            //$('#salesMgModal').draggable();
+            //$('#bossModal').draggable();
         });
     </script>
 
@@ -74,8 +74,8 @@
             const row = button.closest('tr');
 
             // Get the values of the columns in the row
-            const mg_id = row.querySelector('td:nth-child(2)').textContent;
-            const mg_name = row.querySelector('td:nth-child(1)').textContent;
+            const boss_id = row.querySelector('td:nth-child(2)').textContent;
+            const boss_name = row.querySelector('td:nth-child(1)').textContent;
             //const bu_id = row.querySelector('td:nth-child(6)').textContent;
             //const bu_name = row.querySelector('td:nth-child(5)').textContent;
 
@@ -83,16 +83,16 @@
             /*document.getElementById('customersForm').querySelector('#customers').value = customers;
             document.getElementById('customersForm').querySelector('#pin_code').value = pin_code;*/
 
-            document.getElementById('mg_id').value = mg_id;
-            document.getElementById('mg_name').value = mg_name;
+            document.getElementById('boss_id').value = boss_id;
+            document.getElementById('boss_name').value = boss_name;
 
             //document.getElementById('bu_id_hdn').value = bu_id;
             //document.getElementById('bu_name').value = bu_name;
 
             // Hide the modal
-            const modal = document.getElementById('salesMgModal');
-            const modalInstance = bootstrap.Modal.getInstance(modal);
-            modalInstance.hide();
+            const bossModal = document.getElementById('bossModal');
+            const bossModalInstance = bootstrap.Modal.getInstance(bossModal);
+            bossModalInstance.hide();
         }
     </script>
 

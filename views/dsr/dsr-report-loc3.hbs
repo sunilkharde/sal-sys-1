@@ -60,6 +60,8 @@
                             <th>City</th>
                             <th>Location</th>
                             <th>Selfie</th>
+                            <th>Odometer</th>
+                            <th>Invoice</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,7 +79,16 @@
                             <td>{{this.loc_name}}</td>
                             <td>{{this.loc_add}}</td>
                             <td>
-                                <img src="{{this.img1}}" alt="Employee Photo" style="max-width: 100px; max-height: 100px;">
+                                <img class="zoomable-image" src="{{this.img1}}" alt=""
+                                    style="max-width: 100px; max-height: 100px;">
+                            </td>
+                            <td>
+                                <img class="zoomable-image" src="{{this.img2}}" alt=""
+                                    style="max-width: 100px; max-height: 100px;">
+                            </td>
+                            <td>
+                                <img class="zoomable-image" src="{{this.img3}}" alt=""
+                                    style="max-width: 100px; max-height: 100px;">
                             </td>
                         </tr>
                         {{/each}}

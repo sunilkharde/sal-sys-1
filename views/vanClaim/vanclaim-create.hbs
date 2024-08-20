@@ -1,0 +1,54 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 border p-4"> {{!-- border-secondary --}}
+            <h4 class="mb-3">VAN Claim Entry</h4>
+
+            <form id="create_form" action="/vanClaim/update" method="GET">
+
+                <div class="row mb-3">
+                    <label for="customer_id" class="col-sm-2 col-form-label">Vendor Name<span
+                            style="color: red;">*</span></label>
+                    <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
+                        value="{{data.customer_id}}">
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <input readonly type="text" class="form-control" id="customer_name" name="customer_name"
+                                value="{{data.customer_name}}">
+                            <button class="btn btn-outline-info" type="button" id="btnVendor" data-bs-toggle="modal"
+                                data-bs-target="#vendorModal">
+                                <i class="bi bi-list"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label for="claim_month" class="col-sm-2 col-form-label">Month</label>
+                    <div class="col-sm-4">
+                        <input type="month" class="form-control" id="claim_month" name="claim_month"
+                            value="{{data.claim_month}}">
+                    </div>
+                </div>
+
+                <div class="col-sm-2">
+                    <button type="submit" id="btnPop" class="btn btn-success" style="background-color: #4869d6; color: white;">Continue...</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#create_form').on('submit', function (event) {
+        event.preventDefault();
+        var customer_id = $('#customer_id').val();
+        var claim_month = $('#claim_month').val();
+        var queryString = `customer_id=${customer_id}&claim_month=${claim_month}`;
+        var url = `/vanClaim/update?${queryString}`;
+        window.location.href = url;
+    });
+</script>
+
+
+{{> _lov-vendor}}

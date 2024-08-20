@@ -16,6 +16,10 @@ router.get('/view-stock', custTargetController.viewStock);
 router.post('/view-stock', custTargetController.saveStock);
 router.get('/delete-stock', custTargetController.deleteStock);
 
+router.get('/view-sale', custTargetController.viewSale);
+router.post('/view-sale', custTargetController.saveSale);
+router.get('/delete-sale', custTargetController.deleteSale);
+
 // router.get('/create', custTargetController.create);
 // router.post('/create', custTargetController.save);
 // router.get('/edit/:id', custTargetController.edit);
