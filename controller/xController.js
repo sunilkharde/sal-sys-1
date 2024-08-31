@@ -4,29 +4,25 @@ import { join } from 'path';
 
 class xController {
 
-    static updateImageRecords = async (req, res) => {
-
-        const startDate = '2024-05-01 00:00:00';
-        const endDate = '2024-05-02 23:59:59';
+    static updateImageRecords = async (req, res, startDate, endDate) => {
 
         const publicFolderPath = join(process.cwd(), 'public');
 
         try {
-            const selectQuery = "" +
-                " SELECT a.emp_id, a.loc_date, " +
-                " CONCAT('/userData/B_', a.emp_id, '_', DATE_FORMAT(a.loc_date, '%Y-%m-%d %H.%i.%s'), '.jpeg') as loc_img " +
-                " FROM dsr_loc as a, employees as b, designations as c " +
-                " WHERE a.emp_id=b.emp_id and b.desg_id=c.desg_id and c.desg_id in (2,3,4,5) " +
-                " and a.loc_date BETWEEN ? AND ? ";
+            const selectQuery = `
+                SELECT a.emp_id, DATE_FORMAT(a.loc_date, '%Y-%m-%d %H.%i.%s') as loc_date, 
+                CONCAT('/userData/B_', a.emp_id, '_', DATE_FORMAT(a.loc_date, '%Y-%m-%d %H.%i.%s'), '.jpeg') as loc_img 
+                FROM dsr_loc as a, employees as b, designations as c 
+                WHERE a.emp_id=b.emp_id and b.desg_id=c.desg_id and c.desg_id in (2,3,4,5,6,7) 
+                and a.loc_date BETWEEN ? AND ? 
+            `;
             const records = await executeQuery(selectQuery, [startDate, endDate]);
             
-            console.log('Data...', JSON.stringify(records))
-
             for (const record of records) {
                 const imageFileName = `${record.loc_img}`;
                 const imagePath = join(publicFolderPath, imageFileName);
                 if (fs.existsSync(imagePath)) {
-                    console.log('Found...', imagePath)
+                    console.log('Found Odometer Image...', imagePath)
                     const updateQuery = `
                         UPDATE dsr_loc
                         SET has_img2 = 1
@@ -38,7 +34,9 @@ class xController {
                 }
             }
 
-            res.status(200).json({ message: 'Records updated successfully' });
+            console.log('Odometer image records updated successfully...!')
+
+            res.status(200).json({ message: 'Odometer image records updated successfully...!' });
 
         } catch (err) {
             console.error(err);
@@ -46,7 +44,6 @@ class xController {
         }
     };
 
+}
 
-};
-
-export default xController
+export default xController;

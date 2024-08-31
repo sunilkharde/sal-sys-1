@@ -8,12 +8,23 @@ class vanClaimController {
 
         try {
             var user_role = user.user_role !== null && user.user_role !== undefined ? user.user_role : 'User';
+
+            //Get employee details
+            const sqlEmp = "Select a.emp_id,a.first_name,a.middle_name,a.last_name,a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day" +
+                " FROM employees as a, designations as b, hqs as c" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.status='A' and a.user_id=?"
+            const paramsEmp = [user.user_id];
+            const empData = await executeQuery(sqlEmp, paramsEmp);
+            if (empData.length === 0) {
+                res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
+                return;
+            }
             var sqlCust = "Select DISTINCT a.customer_id, a.customer_name, CONCAT(a.city,' ',a.pin_code) as city_pin, ext_code as SAP_Code " +
                 " from customers as a, circular_mst as b" +
                 " Where a.status='A' and a.customer_type = 'Vendor' " +
                 " and a.customer_id  =  b.customer_id ";
             if (user_role !== "Admin") {
-                sqlCust = sqlCust + ` and a.user_id=${user.user_id}`;
+                sqlCust = sqlCust + ` and (a.user_id=${user.user_id} or a.mg_id = ${empData[0].emp_id} or a.se_id = ${empData[0].emp_id})`;
             }
             const customer_list = await executeQuery(sqlCust);
 
@@ -83,7 +94,20 @@ class vanClaimController {
 
     static view = async (req, res) => {
         const alert = req.query.alert;
+
         try {
+
+            //Get employee details
+            const sqlEmp = "Select a.emp_id,a.first_name,a.middle_name,a.last_name,a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day" +
+                " FROM employees as a, designations as b, hqs as c" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.status='A' and a.user_id=?"
+            const paramsEmp = [res.locals.user.user_id];
+            const empData = await executeQuery(sqlEmp, paramsEmp);
+            if (empData.length === 0) {
+                res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
+                return;
+            }
+
             let sqlStr = `SELECT a.claim_month, 
                 DATE_FORMAT(a.claim_month, '%b-%Y') AS claim_mmyyy, 
                 DATE_FORMAT(a.claim_month, '%Y-%m') AS claim_YM,
@@ -98,7 +122,7 @@ class vanClaimController {
                 DATE_FORMAT(a.claim_month, '%b-%Y'), 
                 b.customer_name, a.customer_id, b.ext_code`
             if (!["Admin", "Support"].includes(res.locals.user.user_role)) {
-                sqlStr = sqlStr + ` and (mg_id = ${empData[0].emp_id} or se_id = ${empData[0].emp_id})`;
+                sqlStr = sqlStr + ` and (b.mg_id = ${empData[0].emp_id} or b.se_id = ${empData[0].emp_id})`;
             }
 
             const results = await executeQuery(sqlStr); //, paramsVeh);

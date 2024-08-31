@@ -1,0 +1,180 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 border p-4"> {{!-- border-secondary --}}
+            <h4 class="mb-3">Update Consumer for Code {{data.consumer_id}}</h4>
+
+            <form action="/consumer/update/{{data.consumer_id}}" method="post">
+                <div class="row mb-3">
+                    <label for="consumer_name" class="col-sm-2 col-form-label">Consumer Name<span
+                            style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-10">
+                        <input hidden type="text" class="form-control" id="consumer_id" name="consumer_id"
+                            value="{{data.consumer_id}}">
+                        <input type="text" class="form-control" id="consumer_name" name="consumer_name"
+                            value="{{data.consumer_name}}" placeholder="Enter consumer name" minlength="1" maxlength="50"
+                            aria-describedby="consumer_nameHelp" required>
+                        <div id="consumer_nameHelp" class="form-text">Consumer name cannot exceed 50 characters.</div>
+                    </div>
+                </div>
+
+                <div hidden class="row mb-3">
+                    <label for="nick_name" class="col-sm-2 col-form-label">Nick Name<span style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="nick_name" name="nick_name"
+                            value="{{data.nick_name}}" placeholder="Enter Nickname">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="consumer_type" class="col-sm-2 col-form-label">Consumer Type<span style="color: red;">*</span></label>
+                    <div class="col-sm-10">
+                        <select class="form-select" id="consumer_type" name="consumer_type"
+                            aria-label=".form-select-sm example">
+                            <option value="Consumer" {{#isEqual data.consumer_type "Consumer" }}selected{{/isEqual}}>Consumer</option>
+                            <option value="Retailer" {{#isEqual data.consumer_type "Retailer" }}selected{{/isEqual}}>Retailer</option>
+                            <option value="Vendor" {{#isEqual data.consumer_type "Vendor" }}selected{{/isEqual}}>Vendor</option>
+                            <option value="Mall" {{#isEqual data.consumer_type "Mall" }}selected{{/isEqual}}>Mall</option>
+                            <option value="General Store" {{#isEqual data.consumer_type "General Store"}}selected{{/isEqual}}>General Store</option>
+                            <option value="Feriwala" {{#isEqual data.consumer_type "Feriwala" }}selected{{/isEqual}}>Feriwala</option>
+                            <option value="Wholesaler" {{#isEqual data.consumer_type "Wholesaler"}}selected{{/isEqual}}>Wholesaler</option>
+                            <option value="Other" {{#isEqual data.consumer_type "Other" }}selected{{/isEqual}}>Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="mobile_no" class="col-sm-2 col-form-label">Mobile No<span style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="mobile_no" name="mobile_no"
+                            value="{{data.mobile_no}}" placeholder="Customer mobile no" required>
+                    </div>
+                </div>
+
+                <div hidden class="row mb-3">
+                    <label for="email_id" class="col-sm-2 col-form-label">Email<span style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="email_id" name="email_id" value="{{data.email_id}}"
+                            placeholder="Customer email id">
+                    </div>
+                </div>
+
+                <div hidden class="row mb-3">
+                    <label for="add1" class="col-sm-2 col-form-label">Address Line 1</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="add1" name="add1" value="{{data.add1}}"
+                            placeholder="Enter address lines 1" minlength="1" maxlength="50"
+                            aria-describedby="add1Help">
+                        <div id="add1Help" class="form-text">Consumer address lines 1 cannot exceed 50 characters.</div>
+                    </div>
+                </div>
+
+                <div hidden class="row mb-3">
+                    <label for="add2" class="col-sm-2 col-form-label">Address Line 2</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="add2" name="add2" value="{{data.add3}}"
+                            placeholder="Enter address lines 2" minlength="1" maxlength="50"
+                            aria-describedby="add2Help">
+                        <div id="add2Help" class="form-text">Consumer address lines 2 cannot exceed 50 characters.</div>
+                    </div>
+                </div>
+
+                <div hidden class="row mb-3">
+                    <label for="add3" class="col-sm-2 col-form-label">Address Line 3</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="add3" name="add3" value="{{data.add3}}"
+                            placeholder="Enter address lines 3" minlength="1" maxlength="50"
+                            aria-describedby="add3Help">
+                        <div id="add3Help" class="form-text">Consumer address lines 3 cannot exceed 50 characters.</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="city" class="col-sm-2 col-form-label">City<span style="color: red;">*</span>
+                    </label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="city" name="city" value="{{data.city}}"
+                               required placeholder="Enter city name" minlength="1" maxlength="50" aria-describedby="cityHelp">
+                            <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                                data-bs-target="#cityModal">
+
+                                <i class="bi bi-list"></i></button>
+                        </div>
+                        <div id="cityHelp" class="form-text">Select city name from list and cannot exceed 50 characters.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="pin_code" class="col-sm-2 col-form-label">Pin Code<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="pin_code" name="pin_code" value="{{data.pin_code}}"
+                            placeholder="Enter pin code">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="district" class="col-sm-2 col-form-label">District<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="district" name="district" value="{{data.district}}"
+                            placeholder="Enter district" minlength="1" maxlength="50">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="state" class="col-sm-2 col-form-label">State<span style="color: red;">*</span></label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="state" name="state" value="{{data.state}}"
+                            placeholder="Enter state" minlength="1" maxlength="50">
+                    </div>
+                </div>
+
+                <div hidden class="row mb-3">
+                    <label for="ext_code" class="col-sm-2 col-form-label">External Code<span
+                            style="color: red;">*</span></label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="ext_code" name="ext_code" value="{{data.ext_code}}"
+                            placeholder="Customer External Code">
+                    </div>
+                </div>
+
+                <div hidden class="row mb-3">
+                    <label for="geo_location" class="col-sm-2 col-form-label">Geo-Location</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="geo_location" name="geo_location"
+                            value="{{data.geo_location}}"
+                            placeholder="Customers geographic location (latitude and longitude)">
+                    </div>
+                </div>
+
+                <div hidden class="row mb-3">
+                    <label for="status" class="col-sm-2 col-form-label">Status</label>
+                    <div class="col-sm-10">
+                        <select class="form-select" id="status" name="status" aria-label=".form-select-sm example">
+                            <option value="A" {{#isEqual data.status "A" }}selected{{/isEqual}}>Active</option>
+                            <option value="I" {{#isEqual data.status "I" }}selected{{/isEqual}}>Not-Active</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-3 d-flex justify-content-between">
+                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"
+                        class="btn btn-primary mx-1">Submit</button>
+                    <div class="col-sm-10">
+                        <button type="button" class="btn btn-secondary mx-1"
+                            onclick="window.location.href='/consumer/view'">Cancel</button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{{> _lov-cities}}

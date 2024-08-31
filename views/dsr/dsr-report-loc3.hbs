@@ -111,6 +111,31 @@
         </div>
     </div>
 
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img id="modalImage" src="" alt="Employee Photo" style="width:100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const zoomableImages = document.querySelectorAll('.zoomable-image');
+
+            zoomableImages.forEach(function (imgElement) {
+                imgElement.addEventListener('dblclick', function () {
+                    const modalImage = document.getElementById('modalImage');
+                    modalImage.src = imgElement.src; // Set modal image source
+                    $('#imageModal').modal('show'); // Open Bootstrap modal
+                });
+            });
+        });
+    </script>
+
 
     <script>
         $(document).ready(function () {

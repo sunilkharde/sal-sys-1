@@ -23,6 +23,7 @@ import xController from "./controller/xController.js";
 import empRoute from "./routes/empRoutes.js";
 import circularRoute from "./routes/circularRoute.js";
 import vanclaimRoute from "./routes/vanclaimRoutes.js"
+import consumerRoute from "./routes/consumerRoutes.js";
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
@@ -205,6 +206,7 @@ app.use('/custTarget', custTargetRoute);
 app.use('/emp', empRoute);
 app.use('/circular', circularRoute);
 app.use('/vanclaim', vanclaimRoute);
+app.use('/consumer', consumerRoute);
 
 // Log incoming requests
 /*app.use((req, res, next) => {
@@ -217,15 +219,26 @@ app.get('/', (req, res) => {
   res.render('home', { title: 'Home', message: 'Welcome, to app!' });
 });
 
+
 app.get('/updateImageRecords', async (req, res) => {
+  // GET /updateImageRecords?startDate=2024-08-01%2000:00:00&endDate=2024-08-26%2023:59:59
   try {
-    console.log('updateImageRecords Process is start........')
-    await xController.updateImageRecords(req, res);
+    const { startDate, endDate } = req.query;
+
+    // Validate the date parameters
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'Both startDate and endDate are required' });
+    }
+
+    console.log('The process of updating odometer image records has started...!')
+
+    await xController.updateImageRecords(req, res, startDate, endDate);
   } catch (error) {
     console.error('Error in /updateImageRecords route:', error);
     res.status(500).send('An internal server error occurred');
   }
 });
+
 
 app.get('/about', async (req, res) => {
   res.render('error', { title: 'Error' });
