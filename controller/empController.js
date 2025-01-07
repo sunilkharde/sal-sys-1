@@ -30,7 +30,7 @@ class EmployeeController {
     }
 
     static create = async (req, res) => {
-        const { first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status, user_id, vc_comp_code, vc_emp_code, ext_code } = req.body;
+        const { first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status, user_id, vc_comp_code, vc_emp_code, ext_code, card_no } = req.body;
         const data = req.body
         const [desg_list, hq_list, boss_list, bu_list, users_list] = await this.getData();
 
@@ -86,9 +86,9 @@ class EmployeeController {
             // Insert new record into database
             var status_new = status !== null && status !== undefined ? status : 'A';
             var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const sqlStr = "INSERT INTO employees (emp_id, first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status, user_id, vc_comp_code, vc_emp_code, ext_code, c_at, c_by)" +
-                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP(),?)"
-            const paramsCust = [nextEmployeeID, first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status_new, user_id, vc_comp_code, vc_emp_code, ext_code, c_by];
+            const sqlStr = "INSERT INTO employees (emp_id, first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status, user_id, vc_comp_code, vc_emp_code, ext_code, card_no, c_at, c_by)" +
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP(),?)"
+            const paramsCust = [nextEmployeeID, first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status_new, user_id, vc_comp_code, vc_emp_code, ext_code, card_no, c_by];
             await executeQuery(sqlStr, paramsCust);
 
             res.redirect('/emp/view');
@@ -147,7 +147,7 @@ class EmployeeController {
 
     static update = async (req, res) => {
         const { emp_id } = req.params;
-        const { first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status, user_id, vc_comp_code, vc_emp_code, ext_code } = req.body;
+        const { first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status, user_id, vc_comp_code, vc_emp_code, ext_code, card_no } = req.body;
         const data = req.body
         const [desg_list, hq_list, boss_list, bu_list, users_list] = await this.getData();
 
@@ -199,9 +199,9 @@ class EmployeeController {
             // Update record into database using emp_id
             //var status_new = status !== null && status !== undefined ? status : 'A';
             var u_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const sqlStr = "UPDATE employees Set first_name=?,middle_name=?,last_name=?,desg_id=?,hq_id=?,boss_id=?,bu_id=?,off_day=?,status=?,user_id=?,vc_comp_code=?,vc_emp_code=?,ext_code=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
+            const sqlStr = "UPDATE employees Set first_name=?,middle_name=?,last_name=?,desg_id=?,hq_id=?,boss_id=?,bu_id=?,off_day=?,status=?,user_id=?,vc_comp_code=?,vc_emp_code=?,ext_code=?,card_no=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
                 " WHERE emp_id=?"
-            const params = [first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status, user_id, vc_comp_code, vc_emp_code, ext_code, u_by, emp_id];
+            const params = [first_name, middle_name, last_name, desg_id, hq_id, boss_id, bu_id, off_day, status, user_id, vc_comp_code, vc_emp_code, ext_code, card_no, u_by, emp_id];
             await executeQuery(sqlStr, params);
 
             res.redirect('/emp/view');

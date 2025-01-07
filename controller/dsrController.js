@@ -406,8 +406,19 @@ class dsrController {
         try {
             const [atten_flag_list] = await this.getData(req, res.locals.user);
 
-            const sqlStr = "Select a.emp_id,a.dsr_date,a.atten_flag,a.hr_flag,a.from_city,a.to_city,a.stay_city,a.total_allow,total_lodge,a.total_exp,a.post_mg,a.post_ac" +
+            const formattedDate = moment(dsr_date).format('YYYY-MM');
+            const empTpSql = "Select a.emp_id,a.dsr_date,a.tp_1 as tp_id, CONCAT(b.from,' --to-- ',b.to) as tp_name " +
                 " FROM dsr_1 as a" +
+                " LEFT JOIN tp_routes as b ON (a.tp_1=b.tp_id)" +
+                " Where DATE_FORMAT(a.dsr_date, '%Y-%m') = ? and a.emp_id=?";
+            const empTpParams = [formattedDate, emp_id];
+            const empTpRoutes = await executeQuery(empTpSql, empTpParams);
+            // console.log('empTpRoutes...', empTpRoutes)
+
+            const sqlStr = "Select a.emp_id,a.dsr_date,a.atten_flag,a.hr_flag,a.from_city,a.to_city,a.stay_city,a.total_allow,total_lodge,a.total_exp,a.post_mg,a.post_ac," +
+                " a.tp_2 as tp_id, CONCAT(b.from,' --to-- ',b.to) as tp_name " +
+                " FROM dsr_1 as a" +
+                " LEFT JOIN tp_routes as b ON (a.tp_2=b.tp_id)" +
                 " Where a.dsr_date=? and a.emp_id=?";
             const params = [dsr_date, emp_id];
             const results = await executeQuery(sqlStr, params);
@@ -441,9 +452,9 @@ class dsrController {
             const allow_list = await executeQuery(sqlStr4, [results3[0].desg_id]);
 
             if (postFlag === 'Y') {
-                res.render('dsr/dsr-edit', { data: results[0], data2: results2, data3: results3[0], atten_flag_list, allow_list, postFlag });
+                res.render('dsr/dsr-edit', { data: results[0], data2: results2, data3: results3[0], atten_flag_list, allow_list, postFlag, empTpRoutes });
             } else {
-                res.render('dsr/dsr-edit', { layout: 'mobile', data: results[0], data2: results2, data3: results3[0], atten_flag_list, allow_list });
+                res.render('dsr/dsr-edit', { layout: 'mobile', data: results[0], data2: results2, data3: results3[0], atten_flag_list, allow_list, empTpRoutes });
             }
 
         } catch (error) {
@@ -479,7 +490,7 @@ class dsrController {
 
     static update = async (req, res) => {
         const { dsr_date, emp_id } = req.params;
-        const { atten_flag, from_city, to_city, stay_city, total_allow, total_lodge, total_exp, sr_no, allow_id, amount, from_km, to_km, type, km_rate } = req.body;
+        const { atten_flag, tp_id, from_city, to_city, stay_city, total_allow, total_lodge, total_exp, sr_no, allow_id, amount, from_km, to_km, type, km_rate } = req.body;
         const data = req.body
         const [atten_flag_list] = await this.getData(req, res.locals.user);
         const { postFlag } = req.query;
@@ -493,12 +504,12 @@ class dsrController {
         // if (!atten_flag || atten_flag === 'XX') {
         //     errors.push({ message: 'Attendance (Status) flag is required' });
         // }
-        if (!from_city) {
-            errors.push({ message: 'Select from city' });
-        }
-        if (!to_city) {
-            errors.push({ message: 'Select to city' });
-        }
+        // if (!from_city) {
+        //     errors.push({ message: 'Select from city' });
+        // }
+        // if (!to_city) {
+        //     errors.push({ message: 'Select to city' });
+        // }
 
         if (!allow_id || allow_id.length === undefined) {
             errors.push({ message: 'You have not select proper values.' });
@@ -531,6 +542,14 @@ class dsrController {
         }
 
         if (errors.length) {
+            const formattedDate = moment(dsr_date).format('YYYY-MM');
+            const empTpSql = "Select a.emp_id,a.dsr_date,a.tp_1 as tp_id, CONCAT(b.from,' --to-- ',b.to) as tp_name " +
+                " FROM dsr_1 as a" +
+                " LEFT JOIN tp_routes as b ON (a.tp_1=b.tp_id)" +
+                " Where DATE_FORMAT(a.dsr_date, '%Y-%m') = ? and a.emp_id=?";
+            const empTpParams = [formattedDate, emp_id];
+            const empTpRoutes = await executeQuery(empTpSql, empTpParams);
+
             const sqlStr3 = "Select a.first_name,a.middle_name,a.last_name,a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
                 " a.boss_id, CONCAT(d.first_name,' ',d.middle_name,' ',d.last_name) as boss_name" +
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
@@ -550,7 +569,7 @@ class dsrController {
                 results2 = await executeQuery(sqlStr2);
             }
 
-            res.render('dsr/dsr-edit', { layout: 'mobile', errors, data, data2: results2, data3: results3[0], atten_flag_list, allow_list, postFlag });
+            res.render('dsr/dsr-edit', { layout: 'mobile', errors, data, data2: results2, data3: results3[0], atten_flag_list, allow_list, postFlag, empTpRoutes });
             return;
         }
 
@@ -562,9 +581,9 @@ class dsrController {
             const to_city_title = to_city ? titleCase(to_city) : null;
             const stay_city_title = stay_city ? titleCase(stay_city) : null;
 
-            const sqlStr = "UPDATE dsr_1 Set atten_flag=?,hr_flag=?,from_city=?,to_city=?,stay_city=?,total_allow=?,total_lodge=?,total_exp=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
+            const sqlStr = "UPDATE dsr_1 Set atten_flag=?,hr_flag=?, tp_2=?, from_city=?,to_city=?,stay_city=?,total_allow=?,total_lodge=?,total_exp=?,u_at=CURRENT_TIMESTAMP,u_by=?" +
                 " WHERE dsr_date=? and emp_id=?"
-            const params = [atten_flag, hr_flag, from_city_title, to_city_title, stay_city_title, total_allow, total_lodge, total_exp, u_by, dsr_date, emp_id];
+            const params = [atten_flag, hr_flag, tp_id, from_city_title, to_city_title, stay_city_title, total_allow, total_lodge, total_exp, u_by, dsr_date, emp_id];
             await executeQuery(sqlStr, params);
 
             // Delete records from dsr_2

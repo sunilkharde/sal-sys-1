@@ -1,0 +1,140 @@
+{{!-- views/partials/_lov-dist_city.hbs --}}
+
+<!DOCTYPE html>
+<html>
+
+<body>
+    <!-- dist_cityModal -->
+    <div class="modal fade" id="dist_cityModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Select District-City for TP-Route...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table" id="hqTable">
+                        <thead>
+                            <tr>
+                                <th>Dist</th>
+                                <th>City</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each distCityList}}
+                            <tr>
+                                <td>{{this.dist}}</td>
+                                <td>{{this.city}}</td>
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn-info btn-sm"
+                                        onclick="handleSelectButton_dist_city(this)">
+                                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+
+                </div>
+                {{!-- <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div> --}}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #dist_cityModal .modal-dialog {
+            max-width: 750px;
+        }
+
+        .modal-lg .modal-dialog {
+            max-width: 700px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $('#hqTable').DataTable({
+                pageLength: 10
+            });
+        });
+    </script>
+
+    <script>
+        function handleSelectButton_dist_city(button) {
+            // Get the table row that contains the button
+            const row = button.closest('tr');
+
+            // Get the values of the columns in the row
+            const dist_val = row.querySelector('td:nth-child(1)').textContent;
+            const city_val = row.querySelector('td:nth-child(2)').textContent;
+
+            // Set the values of the form fields with the row values
+            /*document.getElementById('cityForm').querySelector('#dist_city_val').value = dist_city_val;
+            document.getElementById('cityForm').querySelector('#dist_city').value = dist_city;*/
+            document.getElementById('dist_val').value = dist_val;
+            document.getElementById('city_val').value = city_val;
+            document.getElementById('dist_city').value = dist_val + " - " + city_val;
+
+            // Hide the modal
+            const dist_cityModal = document.getElementById('dist_cityModal');
+            const dist_cityModalInstance = bootstrap.Modal.getInstance(dist_cityModal);
+            dist_cityModalInstance.hide();
+
+            // Update all select elements
+            updateTpSelects(dist_val, city_val);
+        }
+
+        async function updateTpSelects(dist, city) {
+            // Get all select elements
+            const selects = document.querySelectorAll('select[id^="cmb_tp_"]');
+
+            //console.log('Updating TP selects for', dist, city);
+
+            try {
+                // Make a fetch call to get the updated options
+                const response = await fetch(`/dsrTp/get-fix-route?dist=${encodeURIComponent(dist)}&city=${encodeURIComponent(city)}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                //console.log('Received TP routes:', data);
+
+                selects.forEach(select => {
+                    // Clear existing options
+                    select.innerHTML = '';
+
+
+                    // Add the default option first
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = '(Select Route)';
+                    //defaultOption.ariaReadOnly=true;
+                    select.appendChild(defaultOption);
+
+
+                    // Add new options
+                    data.forEach(route => {
+                        const option = document.createElement('option');
+                        option.value = route.tp_id;
+                        option.textContent = route.tp_name;
+                        select.appendChild(option);
+                    });
+
+                    //console.log('Updated select:', select.id);
+                });
+            } catch (error) {
+                console.error('Error fetching TP routes:', error);
+            }
+        }
+    </script>
+
+</body>
+
+</html>

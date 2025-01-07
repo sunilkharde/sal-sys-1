@@ -1,5 +1,3 @@
-{{!-- views/dsrTp/dsrTp-edit.hbs --}}
-
 <div style="padding-right: 5px; padding-left: 5px;">
     <div class="row justify-content-center">
         <form id="dsrTpForm" action="/dsrTp/update/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}" method="post">
@@ -18,7 +16,7 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-sm">
-                                    <h1 id="card-h2" class="card-title">Month: {{monData.month_name}}-{{monData.year}}
+                                    <h1 id="card-h2" class="card-title">Month : {{monData.month_name}}-{{monData.year}}
                                         {{#if [tpData]}}
                                         <button type="button" class="btn btn-outline-success btn-sm mx-5"
                                             onclick="window.location.href='/dsrTp/get-tp/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}'">Copy
@@ -33,30 +31,11 @@
 
                             <div class="row">
                                 <div class="col-md-6">
-                                    <h1 id="card-h3" class="card-title">Designation&nbsp;:&nbsp;{{empData.desg_name}}
-                                    </h1>
+                                    <h1 id="card-h3" class="card-title">Desg : {{empData.desg_name}}</h1>
                                 </div>
                                 <div class="col-md-6">
-                                    <h1 id="card-h2" class="card-title d-flex justify-content-end ">HQ&nbsp;:&nbsp;
+                                    <h1 id="card-h2" class="card-title d-flex justify-content-end ">HQ :
                                         {{empData.hq_name}}</h1>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="input-group">
-                                        <h1 id="card-h3" class="card-title">Work Area&nbsp;&nbsp;&nbsp;:&nbsp;</h1>
-                                        <input hidden type="text" class="form-control" id="dist_val" name="dist_val"
-                                            value="{{data.dist_val}}">
-                                        <input hidden type="text" class="form-control" id="city_val" name="city_val"
-                                            value="{{data.city_val}}">
-                                        <input readonly type="text" class="form-control" id="dist_city" name="dist_city"
-                                            value="{{data.dist_city}}" placeholder="District City" minlength="1"
-                                            maxlength="50">
-                                        <button class="btn btn-outline-info" type="button" id="btnDist_city"
-                                            data-bs-toggle="modal" data-bs-target="#dist_cityModal">
-                                            <i class="bi bi-list"></i></button>
-                                    </div>
                                 </div>
                             </div>
 
@@ -73,7 +52,8 @@
                             <tr>
                                 <th hidden>Date</th>
                                 <th class="col-3">Day</th>
-                                <th class="col-9">TP Route</th>
+                                <th class="col-4">From City</th>
+                                <th class="col-5">To City</th>
                             </tr>
                         </thead>
                         <tbody id="orderItemsBody">
@@ -89,46 +69,16 @@
                                         value="{{this.tp_date}} {{this.tp_day}}" {{#isEqual this.off_day this.tp_day}}
                                         style="color: red;" {{/isEqual}}>
                                 </td>
-
                                 <td>
-                                    <div class="row mb-2">
-                                        <div hidden  class="col-12">
-                                            <input {{#isEqual this.post_mg 'Y' }} readonly {{/isEqual}} type="text"
-                                                class="form-control" id="from_city_{{momentYMD this.dsr_date}}"
-                                                name="from_city[]" value="{{this.from_city}}">
-                                            <input {{#isEqual this.post_mg 'Y' }} readonly {{/isEqual}} type="text"
-                                                class="form-control" id="to_city_{{momentYMD this.dsr_date}}"
-                                                name="to_city[]" value="{{this.to_city}}">
-                                        </div>
-
-                                        <div class="col-12">
-                                            <input hidden readonly type="text" class="form-control"
-                                                id="tp_id_{{momentYMD this.dsr_date}}" name="tp_id[]"
-                                                value="{{this.tp_id}}">
-                                            <input readonly type="text" class="form-control"
-                                                id="tp_name_{{momentYMD this.dsr_date}}" name="tp_name[]"
-                                                value="{{this.tp_name}}">
-                                        </div>
-
-                                        <div class="col-12">
-                                            <!-- tp_name Dropdown -->
-                                            <select {{#isEqual this.post_mg 'Y' }} readonly {{/isEqual}}
-                                                class="form-select" id="cmb_tp_{{momentYMD this.dsr_date}}"
-                                                name="cmb_tp[]" aria-label=".form-select-sm example"
-                                                onchange="updateRoutes('tp_id_{{momentYMD this.dsr_date}}', 'tp_name_{{momentYMD this.dsr_date}}',
-                                                    'from_city_{{momentYMD this.dsr_date}}', 'to_city_{{momentYMD this.dsr_date}}', this)">
-                                                {{#each tp_list}}
-                                                <option value="{{this.tp_id}}" {{#isEqual ../data.tp_id
-                                                    this.tp_id}}selected{{/isEqual}}>{{this.tp_name}}
-                                                </option>
-                                                {{/each}}
-                                                <option disabled selected value="">(Select Route)</option>
-                                                <option value="">(Clear Route)</option>
-                                            </select>
-                                        </div>
-                                    </div>
+                                    <input {{#isEqual this.post_mg 'Y' }} readonly {{/isEqual}} type="text"
+                                        class="form-control" id="from_city_{{momentYMD this.dsr_date}}"
+                                        name="from_city[]" value="{{this.from_city}}">
                                 </td>
-
+                                <td>
+                                    <input {{#isEqual this.post_mg 'Y' }} readonly {{/isEqual}} type="text"
+                                        class="form-control" id="to_city_{{momentYMD this.dsr_date}}" name="to_city[]"
+                                        value="{{this.to_city}}">
+                                </td>
                             </tr>
                             {{/each}}
                         </tbody>
@@ -151,42 +101,38 @@
     </div>
 </div>
 
+{{!--
 <script>
-    // JavaScript function to update both tpId and tpName fields
-    function updateRoutes(tpId, tpName, fromCity, toCity, dropdownElement) {
-        // Get the selected option from the dropdown
-        const selectedValue = dropdownElement.value; // Value from the selected option
-        const selectedText = dropdownElement.options[dropdownElement.selectedIndex].text; // Text from the selected option
+    $(document).ready(function () {
+        $('#drsTpTable_xxxxxx').dataTable({
+            pageLength: 10
+        });
+    });
 
-        // Get the input fields by their IDs
-        const tpIdInput = document.getElementById(tpId);
-        const tpNameInput = document.getElementById(tpName);
-        const fromCityInput = document.getElementById(fromCity); // For 'from_city'
-        const toCityInput = document.getElementById(toCity); // For 'to_city'
-
-        // Update the input fields
-        if (tpIdInput) {
-            tpIdInput.value = selectedValue;
-        }
-        if (tpNameInput) {
-            if (selectedValue === "") {
-                tpNameInput.value = '';
-                fromCityInput.value  = '';
-                toCityInput.value = '';
-            } else {
-                tpNameInput.value = selectedText;
-
-                // Split selectedText at ' --to--' and assign values to fromCity and toCity
-                const cities = selectedText.split('--to--');
-                if (cities.length === 2) {
-                    fromCityInput.value = cities[0].trim(); // Extracting and trimming 'fromCity'
-                    toCityInput.value = cities[1].trim();   // Extracting and trimming 'toCity'
-                }
-            }
-        }
-    }
-
-</script>
+    // CSS styles for DataTable customization
+    document.write('<style>\
+        /* Increase font size for DataTable pagination */\
+        .dataTables_paginate .paginate_button {\
+            font-size: 20px; /* You can adjust the font size as needed */\
+        }\
+        /* Increase font size for DataTable pagination information */\
+        .dataTables_info {\
+            font-size: 20px; /* You can adjust the font size as needed */\
+        }\
+        /* Increase font size for "Show [number] entries" label */\
+        .dataTables_length label {\
+            font-size: 20px; /* You can adjust the font size as needed */\
+        }\
+        /* Increase font size for DataTable search box */\
+        .dataTables_filter input {\
+            font-size: 20px; /* You can adjust the font size as needed */\
+        }\
+        /* Increase font size for DataTable search "Clear" button */\
+        .dataTables_filter input[type="search"]::-webkit-search-clear-button {\
+            font-size: 20px; /* You can adjust the font size as needed */\
+        }\
+    </style>');
+</script> --}}
 
 <style>
     .sticky-header th {
@@ -349,6 +295,3 @@
     window.addEventListener('DOMContentLoaded', adjustFontSize);
     window.addEventListener('resize', adjustFontSize);
 </script>
-
-
-{{> _lov-dist_city}}

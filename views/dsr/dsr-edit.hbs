@@ -44,6 +44,7 @@
                         value="{{data3.boss_name}}" placeholder="HQ-Name">
                 </div>
             </div>
+
             <div class="row mb-3">
                 <label for="atten_flag" class="col-sm-3 col-form-label">Status<span style="color: red;">*</span></label>
                 <div class="col-sm-9">
@@ -57,20 +58,35 @@
                     </select>
                 </div>
             </div>
+
             <div class="row mb-3">
+                <label for="tp_id" class="col-sm-3 col-form-label">Route<span style="color: red;">*</span></label>
+                <div class="col-sm-9">
+                    <select class="form-select" id="tp_id" name="tp_id" aria-label=".form-select-sm example"
+                        onchange="updateCities(this)">
+                        <option value="" selected>(Select Route)</option>
+                        {{#each [empTpRoutes]}}
+                        <option value="{{this.tp_id}}" {{#if (eq this.tp_id ../data.tp_id)}}selected{{/if}}>
+                            {{this.tp_name}}
+                        </option>
+                        {{/each}}
+                    </select>
+                </div>
+            </div>
+
+            <div hidden class="row mb-3">
                 <label for="from_city" class="col-sm-3 col-form-label">From<span style="color: red;">*</span></label>
                 <div class="col-sm-9">
-                    <input required type="text" class="form-control" id="from_city" name="from_city"
-                        value="{{data.from_city}}">
+                    <input type="text" class="form-control" id="from_city" name="from_city" value="{{data.from_city}}">
                 </div>
             </div>
-            <div class="row mb-3">
+            <div hidden class="row mb-3">
                 <label for="to_city" class="col-sm-3 col-form-label">To<span style="color: red;">*</span></label>
                 <div class="col-sm-9">
-                    <input required type="text" class="form-control" id="to_city" name="to_city"
-                        value="{{data.to_city}}">
+                    <input type="text" class="form-control" id="to_city" name="to_city" value="{{data.to_city}}">
                 </div>
             </div>
+
             <div class="row mb-3">
                 <label for="stay_city" class="col-sm-3 col-form-label">Stay</label>
                 <div class="col-sm-9">
@@ -184,7 +200,8 @@
 
             <div class="row">
                 <div class="col-sm">
-                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
+                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" id="submitBtn"
+                        class="btn btn-primary mx-1">Submit</button>
 
                     {{#if (eq postFlag 'Y')}}
                     <button type="button" class="btn btn-secondary mx-5"
@@ -199,6 +216,21 @@
         </form>
     </div>
 </div>
+
+<script>
+    function updateCities(dropdown) {
+        const selectedText = dropdown.options[dropdown.selectedIndex].text;
+        if (selectedText.includes('--to--')) {
+            const [fromCity, toCity] = selectedText.split(' --to-- ');
+            document.getElementById('from_city').value = fromCity.trim();
+            document.getElementById('to_city').value = toCity.trim();
+        } else {
+            document.getElementById('from_city').value = '';
+            document.getElementById('to_city').value = '';
+        }
+    }
+</script>
+
 
 <script>
     const dropdownAttenFlag = document.getElementById('atten_flag');

@@ -1,11 +1,15 @@
 import { executeQuery } from '../db.js';
 import moment from 'moment';
+import jwt from 'jsonwebtoken';
 
 // import multer from 'multer';
 // import xlsx from 'xlsx';
 
 // const storage = multer.memoryStorage();
 // const upload = multer({ storage: storage });
+
+const TOKEN_KEY = '6rtfrg4rfkljfd54djhg6ecFcjikljds5rqtJfe4';
+
 
 // const titleCase = (str) => {
 //     return str
@@ -164,30 +168,92 @@ class apiController {
         }
     }
 
+
+    static verifyApiToken = (req, res, next) => {
+        const token = req.headers['authorization'];
+        if (!token) {
+            return res.status(401).json({ message: 'Access denied. No token provided.' });
+        }
+        try {
+            //   const decoded = verify(token, process.env.JWT_SECRET);
+            // const decoded = verify(token, TOKEN_KEY);
+            // req.user = decoded;
+            if (token !== TOKEN_KEY) {
+                return res.status(400).json({ message: 'Invalid token.' });
+            }
+            next();
+        } catch (error) {
+            res.status(400).json({ message: 'Invalid token.' });
+        }
+    };
+
     static employeeLocation = async (req, res) => {
         try {
-            const { attenMonth } = req.params;
 
-            var fromDate = null;
-            var toDate = null;
-            if (attenMonth === null || attenMonth === undefined) {
-                fromDate = moment('2000-01-01').startOf('month'); //moment().startOf('month');
+            // const { attenMonth } = req.params;
+            // var fromDate = null;
+            // var toDate = null;
+            // if (attenMonth === null || attenMonth === undefined) {
+            //     fromDate = moment('2000-01-01').startOf('month'); //moment().startOf('month');
+            //     toDate = fromDate.clone().endOf('month');
+            //     // empID = 0;
+            // } else {
+            //     fromDate = moment(attenMonth + '-01', 'YYYY-MM-DD');
+            //     toDate = fromDate.clone().endOf('month');
+            // }
+
+            let { fromDate, toDate } = req.query;
+            let validatedFromDate = moment(fromDate, 'YYYY-MM-DD', true);
+            let validatedToDate = moment(fromDate, 'YYYY-MM-DD', true);
+            if (!validatedFromDate.isValid() || !validatedToDate.isValid()) {
+                fromDate = moment().startOf('month');
                 toDate = fromDate.clone().endOf('month');
-                // empID = 0;
             } else {
-                fromDate = moment(attenMonth + '-01', 'YYYY-MM-DD');
+                fromDate = moment(fromDate, 'YYYY-MM-DD');
                 toDate = fromDate.clone().endOf('month');
             }
 
             let sqlStr = "SELECT a.emp_id,CONCAT(b.first_name,' ',b.middle_name,' ',b.last_name) as emp_name," +
-                " DATE_FORMAT(a.loc_date,'%d/%m/%Y %H:%i:%s') as loc_date,a.loc_lat,a.loc_lng,a.loc_name" +
-                " FROM dsr_loc as a, employees as b " +
+                " DATE_FORMAT(a.loc_date,'%d/%m/%Y %H:%i:%s') as loc_date,a.loc_lat,a.loc_lng,a.loc_name,a.loc_add," +
+                " b.ext_code, CONCAT(c.first_name,' ',c.middle_name,' ',c.last_name) as boss_name" +
+                " FROM dsr_loc as a, employees as b, employees as c" +
                 " WHERE a.emp_id=b.emp_id and a.loc_date Between ? and ? " +
+                " and b.boss_id=c.emp_id" +
                 " Order By a.emp_id,a.loc_date"
             const params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')];
             const dsrData = await executeQuery(sqlStr, params);
-
+            // ", customers as d, customers as e and b.mg_id=d.emp_id and b.se_id=e.emp_id" +
             res.status(200).json({ dsrData });
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static employeeRoute = async (req, res) => {
+        try {
+
+            let { fromDate, toDate } = req.query;
+            let validatedFromDate = moment(fromDate, 'YYYY-MM-DD', true);
+            let validatedToDate = moment(fromDate, 'YYYY-MM-DD', true);
+            if (!validatedFromDate.isValid() || !validatedToDate.isValid()) {
+                fromDate = moment().startOf('month');
+                toDate = fromDate.clone().endOf('month');
+            } else {
+                fromDate = moment(fromDate, 'YYYY-MM-DD');
+                toDate = fromDate.clone().endOf('month');
+            }
+
+            let sqlStr = "SELECT a.emp_id, CONCAT(b.first_name,' ',b.middle_name,' ',b.last_name) as emp_name," +
+                " dsr_date, atten_flag , hr_flag, tp_route, from_city, to_city, stay_city, total_allow, total_lodge, total_exp, post_mg, post_ac" +
+                " FROM dsr_1 as a, employees as b" +
+                " WHERE a.emp_id=b.emp_id and a.dsr_date Between ? and ? " +
+                " Order By a.emp_id, a.dsr_date"
+            const params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')];
+            const tpData = await executeQuery(sqlStr, params);
+            // ", customers as d, customers as e and b.mg_id=d.emp_id and b.se_id=e.emp_id" +
+            res.status(200).json({ tpData });
 
         } catch (err) {
             console.error(err);

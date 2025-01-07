@@ -167,6 +167,14 @@
                     </div>
                 </div>
 
+                <div class="row mb-3">
+                    <label for="card_no" class="col-sm-2 col-form-label">Keka Card No</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="card_no" name="card_no" value="{{data.card_no}}"
+                            placeholder="Keka Card No">
+                    </div>
+                </div>
+
                 <div class="col-md-3 d-flex justify-content-between">
                     <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"
                         class="btn btn-primary mx-1">Submit</button>

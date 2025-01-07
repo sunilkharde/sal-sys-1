@@ -26,5 +26,7 @@ router.get('/export-pdf', dsrTpController.exportPdf);
 router.get('/report-atten', dsrTpController.reportAtten);
 router.get('/atten-export-csv', dsrTpController.attenExportCSV);
 
+router.get('/get-fix-route', dsrTpController.getFixRoutes);
+
 
 export default router;

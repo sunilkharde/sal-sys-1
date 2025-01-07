@@ -1,3 +1,5 @@
+// controller/dsrTpController.js
+
 import { executeQuery } from '../db.js';
 import moment from 'moment';
 
@@ -371,12 +373,23 @@ class dsrTpController {
                     " Where a.emp_id=b.emp_id and b.hq_id=c.hq_id and a.dsr_date Between ? and ? and a.emp_id=?" +
                     " Order By a.dsr_date";
             } else {
-                sqlTp = "Select a.emp_id, a.dsr_date, a.post_mg, IF(a.tp_route Is Null, c.hq_name, a.from_city) as from_city, a.to_city," +
-                    " DATE_FORMAT(a.dsr_date,'%a') as tp_day, DATE_FORMAT(a.dsr_date,'%d') as tp_date," +
-                    " b.off_day, c.hq_name" +
-                    " FROM dsr_1 as a, employees as b, hqs as c" +
-                    " Where a.emp_id=b.emp_id and b.hq_id=c.hq_id and a.dsr_date Between ? and ? and a.emp_id=?" +
-                    " Order By a.dsr_date";
+                // sqlTp = "Select a.emp_id, a.dsr_date, a.post_mg, IF(a.tp_route Is Null, c.hq_name, a.from_city) as from_city, a.to_city," +
+                //     " DATE_FORMAT(a.dsr_date,'%a') as tp_day, DATE_FORMAT(a.dsr_date,'%d') as tp_date," +
+                //     " b.off_day, c.hq_name" +
+                //     " FROM dsr_1 as a, employees as b, hqs as c" +
+                //     " Where a.emp_id=b.emp_id and b.hq_id=c.hq_id and a.dsr_date Between ? and ? and a.emp_id=?" +
+                //     " Order By a.dsr_date";
+                sqlTp = "SELECT a.emp_id, a.dsr_date, a.post_mg, " +
+                    "IF(d.from IS NULL, IF(a.tp_route IS NULL, c.hq_name, a.from_city), d.from) AS from_city, " +
+                    "IF(d.to IS NULL, a.to_city, d.to) AS to_city, " +
+                    "DATE_FORMAT(a.dsr_date, '%a') AS tp_day, DATE_FORMAT(a.dsr_date, '%d') AS tp_date, " +
+                    "b.off_day, c.hq_name, a.tp_1 as tp_id, CONCAT(d.from, ' To ', d.to) as tp_name " +
+                    "FROM dsr_1 AS a " +
+                    "JOIN employees AS b ON a.emp_id = b.emp_id " +
+                    "JOIN hqs AS c ON b.hq_id = c.hq_id " +
+                    "LEFT JOIN tp_routes AS d ON a.tp_1 = d.tp_id " +
+                    "WHERE a.dsr_date BETWEEN ? AND ? AND a.emp_id = ? " +
+                    "ORDER BY a.dsr_date";
             }
 
             //Get employee details
@@ -391,11 +404,33 @@ class dsrTpController {
             const paramsTp = [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id];
             const tpData = await executeQuery(sqlTp, paramsTp);
 
-            res.render('dsrTp/dsrTp-edit', { layout: 'mobile', monData: monData[0], empData: empData[0], tpData });
+            //Get Dist City List
+            const distCityListSql = "Select DISTINCT a.dist, a.city from tp_routes as a Order By 1,2"
+            const distCityList = await executeQuery(distCityListSql);
+
+            // console.log('distCityList....', distCityList)
+
+            res.render('dsrTp/dsrTp-edit', { layout: 'mobile', monData: monData[0], empData: empData[0], tpData, distCityList });
 
         } catch (error) {
             console.error(error);
             // Handle the error
+        }
+    }
+    static getFixRoutes = async (req, res) => {
+        const { dist, city } = req.query;
+        try {
+            // console.log('Fetching TP routes for:', dist, city);
+            const sqlStr1 = `SELECT a.tp_id, CONCAT(a.from,' --to-- ', a.to) as tp_name
+                FROM tp_routes as a WHERE a.dist=? AND a.city=?`
+                // Union Select '' as tp_id, '(Select)' as tp_name from dual`
+            const params = [dist, city];
+            const tp_list = await executeQuery(sqlStr1, params);
+            // console.log('TP routes fetched:', tp_list);
+            res.json(tp_list);
+        } catch (error) {
+            console.error('Error fetching TP routes:', error);
+            res.status(500).json({ error: 'An error occurred while fetching TP routes' });
         }
     }
 
@@ -436,17 +471,18 @@ class dsrTpController {
 
             const sqlTp = "Select a.emp_id, a.dsr_date, a.post_mg, d.from_city, d.to_city," +
                 " DATE_FORMAT(a.dsr_date,'%a') as tp_day, DATE_FORMAT(a.dsr_date,'%d') as tp_date," +
-                " b.off_day, c.hq_name" +
+                " b.off_day, c.hq_name, d.tp_1 as tp_id, CONCAT(e.from, ' To ', e.to) as tp_name " +
                 " FROM dsr_1 as a LEFT JOIN employees as b ON (a.emp_id=b.emp_id)" +
                 " LEFT JOIN hqs as c ON (b.hq_id=c.hq_id)" +
                 " LEFT JOIN dsr_1 as d ON (a.emp_id=d.emp_id and d.dsr_date Between ? and ?" +
                 " and DATE_FORMAT(a.dsr_date,'%d')=DATE_FORMAT(d.dsr_date,'%d'))" +
+                " LEFT JOIN tp_routes AS e ON d.tp_1 = e.tp_id " +
                 " Where a.dsr_date Between ? and ? and a.emp_id=?" +
                 " Order By a.dsr_date";
             const paramsTp = [from_date_lm.format('YYYY-MM-DD'), to_date_lm.format('YYYY-MM-DD'),
             from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id];
             const tpData = await executeQuery(sqlTp, paramsTp);
-
+            
             res.render('dsrTp/dsrTp-edit', { layout: 'mobile', monData: monData[0], empData: empData[0], tpData });
 
         } catch (error) {
@@ -483,7 +519,7 @@ class dsrTpController {
     /***** */
     static update = async (req, res) => {
         const { emp_id } = req.params;
-        const { dsr_date, from_city, to_city } = req.body;
+        const { dsr_date, from_city, to_city, tp_id } = req.body;
         // const data = req.body
 
         // var errors = [];
@@ -501,14 +537,15 @@ class dsrTpController {
             const dsr_date_val = Array.isArray(dsr_date) ? dsr_date : [dsr_date];
             const from_city_val = Array.isArray(from_city) ? from_city : [from_city];
             const to_city_val = Array.isArray(to_city) ? to_city : [to_city];
+            const tp_id_val = Array.isArray(tp_id) ? tp_id : [tp_id];
 
             for (let i = 0; i < dsr_date.length; i++) {
                 // if (amount_val[i] > 0) {
                 const from_city_title = from_city_val[i] ? titleCase(from_city_val[i]) : null;
                 const to_city_title = to_city_val[i] ? titleCase(to_city_val[i]) : null;
 
-                const sqlStrDt = "UPDATE dsr_1 Set tp_route=?, from_city=?, to_city=?,u_at=CURRENT_TIMESTAMP,u_by=? Where dsr_date=? and emp_id=?"
-                const paramsDt = [to_city_title, from_city_title, to_city_title, u_by, dsr_date_val[i], emp_id];
+                const sqlStrDt = "UPDATE dsr_1 Set tp_route=?, from_city=?, to_city=?, tp_1=?, tp_2=?, u_at=CURRENT_TIMESTAMP,u_by=? Where dsr_date=? and emp_id=?"
+                const paramsDt = [to_city_title, from_city_title, to_city_title, tp_id_val[i], tp_id_val[i], u_by, dsr_date_val[i], emp_id];
                 await executeQuery(sqlStrDt, paramsDt);
                 // }
             }
