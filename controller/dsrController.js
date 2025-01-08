@@ -409,7 +409,7 @@ class dsrController {
             const formattedDate = moment(dsr_date).format('YYYY-MM');
             const empTpSql = "Select a.emp_id,a.dsr_date,a.tp_1 as tp_id, CONCAT(b.from,' --to-- ',b.to) as tp_name " +
                 " FROM dsr_1 as a" +
-                " LEFT JOIN tp_routes as b ON (a.tp_1=b.tp_id)" +
+                " JOIN tp_routes as b ON (a.tp_1=b.tp_id)" +
                 " Where DATE_FORMAT(a.dsr_date, '%Y-%m') = ? and a.emp_id=?";
             const empTpParams = [formattedDate, emp_id];
             const empTpRoutes = await executeQuery(empTpSql, empTpParams);
