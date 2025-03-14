@@ -11,6 +11,8 @@ router.get('/employee-route-exp/:attenMonth', apiController.employeeRouteAndExp)
 // router.get('/employee-location', verifyApiToken, employeeLocation);
 router.get('/employee-location', apiController.employeeLocation);
 router.get('/employee-route', apiController.employeeRoute);
+router.get('/route-master', apiController.routeMaster);
+router.get('/customer-stock', apiController.customerStock);
 
 // https://sales.malpani.com/api/customer-sp-mapping
 // https://sales.malpani.com/api/employee-attendance/2023-10

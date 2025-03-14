@@ -49,19 +49,24 @@
                         value="{{custData.bu_id_hdn}}">
                 </div>
                 <div class="col-sm-3">
-                    <input readonly type="text" class="form-control" id="bu_name" name="bu_name" value="{{custData.bu_name}}">
+                    <input readonly type="text" class="form-control" id="bu_name" name="bu_name"
+                        value="{{custData.bu_name}}">
                 </div>
 
-                <label for="bu_name" class="col-sm-2 col-form-label text-end">&nbsp;</label>
+                <label for="" class="col-sm-2 col-form-label text-end">&nbsp;</label>
                 <div class="col-md-2 item-align-start">
-                    <button type="button" id="btnRefresh" class="btn btn-success" onclick="refreshData()">Refresh
-                        Data</button>
+                    <button type="button" id="btnRefresh" class="btn btn-success" onclick="refreshData()">Refresh Data</button>
                 </div>
 
             </div>
 
-            {{!--
-        </div> --}}
+            <div class="form-group row mb-3">
+                <label for="stock_date" class="col-sm-2 col-form-label text-end">Total Stock</label>
+                <div class="col-sm-2">
+                    <input readonly type="text" class="form-control" id="totalstock" name="totalstock">
+                </div>
+            </div>
+
         {{!-- <br> --}}
 
         <table class="table dataTable" id="custStockTable" style="width:100%">
@@ -139,6 +144,7 @@
         }
     </style>
 
+    {{!--
     <script>
         $(document).ready(function () {
             /*$('#custStockTable').dataTable({
@@ -166,8 +172,9 @@
             });
 
         });
-    </script>
+    </script> --}}
 
+    {{!--
     <script>
         function refreshData() {
             var customer_id = document.getElementById('customer_id').value;
@@ -194,49 +201,51 @@
             }
         }
 
-    </script>
+    </script> --}}
 
     <script>
-        const stockItemsBody = document.getElementById("stockItemsBody");
+        $(document).ready(function () {
+            // Initialize DataTable
+            const dataTable = $("#custStockTable").DataTable({
+                "bDestroy": true,
+                "order": [],
+                "fixedHeader": true,
+                paging: false,
+                "scrollY": 385,
+                "scrollCollapse": true,
+                "searching": false,
+            });
 
-        stockItemsBody.addEventListener("input", async (event) => {
-            const stock = event.stock;
+            // Event listener for input changes in stock quantity
+            const stockItemsBody = document.getElementById("stockItemsBody");
 
-            if (stock.matches("#apr1,#may1,#jun1,#jul1,#aug1,#sep1,#oct1,#nov1,#dec1,#jan1,#feb1,#mar1")) {
+            stockItemsBody.addEventListener("input", (event) => {
+                if (event.target.matches("#stock_qty")) {
+                    calculateTotalStock();
+                }
+            });
 
-                const row = stock.closest("tr");
-                //const allowTypeVal = row.querySelector("#type").value;
-                const apr1 = isNaN(parseFloat(row.querySelector("#apr1").value)) ? 0 : parseFloat(row.querySelector("#apr1").value);
-                const may1 = isNaN(parseFloat(row.querySelector("#may1").value)) ? 0 : parseFloat(row.querySelector("#may1").value);
-                const jun1 = isNaN(parseFloat(row.querySelector("#jun1").value)) ? 0 : parseFloat(row.querySelector("#jun1").value);
-                const jul1 = isNaN(parseFloat(row.querySelector("#jul1").value)) ? 0 : parseFloat(row.querySelector("#jul1").value);
-                const aug1 = isNaN(parseFloat(row.querySelector("#aug1").value)) ? 0 : parseFloat(row.querySelector("#aug1").value);
-                const sep1 = isNaN(parseFloat(row.querySelector("#sep1").value)) ? 0 : parseFloat(row.querySelector("#sep1").value);
-                const oct1 = isNaN(parseFloat(row.querySelector("#oct1").value)) ? 0 : parseFloat(row.querySelector("#oct1").value);
-                const nov1 = isNaN(parseFloat(row.querySelector("#nov1").value)) ? 0 : parseFloat(row.querySelector("#nov1").value);
-                const dec1 = isNaN(parseFloat(row.querySelector("#dec1").value)) ? 0 : parseFloat(row.querySelector("#dec1").value);
-                const jan1 = isNaN(parseFloat(row.querySelector("#jan1").value)) ? 0 : parseFloat(row.querySelector("#jan1").value);
-                const feb1 = isNaN(parseFloat(row.querySelector("#feb1").value)) ? 0 : parseFloat(row.querySelector("#feb1").value);
-                const mar1 = isNaN(parseFloat(row.querySelector("#mar1").value)) ? 0 : parseFloat(row.querySelector("#mar1").value);
-
-                rowstock = apr1 + may1 + jun1 + jul1 + aug1 + sep1 + oct1 + nov1 + dec1 + jan1 + feb1 + mar1;
-                console.log('change.... 2', rowstock)
-                row.querySelector("#total").value = rowstock;
-
-                // Calculate the total stock
-                const stockInputs = stockItemsBody.querySelectorAll("#total");
+            // Function to calculate the total stock
+            function calculateTotalStock() {
+                const stockInputs = stockItemsBody.querySelectorAll("#stock_qty");
                 let totalstock = 0;
+
                 stockInputs.forEach((input) => {
                     const inputValue = parseFloat(input.value);
                     if (!isNaN(inputValue)) {
                         totalstock += inputValue;
                     }
                 });
-                //document.getElementById("totalstock").value = totalAmount.toFixed(0);
+
+                // Update the total stock field
+                document.getElementById("totalstock").value = totalstock.toFixed(0);
             }
 
+            // Calculate the total stock on page load
+            calculateTotalStock();
         });
 
+        // Function to remove a selected item
         function removeSelectedItem(element) {
             const row = element.closest("tr");
             if (row.rowIndex === 1) {
@@ -246,24 +255,34 @@
             const userConfirmed = confirm("Are you sure you want to delete this row?");
             if (userConfirmed) {
                 row.remove();
-                //calculateTotal();
+                calculateTotalStock(); // Recalculate total after removal
             }
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            // Calculate the total stock
-            const stockInputs = stockItemsBody.querySelectorAll("#total");
-            let totalstock = 0;
-            stockInputs.forEach((input) => {
-                const inputValue = parseFloat(input.value);
-                if (!isNaN(inputValue)) {
-                    totalstock += inputValue;
-                }
-            });
-            //document.getElementById("totalstock").value = totalAmount.toFixed(0);
-        });
+        // Function to refresh data
+        function refreshData() {
+            var customer_id = document.getElementById('customer_id').value;
+            var stock_date = document.getElementById('stock_date').value;
+            var bu_id_hdn = document.getElementById('bu_id_hdn').value;
+            var bu_name = document.getElementById('bu_name').value;
 
+            window.location.href = '/custTarget/view-stock?customer_id=' + customer_id + '&stock_date=' + stock_date + '&bu_id=' + bu_id_hdn + '&bu_name=' + bu_name;
+        }
 
+        // Function to delete data
+        function deleteData() {
+            var customer_id = document.getElementById('customer_id').value;
+            var stock_date = document.getElementById('stock_date').value;
+            var bu_id_hdn = document.getElementById('bu_id_hdn').value;
+            var bu_name = document.getElementById('bu_name').value;
+
+            // Ask for user confirmation
+            var userConfirmed = confirm("Are you sure you want to delete this data?");
+
+            if (userConfirmed) {
+                window.location.href = '/custTarget/delete-stock?customer_id=' + customer_id + '&stock_date=' + stock_date + '&bu_id=' + bu_id_hdn + '&bu_name=' + bu_name;
+            }
+        }
     </script>
 
 

@@ -1,6 +1,7 @@
 import express from "express";
 const router = express.Router();
 import customerController from "../controller/customerController.js"
+import { upload } from '../controller/customerController.js'; 
 
 router.get('/se-list', customerController.getSeData);
 router.get('/create', customerController.viewBlank);
@@ -12,6 +13,7 @@ router.get('/delete/:id', customerController.delete);
 
 router.get('/view-info', customerController.viewAllInfo);
 router.get('/update-info/:cust_id', customerController.editInfo);
-router.post('/update-info/:cust_id', customerController.updateInfo);
+// router.post('/update-info/:cust_id', customerController.updateInfo);
+router.post('/update-info/:cust_id', upload.single('photo'), customerController.updateInfo);
 
 export default router;

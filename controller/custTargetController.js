@@ -505,7 +505,7 @@ class custTargetController {
                 LEFT JOIN market_area AS b ON a.market_area_id = b.market_area_id
                 LEFT JOIN customers_bu AS c ON a.customer_id = c.customer_id
                 LEFT JOIN business_units AS d ON c.bu_id = d.bu_id
-                LEFT JOIN employees AS e ON a.mg_id = e.emp_id
+                LEFT JOIN employees AS e ON (a.mg_id = e.emp_id OR a.se_id = e.emp_id)
                 WHERE a.status = 'A'`;
             if (user_role !== "Admin") {
                 sqlCust += ` AND (a.user_id = ${mysql.escape(res.locals.user.user_id)} OR e.user_id = ${mysql.escape(res.locals.user.user_id)})`;
@@ -519,6 +519,8 @@ class custTargetController {
             //     sqlCust = sqlCust + ` Where a.user_id=${res.locals.user.user_id}`;
             // }
             const customer_list = await executeQuery(sqlCust);
+            // console.log('sqlCust', sqlCust)
+            // console.log('customer_list', customer_list)
 
             var mg_id = null;
             var mg_name = null;

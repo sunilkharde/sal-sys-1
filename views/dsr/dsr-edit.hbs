@@ -60,10 +60,10 @@
             </div>
 
             <div class="row mb-3">
-                <label for="tp_id" class="col-sm-3 col-form-label">Route<span style="color: red;">*</span></label>
-                <div class="col-sm-9">
-                    <select class="form-select" id="tp_id" name="tp_id" aria-label=".form-select-sm example"
-                        onchange="updateCities(this)">
+                <label for="tp_id_display" class="col-sm-3 col-form-label">Route<span style="color: red;">*</span></label>
+                <div class="col-sm-9">  
+                    <select class="form-select" id="tp_id_display" name="tp_id_display" aria-label=".form-select-sm example"
+                        onchange="updateCities(this)" disabled>
                         <option value="" selected>(Select Route)</option>
                         {{#each [empTpRoutes]}}
                         <option value="{{this.tp_id}}" {{#if (eq this.tp_id ../data.tp_id)}}selected{{/if}}>
@@ -72,15 +72,17 @@
                         {{/each}}
                     </select>
                 </div>
+                <!-- Hidden input to submit tp_id -->
+                <input type="hidden" name="tp_id" value="{{data.tp_id}}">
             </div>
 
-            <div hidden class="row mb-3">
+            <div {{#isEqual data3.desg_id 1 2 3 4 5 }} {{else}} hidden {{/isEqual}} class="row mb-3">
                 <label for="from_city" class="col-sm-3 col-form-label">From<span style="color: red;">*</span></label>
                 <div class="col-sm-9">
                     <input type="text" class="form-control" id="from_city" name="from_city" value="{{data.from_city}}">
                 </div>
             </div>
-            <div hidden class="row mb-3">
+            <div {{#isEqual data3.desg_id 1 2 3 4 5 }} {{else}} hidden {{/isEqual}} class="row mb-3">
                 <label for="to_city" class="col-sm-3 col-form-label">To<span style="color: red;">*</span></label>
                 <div class="col-sm-9">
                     <input type="text" class="form-control" id="to_city" name="to_city" value="{{data.to_city}}">

@@ -1,4 +1,25 @@
 import { executeQuery } from '../db.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadPath = 'public/customers/';
+        // Ensure the directory exists
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        const cust_id = req.params.cust_id || Date.now(); // Use customer_id if available
+        cb(null, `${cust_id}${ext}`); // Rename file with customer_id
+    }
+});
+const upload = multer({ storage: storage });
+
 
 class customerController {
 
@@ -337,7 +358,7 @@ class customerController {
         }
     };
 
-    //To view all customer to update additional Information by Anil Shinde
+    //To view all customer to update additional Information 
     static viewAllInfo = async (req, res) => {
         // retrieve the alert message from the query parameters
         const alert = req.query.alert;
@@ -352,7 +373,7 @@ class customerController {
                 empID = empData[0].emp_id
             }
 
-            let sqlStr = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,b.market_area,a.ext_code" +
+            let sqlStr = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,a.district,b.market_area,a.ext_code" +
                 " From customers as a, market_area as b " +
                 " Where a.market_area_id=b.market_area_id";
             if (!["Admin", "Read", "Support"].includes(res.locals.user.user_role)) {
@@ -372,6 +393,8 @@ class customerController {
         const { cust_id } = req.params;
 
         try {
+            const [cities_list, users_list, market_area_list, bu_list, emp_list] = await this.getData();
+
             const sqlStr = "Select a.*,CONCAT(b.username,' [', b.email_id,']') as username,c.market_area" +
                 " From customers as a LEFT JOIN users as b ON (a.user_id=b.user_id)" +
                 " LEFT JOIN market_area as c ON (a.market_area_id=c.market_area_id)" +
@@ -379,6 +402,19 @@ class customerController {
             const params = [cust_id];
             const results = await executeQuery(sqlStr, params);
             let data1 = results[0];
+
+            const sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
+                " FROM employees as a Where a.emp_id=?"
+            const row1 = await executeQuery(sqlStr1, [results[0].mg_id]);
+            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
+                " FROM employees as a Where a.emp_id=?"
+            const row2 = await executeQuery(sqlStr2, [results[0].se_id]);
+
+            data1 = {
+                ...data1,
+                mg_name: row1.length > 0 ? row1[0].emp_name : "Undefined",
+                se_name: row2.length > 0 ? row2[0].emp_name : "Undefined"
+            };
 
             //This code is for Vehicle information
             let sqlVeh = `Select * from cust_veh where customer_id = ${cust_id}`;
@@ -396,7 +432,7 @@ class customerController {
                 spData = await executeQuery(sqlSp);
             }
 
-            res.render("customers/customer-edit-info", { data: data1, vehData, spData });
+            res.render("customers/customer-edit-info", { data: data1, emp_list, vehData, spData });
 
         } catch (error) {
             console.error(error);
@@ -408,7 +444,111 @@ class customerController {
 
     static updateInfo = async (req, res) => {
         const { cust_id } = req.params;
-        const { godown_area, total_counters, gst_no, cust_care_no, sr_no, reg_no, veh_type, ins_no, ins_date, sp_type, sp_name, sp_mobile } = req.body;
+        const { nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, geo_location,mg_id, se_id, sr_no, reg_no, veh_type, ins_no, ins_date, sp_type, sp_name, sp_mobile } = req.body;
+        const [cities_list, users_list, market_area_list, bu_list, emp_list] = await this.getData();
+    
+        var errors = [];
+        if (isNaN(godown_area) || godown_area <= 0) {
+            errors.push({ message: "Godown area cannot be blank" });
+        }
+        if (!reg_no || reg_no.length === 0) {
+            errors.push({ message: "Enter vehicle details" });
+        }
+        if (!sp_name || sp_name.length === 0) {
+            errors.push({ message: "Enter salesman details" });
+        }
+    
+        if (errors.length) {
+            const sqlStr = "SELECT a.*, CONCAT(b.username, ' [', b.email_id, ']') AS username, c.market_area " +
+                           "FROM customers AS a " +
+                           "LEFT JOIN users AS b ON (a.user_id = b.user_id) " +
+                           "LEFT JOIN market_area AS c ON (a.market_area_id = c.market_area_id) " +
+                           "WHERE a.customer_id = ?";
+            const results = await executeQuery(sqlStr, [cust_id]);
+            let data1 = results[0];
+    
+            let sqlVeh = `SELECT * FROM cust_veh WHERE customer_id = ${cust_id}`;
+            let vehData = await executeQuery(sqlVeh);
+            if (vehData.length === 0) {
+                sqlVeh = `SELECT 1 AS sr_no, '' AS reg_no, '' AS veh_type, '' AS ins_no, NULL AS ins_date FROM dual`;
+                vehData = await executeQuery(sqlVeh);
+            }
+    
+            let sqlSp = `SELECT * FROM cust_sp WHERE customer_id = ${cust_id}`;
+            let spData = await executeQuery(sqlSp);
+            if (spData.length === 0) {
+                sqlSp = `SELECT 1 AS sr_no, '' AS sp_type, '' AS sp_name, '' AS sp_mobile FROM dual`;
+                spData = await executeQuery(sqlSp);
+            }
+    
+            res.render("customers/customer-edit-info", { errors, data: data1, vehData, spData });
+            return;
+        }
+    
+        try {
+            var upd_by = res.locals.user ? res.locals.user.user_id : 0;
+
+            let photoPath = null;
+
+            // **Delete old photo if exists** //No need of this code
+            // const folderPath = 'public/customers/';
+            // fs.readdirSync(folderPath).forEach(file => {
+            //     if (file.startsWith(`${cust_id}.`)) {
+            //         fs.unlinkSync(`${folderPath}${file}`);
+            //     }
+            // });
+
+            // **Save new photo**
+            if (req.file) {
+                photoPath = `/customers/${cust_id}${path.extname(req.file.originalname)}`; // Save using customer_id
+            }
+            if (!photoPath || photoPath === undefined){
+                photoPath = geo_location;
+            }
+            // console.log('reqFile...', req.file,  photoPath)
+
+            const sqlStr = "UPDATE customers SET nick_name=?, godown_area = ?, total_counters = ?, gst_no = ?, cust_care_no = ?, " +
+                            "add1 = ?, add2 = ?, add3 = ?, city = ?, pin_code = ?, district = ?, state = ?, geo_location = ?, mg_id=?, se_id=?," +
+                            "upd_by = ?, upd_at = CURRENT_TIMESTAMP WHERE customer_id = ?";
+            const params = [nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, photoPath, mg_id, se_id, upd_by, cust_id];
+            await executeQuery(sqlStr, params);
+    
+            // Delete and Insert Vehicle Information
+            await executeQuery("DELETE FROM cust_veh WHERE customer_id=?", [cust_id]);
+    
+            const regNoVal = Array.isArray(reg_no) ? reg_no : [reg_no];
+            const vehTypeVal = Array.isArray(veh_type) ? veh_type : [veh_type];
+            const insNoVal = Array.isArray(ins_no) ? ins_no : [ins_no];
+            const insDateVal = Array.isArray(ins_date) ? ins_date : [ins_date];
+    
+            for (let i = 0; i < regNoVal.length; i++) {
+                let sr_no_val = i + 1;
+                const sqlVeh = "INSERT INTO cust_veh (customer_id, sr_no, reg_no, veh_type, ins_no, ins_date) VALUES (?, ?, ?, ?, ?, ?)";
+                await executeQuery(sqlVeh, [cust_id, sr_no_val, regNoVal[i].toUpperCase(), vehTypeVal[i], insNoVal[i], insDateVal[i]]);
+            }
+    
+            // Delete and Insert Salesperson Information
+            await executeQuery("DELETE FROM cust_sp WHERE customer_id=?", [cust_id]);
+    
+            const spTypeVal = Array.isArray(sp_type) ? sp_type : [sp_type];
+            const spNameVal = Array.isArray(sp_name) ? sp_name : [sp_name];
+            const spMobileVal = Array.isArray(sp_mobile) ? sp_mobile : [sp_mobile];
+    
+            for (let i = 0; i < spNameVal.length; i++) {
+                const sqlSp = "INSERT INTO cust_sp (customer_id, sr_no, sp_type, sp_name, sp_mobile) VALUES (?, ?, ?, ?, ?)";
+                await executeQuery(sqlSp, [cust_id, i + 1, spTypeVal[i], spNameVal[i], spMobileVal[i]]);
+            }
+    
+            res.redirect("/customer/view-info");
+        } catch (err) {
+            console.error(err);
+            res.render("customer/view-info", { alert: "Internal server error" });
+        }
+    };
+
+    static updateInfo_Old = async (req, res) => {
+        const { cust_id } = req.params;
+        const { godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, sr_no, reg_no, veh_type, ins_no, ins_date, sp_type, sp_name, sp_mobile } = req.body;
         // const data = req.body;
 
         var errors = [];
@@ -451,8 +591,10 @@ class customerController {
 
         try {
             var upd_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const sqlStr = "Update customers Set godown_area=?, total_counters=?, gst_no=?, cust_care_no=?, upd_by=?, upd_at=CURRENT_TIMESTAMP WHERE customer_id=?";
-            const params = [godown_area, total_counters, gst_no, cust_care_no, upd_by, cust_id,];
+            const sqlStr = "Update customers Set godown_area=?, total_counters=?, gst_no=?, cust_care_no=?," +
+                " add1=?, add2=?, add3=?, city=?, pin_code=?, district=?, state=?," +
+                " upd_by=?, upd_at=CURRENT_TIMESTAMP WHERE customer_id=?";
+            const params = [godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, upd_by, cust_id,];
             await executeQuery(sqlStr, params);
 
             // Delete records from cust_veh
@@ -503,3 +645,4 @@ class customerController {
 };
 
 export default customerController
+export { upload }; // Add this at the bottom of the file

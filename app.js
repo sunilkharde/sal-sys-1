@@ -6,6 +6,7 @@ import { join } from 'path';
 import favicon from 'serve-favicon';
 import cors from 'cors';
 import moment from 'moment';
+// import { createProxyMiddleware } from 'http-proxy-middleware';
 
 import authRoute from "./routes/authRoutes.js";
 import exphbs from 'express-handlebars';
@@ -35,8 +36,8 @@ import enforce from "express-sslify";
 
 const certsPath = process.cwd() + '/certs';
 const httpsOptions = {
-  key: fs.readFileSync(certsPath + '/server.key'), 
-  cert: fs.readFileSync(certsPath + '/server.crt') 
+  key: fs.readFileSync(certsPath + '/server.key'),
+  cert: fs.readFileSync(certsPath + '/server.crt')
 };
 
 //import axios from 'axios';
@@ -210,7 +211,6 @@ app.use('/circular', circularRoute);
 app.use('/vanclaim', vanclaimRoute);
 app.use('/consumer', consumerRoute);
 
-
 // Log incoming requests
 /*app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} received`);
@@ -218,6 +218,27 @@ app.use('/consumer', consumerRoute);
 });*/
 
 // Temp Routes
+app.get('/sv-crm', (req, res) => {
+  // res.cookie('session', JSON.stringify(req.cookies.session), { httpOnly: false });
+  // res.cookie('authToken', req.cookies.authToken, { httpOnly: false });
+  const email = res.locals.user.email_id;
+  const firstChars = email ? email.slice(0, 1).toUpperCase() : ''; 
+  const secondChars = email ? email.slice(1, 2).toUpperCase() : ''; 
+  const userData = {
+    "userId": res.locals.user.user_id,
+    "firstName": res.locals.user.first_name ? res.locals.user.first_name : firstChars,
+    "lastName": res.locals.user.last_name ? res.locals.user.last_name : secondChars,
+    "userRole": res.locals.user.user_role,
+    "userStatus": "A",
+    "userTheme": "light",
+    "email": res.locals.user.email_id,
+    "username": res.locals.user.username,
+    "userImage": "", "loginWith": ""
+  }
+  res.cookie('session', JSON.stringify(userData), { httpOnly: false });  
+  res.redirect('http://192.168.182.27:3000/');
+});
+
 app.get('/', (req, res) => {
   res.render('home', { title: 'Home', message: 'Welcome, to app!' });
 });

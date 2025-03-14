@@ -236,6 +236,78 @@ class apiController {
 
             let { fromDate, toDate } = req.query;
             let validatedFromDate = moment(fromDate, 'YYYY-MM-DD', true);
+            let validatedToDate = moment(toDate, 'YYYY-MM-DD', true);
+            if (validatedFromDate.isValid() && validatedToDate.isValid()) {
+                // fromDate = moment().startOf('month');
+                // toDate = fromDate.clone().endOf('month');
+                fromDate = moment(fromDate, 'YYYY-MM-DD');
+                toDate = moment(toDate, 'YYYY-MM-DD');
+            } else {
+                fromDate = moment(fromDate, 'YYYY-MM-DD');
+                toDate = fromDate.clone().endOf('month');
+            }
+
+            // let sqlStr = "SELECT a.emp_id, CONCAT(b.first_name,' ',b.middle_name,' ',b.last_name) as emp_name," +
+            //     " a.dsr_date, a.atten_flag , a.hr_flag, a.tp_route, a.from_city, a.to_city, a.stay_city, a.total_allow, a.total_lodge, a.total_exp, a.post_mg, a.post_ac" +
+            //     " c.city as tp_city, c.from as tp_from, c.to as tp_to, " +
+            //     " if(a.atten_flag Is Null, '', d.city) as act_city" +
+            //     " FROM dsr_1 as a, employees as b, tp_routes as c, tp_routes as d" +
+            //     " WHERE a.emp_id=b.emp_id and a.dsr_date Between ? and ? " +
+            //     " and a.tp_1=c.tp_id and a.tp_2=d.tp_id " +
+            //     " Order By a.emp_id, a.dsr_date"
+            let sqlStr = `SELECT a.emp_id,  CONCAT(b.first_name, ' ', b.middle_name, ' ', b.last_name) as emp_name,
+                a.dsr_date, a.atten_flag, a.hr_flag, a.total_allow, a.total_lodge, a.total_exp, a.post_mg, a.post_ac,
+                c.city as tp_city, c.from as tp_from, c.to as tp_to, 
+                IF(a.atten_flag IS NULL OR a.atten_flag = '', NULL, d.city) as act_city, a.stay_city,
+                a.tp_1 as planned_tp_id, IF(a.atten_flag IS NULL OR a.atten_flag = '', NULL, a.tp_2) as executed_tp_id
+                FROM dsr_1 as a
+                LEFT JOIN employees as b ON a.emp_id = b.emp_id
+                LEFT JOIN tp_routes as c ON a.tp_1 = c.tp_id
+                LEFT JOIN tp_routes as d ON a.tp_2 = d.tp_id
+                WHERE a.dsr_date BETWEEN ? AND ?
+                ORDER BY a.emp_id, a.dsr_date;`;
+            const params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')];
+            const tpData = await executeQuery(sqlStr, params);
+            // ", customers as d, customers as e and b.mg_id=d.emp_id and b.se_id=e.emp_id" +
+            res.status(200).json({ tpData });
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static routeMaster = async (req, res) => {
+        try {
+
+            // let { fromDate, toDate } = req.query;
+            // let validatedFromDate = moment(fromDate, 'YYYY-MM-DD', true);
+            // let validatedToDate = moment(fromDate, 'YYYY-MM-DD', true);
+            // if (!validatedFromDate.isValid() || !validatedToDate.isValid()) {
+            //     fromDate = moment().startOf('month');
+            //     toDate = fromDate.clone().endOf('month');
+            // } else {
+            //     fromDate = moment(fromDate, 'YYYY-MM-DD');
+            //     toDate = fromDate.clone().endOf('month');
+            // }
+
+            let sqlStr = `SELECT a.* FROM tp_routes as a`;
+            // const params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')];
+            const routesMaster = await executeQuery(sqlStr);
+            // ", customers as d, customers as e and b.mg_id=d.emp_id and b.se_id=e.emp_id" +
+            res.status(200).json({ routesMaster });
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static customerStock = async (req, res) => {
+        try {
+
+            let { fromDate, toDate } = req.query;
+            let validatedFromDate = moment(fromDate, 'YYYY-MM-DD', true);
             let validatedToDate = moment(fromDate, 'YYYY-MM-DD', true);
             if (!validatedFromDate.isValid() || !validatedToDate.isValid()) {
                 fromDate = moment().startOf('month');
@@ -245,15 +317,12 @@ class apiController {
                 toDate = fromDate.clone().endOf('month');
             }
 
-            let sqlStr = "SELECT a.emp_id, CONCAT(b.first_name,' ',b.middle_name,' ',b.last_name) as emp_name," +
-                " dsr_date, atten_flag , hr_flag, tp_route, from_city, to_city, stay_city, total_allow, total_lodge, total_exp, post_mg, post_ac" +
-                " FROM dsr_1 as a, employees as b" +
-                " WHERE a.emp_id=b.emp_id and a.dsr_date Between ? and ? " +
-                " Order By a.emp_id, a.dsr_date"
+            let sqlStr = "SELECT a.* FROM cust_stock_det as a" +
+                " WHERE a.stock_date Between ? and ? "
             const params = [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')];
-            const tpData = await executeQuery(sqlStr, params);
+            const custStockData = await executeQuery(sqlStr, params);
             // ", customers as d, customers as e and b.mg_id=d.emp_id and b.se_id=e.emp_id" +
-            res.status(200).json({ tpData });
+            res.status(200).json({ custStockData });
 
         } catch (err) {
             console.error(err);

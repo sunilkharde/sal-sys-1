@@ -3,177 +3,375 @@
         <div class="col-lg-10 border p-4"> {{!-- border-secondary --}}
             <h4 class="mb-3">Update Dealer for SAP Code {{data.ext_code}}</h4>
 
-            <form action="/customer/update-info/{{data.customer_id}}" method="post">
-                <div class="row mb-3">
-                    <label for="customer_name" class="col-sm-2 col-form-label">Dealer Name<span
-                            style="color: red;">*</span>
-                    </label>
-                    <div class="col-sm-10">
-                        <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
-                            value="{{data.customer_id}}">
-                        <input disabled type="text" class="form-control" id="customer_name" name="customer_name"
-                            value="{{data.customer_name}}" placeholder="Enter dealer name" minlength="1" maxlength="50"
-                            aria-describedby="customer_nameHelp">
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <label for="nick_name" class="col-sm-2 col-form-label">Nick Name<span style="color: red;">*</span>
-                    </label>
-                    <div class="col-sm-10">
-                        <input disabled type="text" class="form-control" id="nick_name" name="nick_name"
-                            value="{{data.nick_name}}" required placeholder="Enter Nickname">
-                    </div>
-                </div>
-
-
-                <div class="row mb-3">
-                    <label for="godown_area" class="col-sm-2 col-form-label">Godown Area<span
-                            style="color: red;">*</span>
-                    </label>
-                    <div class="col-sm-10">
-                        <input type="number" max="9999" step="1.00" class="form-control" id="godown_area"
-                            name="godown_area" value="{{data.godown_area}}" required placeholder="Godown Area in Sq Ft">
-                        <div id="godown_Help" class="form-text">Enter Godown Area in Square Feet</div>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <label for="total_counters" class="col-sm-2 col-form-label">No of Counter</label>
-                    <div class="col-sm-10">
-                        <input type="number" class="form-control" id="godown_area" name="total_counters"
-                            value="{{data.total_counters}}" required placeholder="Total Number of Counters">
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <label for="gst_no" class="col-sm-2 col-form-label">GST Number</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" id="gst_no" name="gst_no" maxlength="15"
-                            value="{{data.gst_no}}" required placeholder="GST NUMBER">
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <label for="cust_care_no" class="col-sm-2 col-form-label">Customer Care No</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" id="cust_care_no" name="cust_care_no" maxlength="20"
-                            value="{{data.cust_care_no}}" required placeholder="Customer Care No">
-                    </div>
-                </div>
-
-                {{!-- Vehicle details --}}
-                <div class="mb-3 border p-4">
-                    <label for="Vehicle Information" class="form-label"><strong>Vehicle Information</strong></label>
-                    <table class="table" id="veh_info_table">
-                        <thead>
-                            <tr>
-                                <th style="width:8%;">Sr</th>
-                                <th style="width:25%;">Reg No</th>
-                                <th style="width:25%;">Vehicle Type</th>
-                                <th style="width:25%;">Insurance No</th>
-                                <th style="width:12%;">Expiry Date</th>
-                                <th style="width:5%;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBodyVehInfo">
-
-                            {{#each [vehData]}}
-                            <tr>
-                                <td><input readonly type="text" class="form-control text-end" id="sr_no" name="sr_no[]"
-                                        required value={{this.sr_no}}></td>
-                                <td><input type="text" class="form-control text-start text-uppercase" id="reg_no"
-                                        name="reg_no[]" maxlength="10" value={{this.reg_no}}> </td>
-                                <td><input type="text" class="form-control text-start text-uppercase" id="Veh_Type"
-                                        name="veh_type[]" maxlength="10" value={{this.veh_type}}> </td>
-                                <td><input type="text" class="form-control text-start" id="ins_no" name="ins_no[]"
-                                        maxlength="20" value={{this.ins_no}}> </td>
-                                <td><input type="date" class="form-control text-start" id="ins_date" name="ins_date[]"
-                                        value={{momentYMD this.ins_date}}> </td>
-                                <td>
-                                    <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
-                                        class="btn btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {{/each}}
-
-                        </tbody>
-                    </table>
-                    <div class="form-group row">
-                        <div class="col-sm-8">
-                            <button type="button" id="btnAddVeh" class="btn btn-success">Add Vehicle</button>
+            {{!-- <form action="/customer/update-info/{{data.customer_id}}" method="post"> --}}
+                <form action="/customer/update-info/{{data.customer_id}}" method="post" enctype="multipart/form-data">
+                    <div class="row mb-3">
+                        <label for="customer_name" class="col-sm-2 col-form-label">Firm Name<span
+                                style="color: red;">*</span>
+                        </label>
+                        <div class="col-sm-10">
+                            <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
+                                value="{{data.customer_id}}">
+                            <input disabled type="text" class="form-control" id="customer_name" name="customer_name"
+                                value="{{data.customer_name}}" placeholder="Enter dealer name" minlength="1"
+                                maxlength="50" aria-describedby="customer_nameHelp">
                         </div>
-
                     </div>
-                </div>
 
-                {{!-- Saleman Details --}}
-                <div class="mb-3 border p-4">
-                    <label for="sp_info_table" class="form-label"><strong>Saleman Information</strong></label>
-                    <table class="table" id="sp_info_table">
-                        <thead>
-                            <tr>
-                                <th style="width:7%;">Sr</th>
-                                <th style="width:28%;">SP Type</th>
-                                <th style="width:40%;">SP Name</th>
-                                <th style="width:20%;">Mobile No</th>
-                                <th style="width:5%;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBodySpInfo">
-
-                            {{#each [spData]}}
-                            <tr>
-                                <td><input readonly type="text" class="form-control text-end" id="sr_no_sp"
-                                        name="sr_no_sp[]" required value={{this.sr_no}}></td>
-                                <td>
-                                    <select class="form-select" id="sp_type" name="sp_type[]"
-                                        aria-label=".form-select-sm example">
-                                        <option value="Accountant" {{#isEqual this.sp_type "Accountant"
-                                            }}selected{{/isEqual}}>Accountant</option>
-                                        <option value="Salesman" {{#isEqual this.sp_type "Salesman"
-                                            }}selected{{/isEqual}}>Salesman</option>
-                                        <option value="Driver" {{#isEqual this.sp_type "Driver" }}selected{{/isEqual}}>
-                                            Driver</option>
-                                    </select>
-                                </td>
-                                <td><input type="text" class="form-control text-start" id="sp_name" name="sp_name[]"
-                                        maxlength="20" value={{this.sp_name}}> </td>
-                                <td><input type="text" class="form-control text-start" id="sp_mobile" name="sp_mobile[]"
-                                        maxlength="10" value={{this.sp_mobile}}> </td>
-                                <td>
-                                    <button type="button" id="removeSpBtn" onclick="removeSelectedSp(this)"
-                                        class="btn btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {{/each}}
-
-                        </tbody>
-                    </table>
-                    <div class="form-group row">
-                        <div class="col-sm-8">
-                            <button type="button" id="btnAddSp" class="btn btn-success">Add Salesman</button>
+                    <div hidden class="row mb-3">
+                        <label for="nick_name" class="col-sm-2 col-form-label">Short Name<span
+                                style="color: red;">*</span>
+                        </label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="nick_name" name="nick_name"
+                                value="{{data.nick_name}}" required placeholder="Enter Nickname">
                         </div>
-
                     </div>
-                </div>
 
-                <div class="col-md-3 d-flex justify-content-between">
-                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" class="btn btn-primary mx-1">Submit</button>
-                    <div class="col-sm-10">
-                        <button type="button" class="btn btn-secondary mx-1"
-                            onclick="window.location.href='/customer/view-info'">Cancel</button>
+                    <div class="row mb-3">
+                        <label for="godown_area" class="col-sm-2 col-form-label">Godown Area<span
+                                style="color: red;">*</span>
+                        </label>
+                        <div class="col-sm-10">
+                            <input type="number" max="9999" step="1.00" class="form-control" id="godown_area"
+                                name="godown_area" value="{{data.godown_area}}" required
+                                placeholder="Godown Area in Sq Ft">
+                            {{!-- <div id="godown_Help" class="form-text">Enter Godown Area in Square Feet</div> --}}
+                        </div>
                     </div>
-                </div>
 
-            </form>
+                    <div class="row mb-3">
+                        <label for="gst_no" class="col-sm-2 col-form-label">GST Number</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="gst_no" name="gst_no" maxlength="15"
+                                value="{{data.gst_no}}" required placeholder="GST NUMBER">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="cust_care_no" class="col-sm-2 col-form-label">Contact No</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="cust_care_no" name="cust_care_no" maxlength="20"
+                                value="{{data.cust_care_no}}" required placeholder="Customer Care No">
+                        </div>
+                    </div>
+
+                    {{!-- ************************** --}}
+                    <div class="row mb-3">
+                        <label for="add1" class="col-sm-2 col-form-label">Shop Address</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="add1" name="add1" value="{{data.add1}}"
+                                placeholder="Enter address lines 1" minlength="1" maxlength="50"
+                                aria-describedby="add1Help">
+                            {{!-- <div id="add1Help" class="form-text">Dealer address lines 1 cannot exceed 50
+                                characters.
+                            </div> --}}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="add2" class="col-sm-2 col-form-label">Godown Address 1</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="add2" name="add2" value="{{data.add2}}"
+                                placeholder="Enter address lines 2" minlength="1" maxlength="50"
+                                aria-describedby="add2Help">
+                            {{!-- <div id="add2Help" class="form-text">Dealer address lines 2 cannot exceed 50
+                                characters.
+                            </div> --}}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="add3" class="col-sm-2 col-form-label">Godown Address 2</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="add3" name="add3" value="{{data.add3}}"
+                                placeholder="Enter address lines 3" minlength="1" maxlength="50"
+                                aria-describedby="add3Help">
+                            {{!-- <div id="add3Help" class="form-text">Dealer address lines 3 cannot exceed 50
+                                characters.
+                            </div> --}}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="city" class="col-sm-2 col-form-label">City<span style="color: red;">*</span>
+                        </label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="city" name="city" value="{{data.city}}"
+                                    placeholder="Enter city name" minlength="1" maxlength="50"
+                                    aria-describedby="cityHelp">
+                                <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                                    data-bs-target="#cityModal">
+
+                                    <i class="bi bi-list"></i></button>
+                            </div>
+                            {{!-- <div id="cityHelp" class="form-text">Select city name from list and cannot exceed 50
+                                characters.
+                            </div> --}}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="pin_code" class="col-sm-2 col-form-label">Pin Code<span
+                                style="color: red;">*</span></label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="pin_code" name="pin_code"
+                                value="{{data.pin_code}}" placeholder="Enter pin code" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="district" class="col-sm-2 col-form-label">District<span
+                                style="color: red;">*</span></label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="district" name="district"
+                                value="{{data.district}}" placeholder="Enter district" minlength="1" maxlength="50">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="state" class="col-sm-2 col-form-label">State<span
+                                style="color: red;">*</span></label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="state" name="state" value="{{data.state}}"
+                                placeholder="Enter state" minlength="1" maxlength="50">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="total_counters" class="col-sm-2 col-form-label">No of Counter</label>
+                        <div class="col-sm-10">
+                            <input type="number" class="form-control" id="total_counters" name="total_counters"
+                                value="{{data.total_counters}}" required placeholder="Total Number of Counters">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="user_id" class="col-sm-2 col-form-label">Sales Manager<span style="color: red;">*</span>
+                        </label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input hidden type="text" class="form-control" id="mg_id" name="mg_id" value="{{data.mg_id}}">
+                                <input readonly type="text" class="form-control" id="mg_name" name="mg_name"
+                                    value="{{data.mg_name}}" placeholder="Mapping manager name" minlength="1"  maxlength="50">
+                                <button class="btn btn-outline-info" type="button" id="btnMG" data-bs-toggle="modal"
+                                    data-bs-target="#salesMgModal"> <i class="bi bi-list"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="se_id" class="col-sm-2 col-form-label">Sales Excecutive<span
+                                style="color: red;">*</span>
+                        </label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input hidden type="text" class="form-control" id="se_id" name="se_id" value="{{data.se_id}}">
+                                <input readonly type="text" class="form-control" id="se_name" name="se_name"
+                                    value="{{data.se_name}}" placeholder="Mapping sales username" minlength="1" maxlength="50">
+                                <button class="btn btn-outline-info" type="button" id="btnSE" data-bs-toggle="modal"
+                                    data-bs-target="#seModal"> <i class="bi bi-list"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{!-- ************************** --}}
+                    <div class="row mb-3">
+                        <label for="photo" class="col-sm-2 col-form-label">Upload Proprietor Photo<span
+                                style="color: red;">*</span></label>
+                        <div class="col-sm-10">
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" 
+                                onchange="previewImage(event)">
+                            <input type="hidden" id="geo_location" name="geo_location" value="{{data.geo_location}}" >
+                            <div class="mt-2">
+                                <img id="photoPreview" src="{{data.geo_location}}"  alt="Customer Photo"
+                                    class="img-thumbnail"
+                                    style="max-width: 150px; {{#if data.geo_location}}{{else}}display: none;{{/if}}">
+                            </div>
+                        </div>
+                    </div>
+                    {{!-- ************************** --}}
+
+
+                    {{!-- Vehicle details --}}
+                    <div class="mb-3 border p-4">
+                        <label for="Vehicle Information" class="form-label"><strong>Vehicle Information</strong></label>
+                        <table class="table" id="veh_info_table">
+                            <thead>
+                                <tr>
+                                    <th style="width:8%;">Sr</th>
+                                    <th style="width:25%;">Reg No</th>
+                                    <th style="width:25%;">Vehicle Type</th>
+                                    <th style="width:25%;">Insurance No</th>
+                                    <th style="width:12%;">Expiry Date</th>
+                                    <th style="width:5%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyVehInfo">
+
+                                {{#each [vehData]}}
+                                <tr>
+                                    <td><input readonly type="text" class="form-control text-end" id="sr_no"
+                                            name="sr_no[]" required value="{{this.sr_no}}"></td>
+                                    <td><input type="text" class="form-control text-start text-uppercase" id="reg_no"
+                                            name="reg_no[]" maxlength="10" value="{{this.reg_no}}"> </td>
+                                    <td><input type="text" class="form-control text-start text-uppercase" id="Veh_Type"
+                                            name="veh_type[]" maxlength="10" value="{{this.veh_type}}"> </td>
+                                    <td><input type="text" class="form-control text-start" id="ins_no" name="ins_no[]"
+                                            maxlength="20" value="{{this.ins_no}}"> </td>
+                                    <td><input type="date" class="form-control text-start" id="ins_date"
+                                            name="ins_date[]" value="{{momentYMD this.ins_date}}"> </td>
+                                    <td>
+                                        <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
+                                            class="btn btn-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {{/each}}
+
+                            </tbody>
+                        </table>
+                        <div class="form-group row">
+                            <div class="col-sm-8">
+                                <button type="button" id="btnAddVeh" class="btn btn-success">Add Vehicle</button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{!-- Saleman Details --}}
+                    <div class="mb-3 border p-4">
+                        <label for="sp_info_table" class="form-label"><strong>Saleman Information</strong></label>
+                        <table class="table" id="sp_info_table">
+                            <thead>
+                                <tr>
+                                    <th style="width:7%;">Sr</th>
+                                    <th style="width:28%;">Employee Type</th>
+                                    <th style="width:40%;">Employee Name</th>
+                                    <th style="width:20%;">Mobile No</th>
+                                    <th style="width:5%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodySpInfo">
+
+                                {{#each [spData]}}
+                                <tr>
+                                    <td><input readonly type="text" class="form-control text-end" id="sr_no_sp"
+                                            name="sr_no_sp[]" required value={{this.sr_no}}></td>
+                                    <td>
+                                        <select class="form-select" id="sp_type" name="sp_type[]"
+                                            aria-label=".form-select-sm example">
+                                            <option value="" style="color: gray;" selected>Select Type</option>
+                                            <option value="Proprietor" {{#isEqual this.sp_type "Proprietor"
+                                                }}selected{{/isEqual}}>Proprietor</option>
+                                            <option value="Accountant" {{#isEqual this.sp_type "Accountant"
+                                                }}selected{{/isEqual}}>Accountant</option>
+                                            <option value="Salesman" {{#isEqual this.sp_type "Salesman"
+                                                }}selected{{/isEqual}}>Salesman</option>
+                                            <option value="Driver" {{#isEqual this.sp_type "Driver"
+                                                }}selected{{/isEqual}}>
+                                                Driver</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="text" class="form-control text-start" id="sp_name" name="sp_name[]"
+                                            maxlength="20" value={{this.sp_name}}> </td>
+                                    <td><input type="text" class="form-control text-start" id="sp_mobile"
+                                            name="sp_mobile[]" maxlength="10" value={{this.sp_mobile}}> </td>
+                                    <td>
+                                        <button type="button" id="removeSpBtn" onclick="removeSelectedSp(this)"
+                                            class="btn btn-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {{/each}}
+
+                            </tbody>
+                        </table>
+                        <div class="form-group row">
+                            <div class="col-sm-8">
+                                <button type="button" id="btnAddSp" class="btn btn-success">Add Salesman</button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 d-flex justify-content-between">
+                        <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"
+                            class="btn btn-primary mx-1">Submit</button>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-secondary mx-1"
+                                onclick="window.location.href='/customer/view-info'">Cancel</button>
+                        </div>
+                    </div>
+
+                </form>
         </div>
     </div>
 </div>
+
+{{> _lov-cities}}
+
+{{> _lov-emp_mg}}
+{{> _lov-emp_se}}
+
+<script>
+    const btnMG = document.getElementById("btnMG");
+    const se_id = document.getElementById("se_id");
+    const se_name = document.getElementById("se_name");
+    btnMG.addEventListener("click", () => {
+        se_id.value = "";
+        se_name.value = "";
+    });
+
+
+    const btnSE = document.getElementById('btnSE');
+    btnSE.addEventListener("click", async function () {
+        const mg_id = document.getElementById("mg_id").value;
+
+        // Destroy the existing DataTable instance
+        const empSeTable = $('#empSeTable').DataTable();
+        empSeTable.destroy();
+
+        try {
+            const response = await fetch(`/customer/se-list?mg_id=${mg_id}`);
+            const data = await response.json();
+            const se_list = data.se_list;
+
+            // Update the table body with the new se_list data
+            const seListTableBody = document.getElementById("seListTableBody");
+            seListTableBody.innerHTML = ""; // Clear the existing content
+
+            se_list.forEach((se) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                <td class="col-4">${se.emp_name}</td>
+                <td class="col-2">${se.emp_id}</td>
+                <td class="col-1">${se.desg_name}</td>
+                <td class="col-2">${se.hq_name}</td>
+                <td class="col-1">${se.off_day}</td>
+                <td class="col-1" style="text-align: center;">
+                    <button type="button" class="btn btn-info btn-sm"
+                        onclick="handleSelectButtonEmpSe(this)">
+                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                    </button>
+                </td>
+            `;
+
+                seListTableBody.appendChild(row);
+            });
+
+            // Create a new DataTable instance
+            $('#empSeTable').DataTable({
+                pageLength: 10
+            });
+
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
+
+</script>
 
 <script>
     $(document).ready(function () {
@@ -282,4 +480,21 @@
         row.remove();
     }
 
+</script>
+
+
+<script>
+    function previewImage(event) {
+        const preview = document.getElementById("photoPreview");
+        const file = event.target.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    }
 </script>

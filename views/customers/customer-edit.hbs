@@ -19,7 +19,7 @@
                 </div>
 
                 <div class="row mb-3">
-                    <label for="nick_name" class="col-sm-2 col-form-label">Nick Name<span style="color: red;">*</span>
+                    <label for="nick_name" class="col-sm-2 col-form-label">Short Name<span style="color: red;">*</span>
                     </label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="nick_name" name="nick_name"
@@ -40,7 +40,7 @@
                 <div class="row mb-3">
                     <label for="add2" class="col-sm-2 col-form-label">Address Line 2</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="add2" name="add2" value="{{data.add3}}"
+                        <input type="text" class="form-control" id="add2" name="add2" value="{{data.add2}}"
                             placeholder="Enter address lines 2" minlength="1" maxlength="50"
                             aria-describedby="add2Help">
                         <div id="add2Help" class="form-text">Dealer address lines 2 cannot exceed 50 characters.</div>
@@ -180,7 +180,7 @@
                             </option>
                             <option value="Vendor" {{#isEqual data.customer_type "Vendor" }}selected{{/isEqual}}>
                                 Vendor</option>
-                            </option>                            
+                            </option>  
                         </select>
                     </div>
                 </div>
