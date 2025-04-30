@@ -25,6 +25,7 @@ import empRoute from "./routes/empRoutes.js";
 import circularRoute from "./routes/circularRoute.js";
 import vanclaimRoute from "./routes/vanclaimRoutes.js"
 import consumerRoute from "./routes/consumerRoutes.js";
+import shopRoutes from './routes/shopRoutes.js';
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
@@ -195,6 +196,7 @@ app.engine('hbs', exphbs.engine({
 }));
 
 // Load auth routes
+app.use('/shop', shopRoutes);
 app.use('/api', apiRoute);
 app.use('/auth', authRoute);
 app.use('/', authController.checkToken); //chekToken applicable all follwoing routes

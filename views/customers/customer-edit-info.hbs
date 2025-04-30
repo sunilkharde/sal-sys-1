@@ -18,16 +18,6 @@
                         </div>
                     </div>
 
-                    <div hidden class="row mb-3">
-                        <label for="nick_name" class="col-sm-2 col-form-label">Short Name<span
-                                style="color: red;">*</span>
-                        </label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="nick_name" name="nick_name"
-                                value="{{data.nick_name}}" required placeholder="Enter Nickname">
-                        </div>
-                    </div>
-
                     <div class="row mb-3">
                         <label for="godown_area" class="col-sm-2 col-form-label">Godown Area<span
                                 style="color: red;">*</span>
@@ -49,6 +39,16 @@
                     </div>
 
                     <div class="row mb-3">
+                        <label for="nick_name" class="col-sm-2 col-form-label">Contact Person<span
+                                style="color: red;">*</span>
+                        </label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="nick_name" name="nick_name"
+                                value="{{data.nick_name}}" required placeholder="Enter Nickname">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
                         <label for="cust_care_no" class="col-sm-2 col-form-label">Contact No</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="cust_care_no" name="cust_care_no" maxlength="20"
@@ -58,7 +58,7 @@
 
                     {{!-- ************************** --}}
                     <div class="row mb-3">
-                        <label for="add1" class="col-sm-2 col-form-label">Shop Address</label>
+                        <label for="add1" class="col-sm-2 col-form-label">Office Address</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="add1" name="add1" value="{{data.add1}}"
                                 placeholder="Enter address lines 1" minlength="1" maxlength="50"
@@ -137,7 +137,7 @@
                     </div>
 
                     <div class="row mb-3">
-                        <label for="total_counters" class="col-sm-2 col-form-label">No of Counter</label>
+                        <label for="total_counters" class="col-sm-2 col-form-label">No of Customers</label>
                         <div class="col-sm-10">
                             <input type="number" class="form-control" id="total_counters" name="total_counters"
                                 value="{{data.total_counters}}" required placeholder="Total Number of Counters">
@@ -175,7 +175,7 @@
 
                     {{!-- ************************** --}}
                     <div class="row mb-3">
-                        <label for="photo" class="col-sm-2 col-form-label">Upload Proprietor Photo<span
+                        <label for="photo" class="col-sm-2 col-form-label">Proprietor Photo<span
                                 style="color: red;">*</span></label>
                         <div class="col-sm-10">
                             <input type="file" class="form-control" id="photo" name="photo" accept="image/*" 
@@ -260,9 +260,9 @@
                                     <td>
                                         <select class="form-select" id="sp_type" name="sp_type[]"
                                             aria-label=".form-select-sm example">
-                                            <option value="" style="color: gray;" selected>Select Type</option>
-                                            <option value="Proprietor" {{#isEqual this.sp_type "Proprietor"
-                                                }}selected{{/isEqual}}>Proprietor</option>
+                                            {{!-- <option value="" style="color: gray;" selected>Select Type</option> --}}
+                                            <option aria-required="true" value="Proprietor" {{#isEqual this.sp_type "Proprietor"
+                                                }}selected{{/isEqual}}>Proprietor/Partner</option>
                                             <option value="Accountant" {{#isEqual this.sp_type "Accountant"
                                                 }}selected{{/isEqual}}>Accountant</option>
                                             <option value="Salesman" {{#isEqual this.sp_type "Salesman"
@@ -291,12 +291,11 @@
                             <div class="col-sm-8">
                                 <button type="button" id="btnAddSp" class="btn btn-success">Add Salesman</button>
                             </div>
-
                         </div>
                     </div>
 
                     <div class="col-md-3 d-flex justify-content-between">
-                        <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"
+                        <button id="btnSubmit" {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"
                             class="btn btn-primary mx-1">Submit</button>
                         <div class="col-sm-10">
                             <button type="button" class="btn btn-secondary mx-1"
@@ -482,7 +481,6 @@
 
 </script>
 
-
 <script>
     function previewImage(event) {
         const preview = document.getElementById("photoPreview");
@@ -497,4 +495,42 @@
             reader.readAsDataURL(file);
         }
     }
+</script>
+
+<script>
+  // Function to validate the table before submission
+  function validateSpInfo() {
+    const rows = document.querySelectorAll('#sp_info_table tbody tr'); // Get all rows in the table body
+    let isProprietorSelected = false; // Flag to check if Proprietor is selected
+
+    // Loop through each row and check the selected employee type, sp_name, and sp_mobile
+    for (let row of rows) {
+      const employeeTypeSelect = row.querySelector('select[name="sp_type[]"]');
+      const spName = row.querySelector('input[name="sp_name[]"]');
+      const spMobile = row.querySelector('input[name="sp_mobile[]"]');
+
+      // Check if the "Proprietor" is selected and if sp_name and sp_mobile are filled
+      if (employeeTypeSelect && employeeTypeSelect.value === 'Proprietor') {
+        if (spName.value.trim() !== '' && spMobile.value.trim() !== '') {
+          isProprietorSelected = true; // Found a valid Proprietor with name and mobile
+          break; // Exit loop once a valid "Proprietor" is found
+        }
+      }
+    }
+
+    // If no row has "Proprietor" with valid name and mobile, alert the user
+    if (!isProprietorSelected) {
+      alert('At least one row should be of type "Proprietor" with a name and mobile number.');
+      return false; // Prevent form submission
+    }
+
+    return true; // Allow form submission if validation passes
+  }
+
+  // Event listener for form submission
+  document.getElementById('btnSubmit').addEventListener('click', function (event) {
+    if (!validateSpInfo()) {
+      event.preventDefault(); // Prevent form submission if validation fails
+    }
+  });
 </script>

@@ -444,9 +444,9 @@ class customerController {
 
     static updateInfo = async (req, res) => {
         const { cust_id } = req.params;
-        const { nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, geo_location,mg_id, se_id, sr_no, reg_no, veh_type, ins_no, ins_date, sp_type, sp_name, sp_mobile } = req.body;
+        const { nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, geo_location, mg_id, se_id, sr_no, reg_no, veh_type, ins_no, ins_date, sp_type, sp_name, sp_mobile } = req.body;
         const [cities_list, users_list, market_area_list, bu_list, emp_list] = await this.getData();
-    
+
         var errors = [];
         if (isNaN(godown_area) || godown_area <= 0) {
             errors.push({ message: "Godown area cannot be blank" });
@@ -457,34 +457,34 @@ class customerController {
         if (!sp_name || sp_name.length === 0) {
             errors.push({ message: "Enter salesman details" });
         }
-    
+
         if (errors.length) {
             const sqlStr = "SELECT a.*, CONCAT(b.username, ' [', b.email_id, ']') AS username, c.market_area " +
-                           "FROM customers AS a " +
-                           "LEFT JOIN users AS b ON (a.user_id = b.user_id) " +
-                           "LEFT JOIN market_area AS c ON (a.market_area_id = c.market_area_id) " +
-                           "WHERE a.customer_id = ?";
+                "FROM customers AS a " +
+                "LEFT JOIN users AS b ON (a.user_id = b.user_id) " +
+                "LEFT JOIN market_area AS c ON (a.market_area_id = c.market_area_id) " +
+                "WHERE a.customer_id = ?";
             const results = await executeQuery(sqlStr, [cust_id]);
             let data1 = results[0];
-    
+
             let sqlVeh = `SELECT * FROM cust_veh WHERE customer_id = ${cust_id}`;
             let vehData = await executeQuery(sqlVeh);
             if (vehData.length === 0) {
                 sqlVeh = `SELECT 1 AS sr_no, '' AS reg_no, '' AS veh_type, '' AS ins_no, NULL AS ins_date FROM dual`;
                 vehData = await executeQuery(sqlVeh);
             }
-    
+
             let sqlSp = `SELECT * FROM cust_sp WHERE customer_id = ${cust_id}`;
             let spData = await executeQuery(sqlSp);
             if (spData.length === 0) {
                 sqlSp = `SELECT 1 AS sr_no, '' AS sp_type, '' AS sp_name, '' AS sp_mobile FROM dual`;
                 spData = await executeQuery(sqlSp);
             }
-    
+
             res.render("customers/customer-edit-info", { errors, data: data1, vehData, spData });
             return;
         }
-    
+
         try {
             var upd_by = res.locals.user ? res.locals.user.user_id : 0;
 
@@ -502,43 +502,43 @@ class customerController {
             if (req.file) {
                 photoPath = `/customers/${cust_id}${path.extname(req.file.originalname)}`; // Save using customer_id
             }
-            if (!photoPath || photoPath === undefined){
+            if (!photoPath || photoPath === undefined) {
                 photoPath = geo_location;
             }
             // console.log('reqFile...', req.file,  photoPath)
 
             const sqlStr = "UPDATE customers SET nick_name=?, godown_area = ?, total_counters = ?, gst_no = ?, cust_care_no = ?, " +
-                            "add1 = ?, add2 = ?, add3 = ?, city = ?, pin_code = ?, district = ?, state = ?, geo_location = ?, mg_id=?, se_id=?," +
-                            "upd_by = ?, upd_at = CURRENT_TIMESTAMP WHERE customer_id = ?";
+                "add1 = ?, add2 = ?, add3 = ?, city = ?, pin_code = ?, district = ?, state = ?, geo_location = ?, mg_id=?, se_id=?," +
+                "upd_by = ?, upd_at = CURRENT_TIMESTAMP WHERE customer_id = ?";
             const params = [nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, photoPath, mg_id, se_id, upd_by, cust_id];
             await executeQuery(sqlStr, params);
-    
+
             // Delete and Insert Vehicle Information
             await executeQuery("DELETE FROM cust_veh WHERE customer_id=?", [cust_id]);
-    
+
             const regNoVal = Array.isArray(reg_no) ? reg_no : [reg_no];
             const vehTypeVal = Array.isArray(veh_type) ? veh_type : [veh_type];
             const insNoVal = Array.isArray(ins_no) ? ins_no : [ins_no];
             const insDateVal = Array.isArray(ins_date) ? ins_date : [ins_date];
-    
+
             for (let i = 0; i < regNoVal.length; i++) {
                 let sr_no_val = i + 1;
                 const sqlVeh = "INSERT INTO cust_veh (customer_id, sr_no, reg_no, veh_type, ins_no, ins_date) VALUES (?, ?, ?, ?, ?, ?)";
                 await executeQuery(sqlVeh, [cust_id, sr_no_val, regNoVal[i].toUpperCase(), vehTypeVal[i], insNoVal[i], insDateVal[i]]);
             }
-    
+
             // Delete and Insert Salesperson Information
             await executeQuery("DELETE FROM cust_sp WHERE customer_id=?", [cust_id]);
-    
+
             const spTypeVal = Array.isArray(sp_type) ? sp_type : [sp_type];
             const spNameVal = Array.isArray(sp_name) ? sp_name : [sp_name];
             const spMobileVal = Array.isArray(sp_mobile) ? sp_mobile : [sp_mobile];
-    
+
             for (let i = 0; i < spNameVal.length; i++) {
                 const sqlSp = "INSERT INTO cust_sp (customer_id, sr_no, sp_type, sp_name, sp_mobile) VALUES (?, ?, ?, ?, ?)";
                 await executeQuery(sqlSp, [cust_id, i + 1, spTypeVal[i], spNameVal[i], spMobileVal[i]]);
             }
-    
+
             res.redirect("/customer/view-info");
         } catch (err) {
             console.error(err);
@@ -642,6 +642,120 @@ class customerController {
         }
     };
 
+    /***************** */
+    // Customer Information Report
+    static customerReport = async (req, res) => {
+        try {
+            // Get distinct states for the initial dropdown
+            const sqlStates = "SELECT DISTINCT state FROM customers WHERE state IS NOT NULL AND state != '' ORDER BY state";
+            const states = await executeQuery(sqlStates);
+
+            res.render("customers/customer-report", { states });
+        } catch (error) {
+            console.error(error);
+            res.render("error", { message: "Error loading customer report" });
+        }
+    };
+
+    static getCustomerReportData = async (req, res) => {
+        try {
+            const { type, value } = req.query;
+
+            let sql = "";
+            let results = [];
+
+            if (type === "state") {
+                // Get cities for selected state
+                sql = `SELECT DISTINCT city FROM customers 
+                       WHERE state = ? AND city IS NOT NULL AND city != '' 
+                       ORDER BY city`;
+                results = await executeQuery(sql, [value]);
+            } else if (type === "city") {
+                // Get customers for selected city
+                sql = `SELECT customer_id, customer_name, nick_name 
+                       FROM customers 
+                       WHERE city = ? 
+                       ORDER BY customer_name`;
+                results = await executeQuery(sql, [value]);
+            }
+
+            res.json(results);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Error fetching data" });
+        }
+    };
+
+    static getCustomerDetails = async (req, res) => {
+        try {
+            const { cust_id } = req.params;
+
+            // Get customer main info
+            const customerSql = `SELECT * FROM customers WHERE customer_id = ?`;
+            const customer = await executeQuery(customerSql, [cust_id]);
+
+            if (customer.length === 0) {
+                return res.status(404).json({ error: "Customer not found" });
+            }
+
+            // Get salesperson info
+            const spSql = `SELECT * FROM cust_sp WHERE customer_id = ? ORDER BY sr_no`;
+            const salespersons = await executeQuery(spSql, [cust_id]);
+
+            // Get vehicle info
+            const vehSql = `SELECT * FROM cust_veh WHERE customer_id = ? ORDER BY sr_no`;
+            const vehicles = await executeQuery(vehSql, [cust_id]);
+
+            res.json({
+                customer: customer[0],
+                salespersons,
+                vehicles
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Error fetching customer details" });
+        }
+    };
+
+    static searchCustomers = async (req, res) => {
+        try {
+            const { query } = req.query;
+            
+            if (!query || query.length < 2) {
+                return res.json([]);
+            }
+            
+            const searchQuery = `%${query}%`;
+            
+            const sql = `
+                SELECT customer_id, customer_name, nick_name, city, state 
+                FROM customers 
+                WHERE customer_name LIKE ? 
+                   OR nick_name LIKE ? 
+                   OR city LIKE ? 
+                   OR state LIKE ? 
+                   OR add1 LIKE ? 
+                   OR add2 LIKE ? 
+                   OR add3 LIKE ? 
+                   OR pin_code LIKE ? 
+                   OR district LIKE ?
+                ORDER BY customer_name
+                LIMIT 10
+            `;
+            
+            const results = await executeQuery(sql, [
+                searchQuery, searchQuery, searchQuery, searchQuery,
+                searchQuery, searchQuery, searchQuery, searchQuery,
+                searchQuery
+            ]);
+            
+            res.json(results);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Error searching customers" });
+        }
+    };
+    
 };
 
 export default customerController

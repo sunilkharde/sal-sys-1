@@ -1,0 +1,591 @@
+<div class="container mt-4">
+    <h4>Customer Information Report</h4>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <!-- Quick Search Section -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h5>Quick Search</h5>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="globalSearch"
+                            placeholder="Search customers (min 2 chars)...">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">Clear</button>
+                    </div>
+                    <div id="searchResults" class="list-group"
+                        style="display: none; max-height: 300px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <!-- OR Divider -->
+            <div class="row mb-3">
+                <div class="col-12 text-center">
+                    <div class="position-relative">
+                        <hr>
+                        <span class="position-absolute bg-white px-2"
+                            style="top: 50%; left: 50%; transform: translate(-50%, -50%);">OR</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hierarchical Search Section -->
+            <div class="row">
+                <div class="col-12">
+                    <h5>Browse by Location</h5>
+                    <form id="hierarchicalSearchForm">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="stateSelect" class="form-label">State</label>
+                                <select class="form-select" id="stateSelect">
+                                    <option value="" selected disabled>Select State</option>
+                                    {{#each states}}
+                                    <option value="{{this.state}}">{{this.state}}</option>
+                                    {{/each}}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="citySelect" class="form-label">City</label>
+                                <select class="form-select" id="citySelect" disabled>
+                                    <option value="" selected disabled>Select City</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="customerSelect" class="form-label">Customer</label>
+                                <select class="form-select" id="customerSelect" disabled>
+                                    <option value="" selected disabled>Select Customer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Details Section (remains the same) -->
+    <div id="customerDetails" class="card" style="display: none;">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Customer Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <img id="customerPhoto" src="" alt="Customer Photo" class="img-thumbnail" style="max-width: 150px;">
+                </div>
+                <div class="col-md-10">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Customer ID:</strong> <span id="customerId"></span></p>
+                            <p><strong>Name:</strong> <span id="customerName"></span></p>
+                            <p><strong>Contact Person:</strong> <span id="nickName"></span></p>
+                            <p><strong>Address:</strong> <span id="customerAddress"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>City:</strong> <span id="customerCity"></span></p>
+                            <p><strong>District:</strong> <span id="customerDistrict"></span></p>
+                            <p><strong>State:</strong> <span id="customerState"></span></p>
+                            <p><strong>PIN Code:</strong> <span id="customerPin"></span></p>
+                            <p><strong>Cust Image:</strong> <span id="customerImage"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">Salespersons</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Name</th>
+                                        <th>Mobile</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salespersonsTable">
+                                    <!-- Salespersons data will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">Vehicles</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Reg No</th>
+                                        <th>Type</th>
+                                        <th>Insurance No</th>
+                                        <th>Expiry</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vehiclesTable">
+                                    <!-- Vehicles data will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // State dropdown change event
+        $('#stateSelect').change(function () {
+            const state = $(this).val();
+            resetLocationSearch();
+
+            if (state) {
+                fetchCities(state);
+            }
+        });
+
+        // City dropdown change event
+        $('#citySelect').change(function () {
+            const city = $(this).val();
+            resetCustomerDropdown();
+
+            if (city) {
+                fetchCustomers(city);
+            }
+        });
+
+        // Customer dropdown change event
+        $('#customerSelect').change(function () {
+            const customerId = $(this).val();
+            if (customerId) {
+                loadCustomerDetails(customerId);
+            }
+        });
+
+        // Global search functionality
+        const globalSearch = $('#globalSearch');
+        const searchResults = $('#searchResults');
+        let searchTimer;
+
+        // Search input handler with debounce
+        globalSearch.on('input', function () {
+            clearTimeout(searchTimer);
+            const query = $(this).val().trim();
+
+            if (query.length < 2) {
+                searchResults.hide().empty();
+                return;
+            }
+
+            showSearchLoading();
+
+            searchTimer = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        });
+
+        // Clear search button
+        $('#clearSearch').click(function () {
+            globalSearch.val('');
+            searchResults.hide().empty();
+            $('#customerDetails').hide();
+            resetLocationSearch();
+        });
+
+        // Handle click on search result
+        $(document).on('click', '.search-result-item', function (e) {
+            e.preventDefault();
+            const customerId = $(this).data('customer-id');
+            selectCustomerFromSearch(customerId, $(this).find('strong').text());
+        });
+
+        // Hide search results when clicking elsewhere
+        $(document).click(function (e) {
+            if (!$(e.target).closest('#globalSearch, #searchResults, #clearSearch').length) {
+                searchResults.hide();
+            }
+        });
+
+        // Helper Functions
+        function resetLocationSearch() {
+            $('#citySelect').empty().append('<option value="" selected disabled>Select City</option>').prop('disabled', true);
+            resetCustomerDropdown();
+        }
+
+        function resetCustomerDropdown() {
+            $('#customerSelect').empty().append('<option value="" selected disabled>Select Customer</option>').prop('disabled', true);
+            $('#customerDetails').hide();
+        }
+
+        function fetchCities(state) {
+            $.get('/customer/report-data', { type: 'state', value: state }, function (cities) {
+                if (cities.length > 0) {
+                    $('#citySelect').empty().append('<option value="" selected disabled>Select City</option>');
+                    cities.forEach(function (city) {
+                        $('#citySelect').append(`<option value="${city.city}">${city.city}</option>`);
+                    });
+                    $('#citySelect').prop('disabled', false);
+                } else {
+                    $('#citySelect').append('<option value="" selected>No cities found</option>');
+                }
+            }).fail(showLocationError);
+        }
+
+        function fetchCustomers(city) {
+            $.get('/customer/report-data', { type: 'city', value: city }, function (customers) {
+                if (customers.length > 0) {
+                    $('#customerSelect').empty().append('<option value="" selected disabled>Select Customer</option>');
+                    customers.forEach(function (customer) {
+                        $('#customerSelect').append(
+                            `<option value="${customer.customer_id}">${customer.customer_name} (${customer.nick_name})</option>`
+                        );
+                    });
+                    $('#customerSelect').prop('disabled', false);
+                } else {
+                    $('#customerSelect').append('<option value="" selected>No customers found</option>');
+                }
+            }).fail(showLocationError);
+        }
+
+        function showSearchLoading() {
+            searchResults.html(`
+                <div class="list-group-item">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-2">Searching...</span>
+                </div>
+            `).show();
+        }
+
+        function performSearch(query) {
+            $.get('/customer/search', { query })
+                .done(function (results) {
+                    displaySearchResults(results, query);
+                })
+                .fail(function () {
+                    showSearchError();
+                });
+        }
+
+        function displaySearchResults(results, query) {
+            searchResults.empty();
+
+            if (results.length === 0) {
+                searchResults.append(`
+                    <div class="list-group-item text-muted">
+                        No customers found matching "${query}"
+                    </div>
+                `);
+            } else {
+                results.forEach(customer => {
+                    searchResults.append(`
+                        <a href="#" class="list-group-item list-group-item-action search-result-item" 
+                           data-customer-id="${customer.customer_id}">
+                            <strong>${customer.customer_name}</strong><br>
+                            <small>
+                                ${customer.nick_name ? `Contact: ${customer.nick_name}, ` : ''}
+                                ${customer.city ? `${customer.city}, ` : ''}
+                                ${customer.state || ''}
+                            </small>
+                        </a>
+                    `);
+                });
+            }
+            searchResults.show();
+        }
+
+        function selectCustomerFromSearch(customerId, customerName) {
+            globalSearch.val(customerName);
+            searchResults.hide();
+            loadCustomerDetails(customerId);
+        }
+
+        function loadCustomerDetails(customerId) {
+            //console.log('Loading details for customer ID:', customerId); // Debug log
+
+            // Show loading state
+            $('#customerDetails').html(`
+        <div class="text-center p-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Loading customer details...</p>
+        </div>
+    `).show();
+
+            $.get(`/customer/report-details/${customerId}`)
+                .done(function (data) {
+                    //console.log('API Response:', data); // Debug log
+                    if (data && data.customer) {
+                        displayCustomerDetails(data);
+                    } else {
+                        showCustomerDetailsError(customerId, 'Invalid data format received');
+                    }
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    //console.error('Error loading customer details:', textStatus, errorThrown); // Debug log
+                    showCustomerDetailsError(customerId, `Server error: ${textStatus}`);
+                });
+        }
+
+        function displayCustomerDetails(data) {
+            try {
+                // First ensure the customerDetails container exists
+                const $customerDetails = $('#customerDetails');
+                if ($customerDetails.length === 0) {
+                    throw new Error('Customer details container not found');
+                }
+
+                // Clear any previous loading state
+                $customerDetails.empty();
+
+                // Create and append the customer details HTML structure
+                const customer = data.customer;
+                const html = `
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-2">
+                        <img id="customerPhoto" src="${customer.geo_location || ''}" 
+                             class="img-thumbnail" style="max-width: 150px; ${!customer.geo_location ? 'display:none' : ''}">
+                    </div>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Customer ID:</strong> <span id="customerId">${customer.customer_id || 'N/A'}</span></p>
+                                <p><strong>Name:</strong> <span id="customerName">${customer.customer_name?.trim() || 'N/A'}</span></p>
+                                <p><strong>Contact Person:</strong> <span id="nickName">${customer.nick_name?.trim() || 'N/A'}</span></p>
+                                <p><strong>Address:</strong> <span id="customerAddress">${[customer.add1, customer.add2, customer.add3].filter(Boolean).join(', ') || 'N/A'}</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>City:</strong> <span id="customerCity">${customer.city?.trim() || 'N/A'}</span></p>
+                                <p><strong>District:</strong> <span id="customerDistrict">${customer.district?.trim() || 'N/A'}</span></p>
+                                <p><strong>State:</strong> <span id="customerState">${customer.state?.trim() || 'N/A'}</span></p>
+                                <p><strong>PIN Code:</strong> <span id="customerPin">${customer.pin_code || 'N/A'}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Salespersons</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Name</th>
+                                            <th>Mobile</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="salespersonsTable">
+                                        ${data.salespersons?.map(sp => `
+                                            <tr>
+                                                <td>${sp.sp_type || '-'}</td>
+                                                <td>${sp.sp_name?.trim() || '-'}</td>
+                                                <td>${sp.sp_mobile || '-'}</td>
+                                            </tr>
+                                        `).join('') || '<tr><td colspan="3" class="text-center">No salespersons found</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Vehicles</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Reg No</th>
+                                            <th>Type</th>
+                                            <th>Insurance No</th>
+                                            <th>Expiry</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vehiclesTable">
+                                        ${data.vehicles?.map(veh => {
+                    const insDate = veh.ins_date && veh.ins_date !== '1899-11-30'
+                        ? new Date(veh.ins_date).toLocaleDateString()
+                        : '-';
+                    return `
+                                                <tr>
+                                                    <td>${veh.reg_no || '-'}</td>
+                                                    <td>${veh.veh_type || '-'}</td>
+                                                    <td>${veh.ins_no || '-'}</td>
+                                                    <td>${insDate}</td>
+                                                </tr>
+                                            `;
+                }).join('') || '<tr><td colspan="4" class="text-center">No vehicles found</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                $customerDetails.html(html).show();
+
+            } catch (error) {
+                //console.error('Error displaying customer details:', error);
+                $('#customerDetails').html(`
+            <div class="alert alert-danger">
+                Error displaying customer details: ${error.message}
+                <button onclick="window.location.reload()" class="btn btn-sm btn-warning">Reload Page</button>
+            </div>
+        `).show();
+            }
+        }
+
+        function updateSalespersonsTable(salespersons) {
+            const spTableBody = $('#salespersonsTable').empty();
+            //console.log('Updating salespersons table with:', salespersons); // Debug log
+
+            if (salespersons.length > 0) {
+                salespersons.forEach(function (sp) {
+                    spTableBody.append(`
+                <tr>
+                    <td>${sp.sp_type || '-'}</td>
+                    <td>${sp.sp_name ? sp.sp_name.trim() : '-'}</td>
+                    <td>${sp.sp_mobile || '-'}</td>
+                </tr>
+            `);
+                });
+            } else {
+                spTableBody.append('<tr><td colspan="3" class="text-center">No salespersons found</td></tr>');
+            }
+        }
+
+        function updateVehiclesTable(vehicles) {
+            const vehTableBody = $('#vehiclesTable').empty();
+            //console.log('Updating vehicles table with:', vehicles); // Debug log
+
+            if (vehicles.length > 0) {
+                vehicles.forEach(function (veh) {
+                    let insDate = '-';
+                    if (veh.ins_date && veh.ins_date !== '1899-11-30') {
+                        insDate = new Date(veh.ins_date).toLocaleDateString();
+                    }
+
+                    vehTableBody.append(`
+                <tr>
+                    <td>${veh.reg_no || '-'}</td>
+                    <td>${veh.veh_type || '-'}</td>
+                    <td>${veh.ins_no || '-'}</td>
+                    <td>${insDate}</td>
+                </tr>
+            `);
+                });
+            } else {
+                vehTableBody.append('<tr><td colspan="4" class="text-center">No vehicles found</td></tr>');
+            }
+        }
+
+        function showLocationError() {
+            alert('Error loading location data. Please try again.');
+        }
+
+        function showSearchError() {
+            searchResults.empty().append(`
+                <div class="list-group-item text-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Error performing search
+                    <button class="btn btn-sm btn-outline-secondary retry-search-btn">Retry</button>
+                </div>
+            `).show();
+
+            // Retry button handler
+            $(document).off('click', '.retry-search-btn').on('click', '.retry-search-btn', function () {
+                const query = globalSearch.val().trim();
+                if (query.length >= 2) {
+                    performSearch(query);
+                }
+            });
+        }
+
+        function showCustomerDetailsError(customerId, errorMessage = '') {
+            const errorHtml = `
+        <div class="alert alert-danger m-3">
+            <i class="bi bi-exclamation-triangle-fill"></i> 
+            Error loading customer details
+            ${errorMessage ? `<div class="mt-2 small">${errorMessage}</div>` : ''}
+            <button class="btn btn-sm btn-outline-secondary retry-details-btn mt-2">Retry</button>
+            <button class="btn btn-sm btn-outline-info view-console-btn mt-2 ms-2">View Console</button>
+        </div>
+    `;
+
+            $('#customerDetails').html(errorHtml).show();
+
+            // Retry button handler
+            $(document).off('click', '.retry-details-btn').on('click', '.retry-details-btn', function () {
+                loadCustomerDetails(customerId);
+            });
+
+            // View console button handler
+            $(document).off('click', '.view-console-btn').on('click', '.view-console-btn', function () {
+                //console.log('Attempting to view details for customer ID:', customerId);
+                // You might want to implement a more sophisticated console viewer here
+                alert('Check browser console (F12) for detailed error information');
+            });
+        }
+    });
+</script>
+
+<style>
+    .card-header {
+        font-weight: bold;
+    }
+
+    #customerDetails {
+        margin-top: 20px;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    /* Search Results Improvements */
+    #searchResults {
+        border-radius: 0 0 0.25rem 0.25rem;
+        border: 1px solid rgba(0, 0, 0, .125);
+        border-top: none;
+    }
+
+    .search-result-item {
+        transition: all 0.2s ease;
+    }
+
+    .search-result-item:hover {
+        background-color: #f1f8ff;
+        transform: translateX(2px);
+    }
+
+    /* Loading States */
+    .spinner-border {
+        margin-right: 8px;
+    }
+
+    /* Error States */
+    .alert-danger {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .retry-btn,
+    .retry-details-btn {
+        margin-left: 10px;
+    }
+</style>

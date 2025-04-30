@@ -16,4 +16,10 @@ router.get('/update-info/:cust_id', customerController.editInfo);
 // router.post('/update-info/:cust_id', customerController.updateInfo);
 router.post('/update-info/:cust_id', upload.single('photo'), customerController.updateInfo);
 
+// Add this to customerRoutes.js
+router.get('/report', customerController.customerReport);
+router.get('/report-data', customerController.getCustomerReportData);
+router.get('/report-details/:cust_id', customerController.getCustomerDetails);
+router.get('/search', customerController.searchCustomers);
+
 export default router;

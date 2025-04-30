@@ -1,0 +1,293 @@
+<div class="container mt-2 p-2">
+    <h2 class="mb-3">Create New Shop Record</h2>
+
+    <form id="shopForm" action="/shop/create" method="post" enctype="multipart/form-data">
+        <!-- Single column layout for mobile -->
+        <div class="row">
+            <div class="col-12">
+                <div class="mb-3">
+                    <label for="shop_name" class="form-label">Shop Name*</label>
+                    <input type="text" class="form-control form-control-lg" id="shop_name" name="shop_name" required
+                        value="{{data.shop_name}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="owner_name" class="form-label">Owner Name*</label>
+                    <input type="text" class="form-control form-control-lg" id="owner_name" name="owner_name" required
+                        value="{{data.owner_name}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="owner_mobile" class="form-label">Owner Mobile*</label>
+                    <input type="tel" class="form-control form-control-lg" id="owner_mobile" name="owner_mobile" required
+                        value="{{data.owner_mobile}}" pattern="[0-9]{10}" inputmode="numeric">
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control form-control-lg" id="email" name="email" value="{{data.email}}" inputmode="email">
+                </div>
+
+                <div class="mb-3">
+                    <label for="address" class="form-label">Address*</label>
+                    <textarea class="form-control form-control-lg" id="address" name="address" required rows="3">{{data.address}}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="city" class="form-label">City*</label>
+                    <input type="text" class="form-control form-control-lg" id="city" name="city" required value="{{data.city}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="pin" class="form-label">PIN Code*</label>
+                    <input type="text" class="form-control form-control-lg" id="pin" name="pin" required 
+                        value="{{data.pin}}" pattern="[0-9]{6}" inputmode="numeric">
+                </div>
+
+                <div class="mb-3">
+                    <label for="taluka" class="form-label">Taluka</label>
+                    <input type="text" class="form-control form-control-lg" id="taluka" name="taluka" value="{{data.taluka}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="dist" class="form-label">District*</label>
+                    <input type="text" class="form-control form-control-lg" id="dist" name="dist" required value="{{data.dist}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="photo" class="form-label">Shop Photo</label>
+                    <input type="file" class="form-control form-control-lg" id="photo" name="photo" accept="image/*" capture="environment">
+                    {{#if photo_path}}
+                    <img src="{{photo_path}}" class="img-thumbnail mt-2" style="max-width: 150px;">
+                    {{/if}}
+                </div>
+
+                <div class="mb-3 border p-2 rounded">
+                    <label class="form-label fw-bold">Location</label>
+                    <button type="button" class="btn btn-primary btn-lg w-100 mb-2" onclick="getLocation()">
+                        <i class="bi bi-geo-alt"></i> Capture Current Location
+                    </button>
+                    <div id="locationInfo" class="small">
+                        {{#if data.loc_name}}
+                        <div><strong>Location:</strong> {{data.loc_name}}</div>
+                        <div><strong>Address:</strong> {{data.loc_add}}</div>
+                        <div><strong>Coordinates:</strong> {{data.loc_lat}}, {{data.loc_lng}}</div>
+                        {{else}}
+                        <div class="text-muted">No location captured yet</div>
+                        {{/if}}
+                    </div>
+                    <input type="hidden" id="loc_lat" name="loc_lat" value="{{data.loc_lat}}">
+                    <input type="hidden" id="loc_lng" name="loc_lng" value="{{data.loc_lng}}">
+                    <input type="hidden" id="loc_name" name="loc_name" value="{{data.loc_name}}">
+                    <input type="hidden" id="loc_add" name="loc_add" value="{{data.loc_add}}">
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-lg w-100 py-2">
+                    <i class="bi bi-save"></i> Save Shop Record
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Mobile-first responsive styles */
+    body {
+        font-size: 16px;
+    }
+    
+    .form-control, .form-select, .btn {
+        font-size: 1rem;
+    }
+    
+    label {
+        font-weight: 500;
+    }
+    
+    /* Larger form elements for better touch targets */
+    @media (max-width: 768px) {
+        .form-control, .form-select {
+            padding: 0.75rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1rem;
+        }
+    }
+    
+    /* Auto-zoom on input focus for mobile */
+    @media (max-width: 480px) {
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+    }
+</style>
+
+<script>
+    // Show alerts for success/error messages
+    {{#if showSuccessAlert}}
+        document.addEventListener('DOMContentLoaded', function() {
+            alert('Shop record saved successfully!');
+        });
+    {{/if}}
+    
+    {{#if showErrorAlert}}
+        document.addEventListener('DOMContentLoaded', function() {
+            alert('Failed to save shop record!');
+        });
+    {{/if}}
+
+    // Geolocation function remains the same
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    document.getElementById('loc_lat').value = lat;
+                    document.getElementById('loc_lng').value = lng;
+
+                    try {
+                        const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key={{googleApiKey}}`);
+                        const data = await response.json();
+
+                        if (data.results?.length > 0) {
+                            const result = data.results[0];
+                            let locality = result.address_components.find(c => c.types.includes('locality'))?.long_name || '';
+
+                            document.getElementById('loc_name').value = locality;
+                            document.getElementById('loc_add').value = result.formatted_address;
+
+                            document.getElementById('locationInfo').innerHTML = `
+                                <div><strong>Location:</strong> ${locality}</div>
+                                <div><strong>Address:</strong> ${result.formatted_address}</div>
+                                <div><strong>Coordinates:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+                            `;
+                        }
+                    } catch (err) {
+                        console.error('Geocoding error:', err);
+                        alert('Error getting address information');
+                    }
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    alert('Error getting location. Please enable location services.');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            alert('Geolocation is not supported by your browser');
+        }
+    }
+</script>
+
+{{#if data.loc_lat}}
+<script>
+    // Initialize map if coordinates exist
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: {{data.loc_lat}}, lng: {{data.loc_lng}} },
+            zoom: 15,
+            gestureHandling: 'cooperative'
+        });
+
+        new google.maps.Marker({
+            position: { lat: {{data.loc_lat}}, lng: {{data.loc_lng}} },
+            map: map,
+            title: "{{data.shop_name}}"
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if ({{data.loc_lat}} && {{data.loc_lng}}) {
+            if (!document.getElementById('map')) {
+                const mapDiv = document.createElement('div');
+                mapDiv.id = 'map';
+                mapDiv.style.height = '250px';
+                mapDiv.style.marginTop = '15px';
+                mapDiv.style.border = '1px solid #ddd';
+                mapDiv.style.borderRadius = '4px';
+                document.querySelector('form').appendChild(mapDiv);
+            }
+            
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key={{googleApiKey}}&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+    });
+</script>
+{{/if}}
+
+
+<script>
+document.getElementById('photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check if image is over 1MB
+    if (file.size > 1000000) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                // Create canvas for compression
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calculate new dimensions
+                let width = img.width;
+                let height = img.height;
+                const maxDimension = 1200;
+                
+                if (width > height && width > maxDimension) {
+                    height *= maxDimension / width;
+                    width = maxDimension;
+                } else if (height > maxDimension) {
+                    width *= maxDimension / height;
+                    height = maxDimension;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to compressed blob
+                canvas.toBlob(function(blob) {
+                    // Create new file from blob
+                    const compressedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    
+                    // Replace original file in input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(compressedFile);
+                    e.target.files = dataTransfer.files;
+                    
+                    // Show preview
+                    const preview = document.createElement('img');
+                    preview.src = URL.createObjectURL(blob);
+                    preview.style.maxWidth = '150px';
+                    preview.style.marginTop = '10px';
+                    
+                    const existingPreview = e.target.nextElementSibling;
+                    if (existingPreview && existingPreview.tagName === 'IMG') {
+                        existingPreview.replaceWith(preview);
+                    } else {
+                        e.target.after(preview);
+                    }
+                }, 'image/jpeg', 0.7); // 0.7 = 70% quality
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
