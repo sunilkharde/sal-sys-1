@@ -1,0 +1,43 @@
+{{! views/shops/shop-view.hbs }}
+<div class="container mt-4">
+    <h2>Shop Details</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">{{shop.shop_name}}</h3>
+            <p class="card-text"><strong>Owner:</strong> {{shop.owner_name}}</p>
+            <p class="card-text"><strong>Mobile:</strong> {{shop.owner_mobile}}</p>
+            <p class="card-text"><strong>Address:</strong> {{shop.address}}, {{shop.city}}</p>
+            <p class="card-text"><strong>PIN:</strong> {{shop.pin}}</p>
+            
+            {{#if shop.photo_path}}
+            <div class="mt-3">
+                <img src="{{shop.photo_path}}" class="img-fluid" style="max-width: 300px;">
+            </div>
+            {{/if}}
+            
+            <div class="mt-4">
+                <a href="/shop/list" class="btn btn-secondary">Back to List</a>
+                <a href="/shop/edit/{{momentYMD shop.entry_date}}/{{shop.entry_no}}" class="btn btn-primary ms-2">Edit</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{#if googleApiKey}}
+<script>
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: {{shop.loc_lat}}, lng: {{shop.loc_lng}} },
+            zoom: 15
+        });
+        
+        new google.maps.Marker({
+            position: { lat: {{shop.loc_lat}}, lng: {{shop.loc_lng}} },
+            map: map,
+            title: "{{shop.shop_name}}"
+        });
+    }
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{googleApiKey}}&callback=initMap" async defer></script>
+{{/if}}

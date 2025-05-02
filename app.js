@@ -196,7 +196,6 @@ app.engine('hbs', exphbs.engine({
 }));
 
 // Load auth routes
-app.use('/shop', shopRoutes);
 app.use('/api', apiRoute);
 app.use('/auth', authRoute);
 app.use('/', authController.checkToken); //chekToken applicable all follwoing routes
@@ -212,6 +211,7 @@ app.use('/emp', empRoute);
 app.use('/circular', circularRoute);
 app.use('/vanclaim', vanclaimRoute);
 app.use('/consumer', consumerRoute);
+app.use('/shop', shopRoutes);
 
 // Log incoming requests
 /*app.use((req, res, next) => {
