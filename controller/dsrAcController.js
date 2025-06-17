@@ -1,3 +1,5 @@
+// controller/dsrAcController.js
+
 import { executeQuery } from '../db.js';
 import moment from 'moment';
 
@@ -33,10 +35,10 @@ class dsrAcController {
             //     return;
             // }
             const monDiff = moment(monData[0].month_date).diff(fromDate, 'months');
-            
+
             if (monDiff > 1 && fromDate.format('YYYY-MM-DD') !== '2000-01-01') {
-                    res.status(404).send("<h1>Posting not available for this month.</h1>");
-                    return;
+                res.status(404).send("<h1>Posting not available for this month.</h1>");
+                return;
             }
 
             let sqlStr3 = "SELECT a.year,a.month,a.emp_id,CONCAT(c.last_name,' ',c.first_name,' ',c.middle_name) as emp_name,a.post_ac,a.da,a.lodge,a.fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,a.remarks" +
@@ -244,10 +246,10 @@ class dsrAcController {
                 const totalPostage = parseFloat(row.postage_val);
                 const totalInternet = parseFloat(row.internet_val);
                 const totalOther = parseFloat(row.other_val);
-            
+
                 // Add the total field to the row
                 row.total_amount = totalDA + totalLodge + totalFare + totalStationary + totalPostage + totalInternet + totalOther;
-            
+
                 csvStream.write(row);
             });
             csvStream.end();
@@ -262,6 +264,278 @@ class dsrAcController {
             //conn.release
         }
     };
+
+
+    // Update the viewSummary method to include summary data
+    static viewSummary = async (req, res) => {
+        const { from_date, to_date, expense_type } = req.query;
+
+        try {
+            // Set default dates if not provided
+            const currentDate = moment();
+            const defaultFromDate = currentDate.clone().subtract(3, 'months').startOf('month');
+            const defaultToDate = currentDate.clone().subtract(1, 'months').endOf('month');
+
+            const fromDate = from_date ? moment(from_date) : defaultFromDate;
+            const toDate = to_date ? moment(to_date) : defaultToDate;
+
+            // Get min and max dates for the date picker
+            const minDate = moment('2020-01-01'); // Adjust as needed
+            const maxDate = moment().add(1, 'year');
+
+            // Get summary data
+            const summaryData = await this.getSummaryData(fromDate, toDate);
+
+
+            // Get report data for the table
+            const orderDirection = expense_type === 'expensive' ? 'DESC' : 'ASC';
+            const reportData = await executeQuery(`
+            SELECT 
+                a.emp_id,
+                CONCAT(b.last_name, ' ', b.first_name, ' ', b.middle_name) as emp_name,
+                SUM(a.da) as total_da,
+                SUM(a.lodge) as total_lodge,
+                SUM(a.fare) as total_fare,
+                SUM(a.stationary_val) as total_stationary,
+                SUM(a.postage_val) as total_postage,
+                SUM(a.internet_val) as total_internet,
+                SUM(a.other_val) as total_other,
+                SUM(a.da + a.lodge + a.fare + a.stationary_val + a.postage_val + a.internet_val + a.other_val) as total_expenses
+            FROM 
+                dsr_ac a
+            JOIN 
+                employees b ON a.emp_id = b.emp_id
+            WHERE 
+                STR_TO_DATE(CONCAT(a.year, '-', a.month, '-01'), '%Y-%m-%d') BETWEEN ? AND ?
+            GROUP BY 
+                a.emp_id, emp_name
+            ORDER BY 
+                total_expenses ${orderDirection}
+            `, [
+                fromDate.format('YYYY-MM-DD'),
+                toDate.format('YYYY-MM-DD')
+            ]);
+
+            res.render('dsrAc/summary', {
+                from_date: fromDate.format('YYYY-MM-DD'),
+                to_date: toDate.format('YYYY-MM-DD'),
+                expense_type: expense_type || 'expensive',
+                minDate: minDate.format('YYYY-MM-DD'),
+                maxDate: maxDate.format('YYYY-MM-DD'),
+                summaryData,
+                reportData 
+            });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Internal Server Error");
+        }
+    }
+
+    // Method to get summary data for the summary page
+    static getSummaryData = async (fromDate, toDate) => {
+        try {
+            // Query to get summary figures
+            const sqlStr = `
+            SELECT 
+                COUNT(DISTINCT a.emp_id) as employee_count,
+                SUM(a.da) as total_da,
+                SUM(a.lodge) as total_lodge,
+                SUM(a.fare) as total_fare,
+                SUM(a.stationary_val) as total_stationary,
+                SUM(a.postage_val) as total_postage,
+                SUM(a.internet_val) as total_internet,
+                SUM(a.other_val) as total_other,
+                SUM(a.da + a.lodge + a.fare + a.stationary_val + a.postage_val + a.internet_val + a.other_val) as grand_total
+            FROM 
+                dsr_ac a
+            WHERE 
+                STR_TO_DATE(CONCAT(a.year, '-', a.month, '-01'), '%Y-%m-%d') BETWEEN ? AND ?
+        `;
+
+            const params = [
+                fromDate.format('YYYY-MM-DD'),
+                toDate.format('YYYY-MM-DD')
+            ];
+
+            const result = await executeQuery(sqlStr, params);
+            return result[0];
+
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+    
+    // Add CSV export method
+    static exportSummaryCSV = async (req, res) => {
+        const { from_date, to_date, expense_type } = req.query;
+
+        try {
+            const currentDate = moment();
+            const defaultFromDate = currentDate.clone().subtract(3, 'months').startOf('month');
+            const defaultToDate = currentDate.clone().subtract(1, 'months').endOf('month');
+
+            const fromDate = from_date ? moment(from_date) : defaultFromDate;
+            const toDate = to_date ? moment(to_date) : defaultToDate;
+
+            // Get graph data
+            const orderDirection = expense_type === 'expensive' ? 'DESC' : 'ASC';
+
+            const sqlStr = `
+            SELECT 
+                a.emp_id,
+                CONCAT(b.last_name, ' ', b.first_name, ' ', b.middle_name) as emp_name,
+                SUM(a.da) as total_da,
+                SUM(a.lodge) as total_lodge,
+                SUM(a.fare) as total_fare,
+                SUM(a.stationary_val) as total_stationary,
+                SUM(a.postage_val) as total_postage,
+                SUM(a.internet_val) as total_internet,
+                SUM(a.other_val) as total_other,
+                SUM(a.da + a.lodge + a.fare + a.stationary_val + a.postage_val + a.internet_val + a.other_val) as total_expenses
+            FROM 
+                dsr_ac a
+            JOIN 
+                employees b ON a.emp_id = b.emp_id
+            WHERE 
+                STR_TO_DATE(CONCAT(a.year, '-', a.month, '-01'), '%Y-%m-%d') BETWEEN ? AND ?
+            GROUP BY 
+                a.emp_id, emp_name
+            ORDER BY 
+                total_expenses ${orderDirection}
+            LIMIT 20
+        `;
+
+            const params = [
+                fromDate.format('YYYY-MM-DD'),
+                toDate.format('YYYY-MM-DD')
+            ];
+
+            const reportData = await executeQuery(sqlStr, params);
+
+            // Get summary data
+            const summaryData = await executeQuery(`
+            SELECT 
+                COUNT(DISTINCT a.emp_id) as employee_count,
+                SUM(a.da) as total_da,
+                SUM(a.lodge) as total_lodge,
+                SUM(a.fare) as total_fare,
+                SUM(a.stationary_val) as total_stationary,
+                SUM(a.postage_val) as total_postage,
+                SUM(a.internet_val) as total_internet,
+                SUM(a.other_val) as total_other,
+                SUM(a.da + a.lodge + a.fare + a.stationary_val + a.postage_val + a.internet_val + a.other_val) as grand_total
+            FROM 
+                dsr_ac a
+            WHERE 
+                STR_TO_DATE(CONCAT(a.year, '-', a.month, '-01'), '%Y-%m-%d') BETWEEN ? AND ?
+        `, params);
+
+            // Combine data for CSV
+            const csvData = [
+                ['Summary Report', '', '', '', '', '', '', '', ''],
+                ['From Date', fromDate.format('YYYY-MM-DD'), '', 'To Date', toDate.format('YYYY-MM-DD'), '', 'Report Type', expense_type === 'expensive' ? 'Top 20 Expensive' : 'Top 20 Less-Expensive', ''],
+                ['Total Employees', summaryData[0].employee_count, '', 'Total DA', summaryData[0].total_da, '', 'Total Lodge', summaryData[0].total_lodge, ''],
+                ['Total Fare', summaryData[0].total_fare, '', 'Total Stationary', summaryData[0].total_stationary, '', 'Total Postage', summaryData[0].total_postage, ''],
+                ['Total Internet', summaryData[0].total_internet, '', 'Total Other', summaryData[0].total_other, '', 'Grand Total', summaryData[0].grand_total, ''],
+                ['', '', '', '', '', '', '', '', ''],
+                ['Detailed Report', '', '', '', '', '', '', '', ''],
+                ['Emp ID', 'Employee Name', 'DA', 'Lodge', 'Fare', 'Stationary', 'Postage', 'Internet', 'Other', 'Total']
+            ];
+
+            reportData.forEach(row => {
+                csvData.push([
+                    row.emp_id,
+                    row.emp_name,
+                    row.total_da,
+                    row.total_lodge,
+                    row.total_fare,
+                    row.total_stationary,
+                    row.total_postage,
+                    row.total_internet,
+                    row.total_other,
+                    row.total_expenses
+                ]);
+            });
+
+            const fileName = `Expenses_Summary_${fromDate.format('YYYYMMDD')}_to_${toDate.format('YYYYMMDD')}.csv`;
+
+            res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
+            res.set('Content-Type', 'text/csv');
+
+            const csvStream = csv.format({ headers: false });
+            csvStream.pipe(res);
+
+            csvData.forEach(row => csvStream.write(row));
+            csvStream.end();
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Internal Server Error");
+        }
+    }
+
+    static getGraphData = async (req, res) => {
+        const { from_date, to_date, expense_type } = req.query;
+
+        try {
+            const currentDate = moment();
+            const defaultFromDate = currentDate.clone().subtract(3, 'months').startOf('month');
+            const defaultToDate = currentDate.clone().subtract(1, 'months').endOf('month');
+
+            const fromDate = from_date ? moment(from_date) : defaultFromDate;
+            const toDate = to_date ? moment(to_date) : defaultToDate;
+
+            // Query to get top 20 employees by total expenses
+            const orderDirection = expense_type === 'expensive' ? 'DESC' : 'ASC';
+
+            const sqlStr = `
+                SELECT 
+                    a.emp_id,
+                    CONCAT(b.last_name, ' ', b.first_name, ' ', b.middle_name) as emp_name,
+                    SUM(a.da + a.lodge + a.fare + a.stationary_val + a.postage_val + a.internet_val + a.other_val) as total_expenses
+                FROM 
+                    dsr_ac a
+                JOIN 
+                    employees b ON a.emp_id = b.emp_id
+                WHERE 
+                    STR_TO_DATE(CONCAT(a.year, '-', a.month, '-01'), '%Y-%m-%d') BETWEEN ? AND ?
+                GROUP BY 
+                    a.emp_id, emp_name
+                ORDER BY 
+                    total_expenses ${orderDirection}
+                LIMIT 20
+            `;
+
+            const params = [
+                fromDate.format('YYYY-MM-DD'),
+                toDate.format('YYYY-MM-DD')
+            ];
+
+            const graphData = await executeQuery(sqlStr, params);
+
+            // Format data for Chart.js
+            const labels = graphData.map(item => item.emp_name);
+            const data = graphData.map(item => item.total_expenses);
+
+            res.json({
+                labels,
+                datasets: [{
+                    label: 'Total Expenses',
+                    data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+
 
 };
 

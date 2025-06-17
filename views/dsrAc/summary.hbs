@@ -1,0 +1,218 @@
+{{!-- Update views/dsrAc/summary.hbs --}}
+
+<div class="container">
+    <div id="printable-area">
+        <h4 style="margin-bottom: 20px;">Employee Expenses Summary Report</h4>
+
+        <form id="reportForm" action="/dsrAc/summary" method="GET">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="from_date" class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="from_date" name="from_date" value="{{from_date}}"
+                        min="{{minDate}}" max="{{maxDate}}">
+                </div>
+                <div class="col-md-3">
+                    <label for="to_date" class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="to_date" name="to_date" value="{{to_date}}"
+                        min="{{minDate}}" max="{{maxDate}}">
+                </div>
+                <div class="col-md-3">
+                    <label for="expense_type" class="form-label">Report Type for Graph</label>
+                    <select class="form-select" id="expense_type" name="expense_type">
+                        <option value="expensive" {{#isEqual expense_type "expensive" }}selected{{/isEqual}}>Top 20
+                            Expensive</option>
+                        <option value="less-expensive" {{#isEqual expense_type "less-expensive" }}selected{{/isEqual}}>
+                            Top 20 Less-Expensive</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Generate Report</button>
+                    <a href="/dsrAc/summary/export-csv?from_date={{from_date}}&to_date={{to_date}}&expense_type={{expense_type}}"
+                        class="btn btn-success">Export CSV</a>
+                </div>
+            </div>
+        </form>
+
+        {{!-- Summary Figures Table --}}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Summary Figures</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th colspan="4" class="text-center">Expenses Summary ({{momentDMY from_date}} to
+                                            {{momentDMY to_date}}) for All Employee</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Total Employees</strong></td>
+                                        <td>{{summaryData.employee_count}}</td>
+                                        <td><strong>Total DA</strong></td>
+                                        <td class="text-end">{{summaryData.total_da}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Lodge</strong></td>
+                                        <td class="text-end">{{summaryData.total_lodge}}</td>
+                                        <td><strong>Total Fare</strong></td>
+                                        <td class="text-end">{{summaryData.total_fare}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Stationary</strong></td>
+                                        <td class="text-end">{{summaryData.total_stationary}}</td>
+                                        <td><strong>Total Postage</strong></td>
+                                        <td class="text-end">{{summaryData.total_postage}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Internet</strong></td>
+                                        <td class="text-end">{{summaryData.total_internet}}</td>
+                                        <td><strong>Total Other</strong></td>
+                                        <td class="text-end">{{summaryData.total_other}}</td>
+                                    </tr>
+                                    <tr class="table-active">
+                                        <td colspan="3"><strong>Grand Total</strong></td>
+                                        <td class="text-end"><strong>{{summaryData.grand_total}}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{!-- Chart Section --}}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Top 20 {{#isEqual expense_type "expensive"}}Most Expensive{{else}}Least
+                            Expensive{{/isEqual}} Employees</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="expenseChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{!-- Detailed Table Section --}}
+        {{#if reportData}}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Detailed Expenses for All Employees</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="expenseTable">
+                                <thead>
+                                    <tr>
+                                        <th>Emp ID</th>
+                                        <th>Employee Name</th>
+                                        <th class="text-end">DA</th>
+                                        <th class="text-end">Lodge</th>
+                                        <th class="text-end">Fare</th>
+                                        <th class="text-end">Stationary</th>
+                                        <th class="text-end">Postage</th>
+                                        <th class="text-end">Internet</th>
+                                        <th class="text-end">Other</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#each reportData}}
+                                    <tr>
+                                        <td>{{this.emp_id}}</td>
+                                        <td>{{this.emp_name}}</td>
+                                        <td class="text-end">{{this.total_da}}</td>
+                                        <td class="text-end">{{this.total_lodge}}</td>
+                                        <td class="text-end">{{this.total_fare}}</td>
+                                        <td class="text-end">{{this.total_stationary}}</td>
+                                        <td class="text-end">{{this.total_postage}}</td>
+                                        <td class="text-end">{{this.total_internet}}</td>
+                                        <td class="text-end">{{this.total_other}}</td>
+                                        <td class="text-end">{{this.total_expenses}}</td>
+                                    </tr>
+                                    {{/each}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable
+        $('#expenseTable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[9, '{{#isEqual expense_type "expensive"}}desc{{else}}asc{{/isEqual}}']],
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ]
+        });
+
+        // Load chart data
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        const fromDate = $('#from_date').val();
+        const toDate = $('#to_date').val();
+        const expenseType = $('#expense_type').val();
+
+        $.get(`/dsrAc/summary/graph-data?from_date=${fromDate}&to_date=${toDate}&expense_type=${expenseType}`,
+            function (data) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Employee Expenses Summary'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.dataset.label + ': ' + context.raw.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Amount'
+                                },
+                                ticks: {
+                                    callback: function (value) {
+                                        return value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        );
+    });
+</script>

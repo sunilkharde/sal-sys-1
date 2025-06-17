@@ -303,7 +303,7 @@ class dsrController {
                 " Order By loc_date";
             const params7 = [results[0].emp_id];
             const locData = await executeQuery(sqlStr7, params7);
-            const toDate = locData[0].loc_date ? moment(locData[0].loc_date).format('YYYY-MM-DD HH:mm:ss')  : moment('2000-01-01 12:00:00').format('YYYY-MM-DD HH:mm:ss');
+            const toDate = locData[0].loc_date ? moment(locData[0].loc_date).format('YYYY-MM-DD HH:mm:ss') : moment('2000-01-01 12:00:00').format('YYYY-MM-DD HH:mm:ss');
             //
             res.render('dsr/dsr-view-pm', { layout: 'mobile', data: results[0], data2: results2[0], dataNote, showNote: showNote, googleApiKey: process.env.GOOGLE_MAPS_API_KEY, locNames, toDate });
 
@@ -1529,7 +1529,7 @@ class dsrController {
                 locNames = "Route: " + routeData.map(row => row.loc_name).join(' > ');
             }
 
-            res.status(200).json({ message: 'Location data saved successfully', locNames, toDate}); //toDate-for prevent next click
+            res.status(200).json({ message: 'Location data saved successfully', locNames, toDate }); //toDate-for prevent next click
 
         } catch (err) {
             console.error(err);
@@ -1850,7 +1850,7 @@ class dsrController {
                 " and a.loc_date Between ? and ? " +
                 " and b.desg_id=c.desg_id and b.hq_id=d.hq_id and b.boss_id=e.emp_id "
             // console.log('sql', sqlStr3, fromDate, toDate)
-            
+
             const params3 = [fromDate, toDate];
             const locData = await executeQuery(sqlStr3, params3);
             // console.log('Data', locData)
@@ -2007,6 +2007,139 @@ class dsrController {
             // Handle the error
         }
     }
+    
+
+    static reportArea = async (req, res) => {
+        const { emp_id, from_date, to_date } = req.query;
+        const alert = req.query.alert;
+
+        try {
+            // Date handling with proper defaults
+            const defaultStart = moment().startOf('day');
+            const defaultEnd = moment().endOf('day');
+
+            let fromDate = from_date ?
+                moment(from_date.includes('T') ? from_date : `${from_date}T00:00`) :
+                defaultStart;
+
+            let toDate = to_date ?
+                moment(to_date.includes('T') ? to_date : `${to_date}T23:59`) :
+                defaultEnd;
+
+            // Validate dates
+            if (!fromDate.isValid()) fromDate = defaultStart;
+            if (!toDate.isValid()) toDate = defaultEnd;
+
+            // Get all active employees
+            const empList = await executeQuery(
+                `SELECT emp_id, CONCAT(last_name,' ',first_name,' ',middle_name) as emp_name 
+             FROM employees WHERE status='A'`
+            );
+
+            // First check the count of locations to prevent overloading
+            let countSql = `
+                SELECT COUNT(DISTINCT loc_name) as location_count
+                FROM dsr_loc
+                WHERE loc_date BETWEEN ? AND ?
+                ${emp_id > 0 ? 'AND emp_id = ?' : ''}`;
+
+            const countParams = [
+                fromDate.format('YYYY-MM-DD HH:mm:ss'),
+                toDate.format('YYYY-MM-DD HH:mm:ss')
+            ];
+
+            if (emp_id) countParams.push(emp_id);
+
+            const countResult = await executeQuery(countSql, countParams);
+            const locationCount = countResult[0]?.location_count || 0;
+
+            // console.log('locationCount...', locationCount)
+
+            // If too many locations, ask user to narrow date range
+            if (locationCount > 5000) { //1999
+                return res.render('dsr/dsr-report-area-2', {
+                    layout: 'mobile',
+                    fromDate: fromDate.format('YYYY-MM-DDTHH:mm'),
+                    toDate: toDate.format('YYYY-MM-DDTHH:mm'),
+                    emp_list: empList,
+                    empData: { emp_id: emp_id || 0, emp_name: emp_id ? '' : 'All Employees' },
+                    uniqueLocations: locationCount,
+                    showMap: false,
+                    alert: 'too-many-locations',
+                    googleApiKey: process.env.GOOGLE_MAPS_API_KEY
+                });
+            }
+
+            // Query to get distinct locations visited
+            let locationSql = `
+            SELECT 
+                loc_name,
+                loc_lat,
+                loc_lng,
+                loc_add
+            FROM (
+                SELECT 
+                    loc_name,
+                    loc_lat,
+                    loc_lng,
+                    loc_add,
+                    ROW_NUMBER() OVER (PARTITION BY loc_name ORDER BY loc_date) as rn
+                FROM dsr_loc
+                WHERE loc_date BETWEEN ? AND ?
+                ${emp_id > 0 ? 'AND emp_id = ?' : ''}
+            ) t
+            WHERE rn = 1
+            ORDER BY loc_name`;
+
+            const params = [
+                fromDate.format('YYYY-MM-DD HH:mm:ss'),
+                toDate.format('YYYY-MM-DD HH:mm:ss')
+            ];
+
+            if (emp_id) params.push(emp_id);
+
+            const locData = await executeQuery(locationSql, params);
+
+            // Get selected employee details or default to "All"
+            const empID = emp_id || 0;
+            const empData = empID ?
+                await executeQuery(
+                    `SELECT emp_id, CONCAT(last_name,' ',first_name,' ',middle_name) as emp_name 
+                 FROM employees WHERE status='A' AND emp_id=?`,
+                    [empID]
+                ) :
+                [{ emp_id: 0, emp_name: "All Employees" }];
+
+            // Prepare data for map
+            const locDataForMap = locData.map(loc => ({
+                loc_lat: parseFloat(loc.loc_lat),
+                loc_lng: parseFloat(loc.loc_lng),
+                loc_name: loc.loc_name,
+                // loc_add: loc.loc_add
+            }));
+
+            res.render('dsr/dsr-report-area-2', {
+                layout: 'mobile',
+                fromDate: fromDate.format('YYYY-MM-DDTHH:mm'),
+                toDate: toDate.format('YYYY-MM-DDTHH:mm'),
+                emp_list: empList,
+                empData: empData[0],
+                locations: JSON.stringify(locDataForMap),
+                locationsArray: locDataForMap,
+                uniqueLocations: locData.length,
+                showMap: locData.length > 0,
+                alert,
+                googleApiKey: process.env.GOOGLE_MAPS_API_KEY
+            });
+
+        } catch (error) {
+            console.error('Error in reportArea:', error);
+            res.status(500).render('error', {
+                message: 'Failed to generate report',
+                error: process.env.NODE_ENV === 'development' ? error : {}
+            });
+        }
+    };
 
 };
 

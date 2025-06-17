@@ -1,0 +1,279 @@
+<div class="container-fluid py-3">
+    <div class="card shadow-sm" id="printable-area">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-map me-2"></i>Area Coverage Report
+                </h4>
+                <div>
+                    <form id="exportForm" action="/dsr/area-export-csv" method="GET" class="d-inline me-2">
+                        <input type="hidden" name="from_date" value="{{fromDate}}">
+                        <input type="hidden" name="to_date" value="{{toDate}}">
+                        <input type="hidden" name="emp_id" value="{{empData.emp_id}}">
+                        {{!-- <button type="submit" class="btn btn-light btn-sm">
+                            <i class="bi bi-download me-1"></i>Export CSV
+                        </button> --}}
+                    </form>
+                    {{!-- <button id="printBtn" class="btn btn-light btn-sm">
+                        <i class="bi bi-printer me-1"></i>Print
+                    </button> --}}
+                </div>
+            </div>
+            <span class="ms-3 text-warning" style="font-size: 1.0em;">
+                <i class="bi bi-info-circle me-1"></i>For best performance, select a period of up to 10 days
+            </span>
+        </div>
+
+        <div class="card-body">
+            <form id="searchForm" action="/dsr/report-area" method="GET">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <label for="from_date" class="form-label">
+                            <i class="bi bi-calendar-date me-1"></i>From Date & Time
+                        </label>
+                        <input type="datetime-local" class="form-control" id="from_date" name="from_date"
+                            value="{{fromDate}}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="to_date" class="form-label">
+                            <i class="bi bi-calendar-date me-1"></i>To Date & Time
+                        </label>
+                        <input type="datetime-local" class="form-control" id="to_date" name="to_date" value="{{toDate}}"
+                            required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="emp_name" class="form-label">
+                            <i class="bi bi-person me-1"></i>Employee
+                        </label>
+                        <div class="input-group">
+                            <input type="hidden" id="emp_id" name="emp_id" value="{{empData.emp_id}}">
+                            <input type="text" class="form-control" id="emp_name" name="emp_name" readonly
+                                value="{{#if empData.emp_name}}{{empData.emp_name}}{{else}}All Employees{{/if}}">
+                            <button class="btn btn-outline-secondary" type="button" id="btnEmp" data-bs-toggle="modal"
+                                data-bs-target="#empModal">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" type="button" id="resetBtn">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search me-1"></i>Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            {{#if (eq alert 'too-many-locations')}}
+            <div class="alert alert-warning d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                <div>
+                    <strong>{{uniqueLocations}}, Too many locations found!</strong>
+                    <p>Please select a smaller date range (maximum 5000 locations allowed).</p>
+                </div>
+            </div>
+            {{/if}}
+
+            {{#if showMap}}
+            <div class="alert alert-info d-flex align-items-center mb-3">
+                <i class="bi bi-info-circle-fill me-2 fs-4"></i>
+                <div>
+                    Showing <span class="badge bg-primary">{{uniqueLocations}}</span> unique locations visited by
+                    <strong>{{#if empData.emp_name}}{{empData.emp_name}}{{else}}all employees{{/if}}</strong>
+                    between <span class="fw-bold">{{momentDMYHm fromDate}}</span> and <span
+                        class="fw-bold">{{momentDMYHm toDate}}</span>
+                </div>
+            </div>
+
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body p-0" style="height: 65vh;">
+                    <div id="map" style="height: 100%; width: 100%; border-radius: 0.375rem;"></div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table me-2"></i>Location Details
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="25%">Location Name</th>
+                                    <th width="45%">Address</th>
+                                    <th width="25%">Coordinates</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{!-- {{#each locationsArray}}
+                                <tr>
+                                    <td>{{@index}}</td>
+                                    <td>{{loc_name}}</td>
+                                    <td>{{loc_add}}</td>
+                                    <td>{{loc_lat}}, {{loc_lng}}</td>
+                                </tr>
+                                {{/each}} --}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {{else}}
+            {{#if (eq alert 'too-many-locations')}}
+            {{else}}
+            <div class="alert alert-warning d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                <div>
+                    No location data found for the selected criteria.
+                </div>
+            </div>
+            {{/if}}
+            {{/if}}
+        </div>
+    </div>
+</div>
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-fullscreen/dist/leaflet.fullscreen.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-fullscreen/dist/Leaflet.fullscreen.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#resetBtn').on('click', function () {
+            $('#emp_id').val('');
+            $('#emp_name').val('All Employees');
+        });
+
+    });    
+</script>
+
+{{!-- {{#if showMap}} --}}
+<script>
+    function initMap() {
+        try {
+            const locations = JSON.parse('{{{locations}}}');
+            const mapCenter = locations.length > 0 ? 
+                [parseFloat(locations[0].loc_lat), parseFloat(locations[0].loc_lng)] : 
+                [19.565143, 74.206182];
+
+            // Initialize the map
+            const map = L.map('map').setView(mapCenter, 12);
+
+            // Add tile layer (you can use OpenStreetMap or other providers)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+             // Add fullscreen control
+            map.addControl(new L.Control.Fullscreen({
+                position: 'topleft', // Position of the button
+                title: 'View Fullscreen', // Tooltip text
+                titleCancel: 'Exit Fullscreen', // Tooltip text when in fullscreen
+                forceSeparateButton: true // Force separate button (not combined with zoom)
+            }));
+
+            // Add markers
+            locations.forEach((loc, idx) => {
+                const marker = L.marker([parseFloat(loc.loc_lat), parseFloat(loc.loc_lng)], {
+                    title: `${idx + 1}. ${loc.loc_name}`
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <div style="min-width: 250px;">
+                        <h6 class="mb-2">${idx + 1}. ${loc.loc_name}</h6>
+                        <p class="mb-1"><strong><i class="bi bi-geo-alt"></i> Address:</strong> ${loc.loc_add || 'N/A'}</p>
+                        <p class="mb-0"><strong><i class="bi bi-pin-map"></i> Coordinates:</strong> ${loc.loc_lat}, ${loc.loc_lng}</p>
+                    </div>
+                `);
+            });
+
+            // Fit bounds if there are locations
+            if (locations.length > 0) {
+                const bounds = L.latLngBounds(locations.map(loc =>
+                    [parseFloat(loc.loc_lat), parseFloat(loc.loc_lng)]
+                ));
+                map.fitBounds(bounds);
+            }
+
+             // Handle fullscreen change to resize map
+            map.on('fullscreenchange', function() {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+            });
+
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
+    }
+
+    // Call initMap when page loads
+    document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{{!-- {{/if}} --}}
+
+{{> _lov-emp}}
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .table th {
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+
+    #map {
+        min-height: 400px;
+    }
+
+    .form-label {
+        font-weight: 500;
+    }
+
+    .badge {
+        font-size: 0.8em;
+        vertical-align: middle;
+    }
+    
+    /* Fullscreen button styles */
+    .leaflet-control-fullscreen a {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" width="18px" height="18px"><path d="M0 0h24v24H0z" fill="none"/><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>');
+        background-size: 16px 16px;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    
+    /* Fullscreen mode styles */
+    .leaflet-container:-webkit-full-screen {
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 99999;
+    }
+    .leaflet-container:-ms-fullscreen {
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 99999;
+    }
+    .leaflet-container:fullscreen {
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 99999;
+    }
+</style>

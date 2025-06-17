@@ -42,18 +42,15 @@ const checkUserRole = (req, res, next) => {
 // Define routes for Admin and Read roles
 router.get('/report-loc', checkUserRole, dsrController.reportLocation);
 router.get('/report-loc2', checkUserRole, dsrController.reportLocationTrack);
+router.get('/report-area', checkUserRole, dsrController.reportArea);
 
 // Define routes for regular users
 router.get('/report-loc', dsrController.reportLocationRegular);
 router.get('/report-loc2', dsrController.reportLocationRegular);
 
-
 router.get('/report-loc-emp', dsrController.reportLocationEmployee);
 
 router.get('/loc-export-csv', dsrController.exportCSVLocationRegular);
-
-
-
 
 
 export default router;

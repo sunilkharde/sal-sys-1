@@ -112,7 +112,7 @@
                         <li><a class="dropdown-item" href="/vanclaim/view">Van Claim</a></li>
                         <div class="dropdown-divider"></div>
                         <li><a class="dropdown-item" href="/consumer/view">Consumers</a></li>
-                        <li><a class="dropdown-item" href="/shop/list">Shops</a></li>
+                        <li><a class="dropdown-item" href="/shop/list">Pan Shop Display</a></li>
                         {{/isEqual}}
                         {{#isEqual user.user_role "Admin" "Read" "Account"}}
                         <div class="dropdown-divider"></div>
@@ -136,9 +136,11 @@
                         {{/isEqual}}
                         {{#isEqual user.user_role "Admin" "Read" "Support" "Audit" "Account"}}
                         <li><a class="dropdown-item" href="/dsr/report">Expenses</a></li>
+                        <li><a class="dropdown-item" href="/dsrAc/summary">Expenses Summary</a></li>
                         <li><a class="dropdown-item" href="/dsr/report-atten">Attendance</a></li>
                         <li><a class="dropdown-item" href="/dsr/report-loc">Locate Team</a></li>
                         <li><a class="dropdown-item" href="/dsr/report-loc2">Route Map</a></li>
+                        <li><a class="dropdown-item" href="/dsr/report-area">Area Coverage</a></li>
                         <li><a class="dropdown-item" href="/dsr/report-loc-emp">Employee Location</a></li>
                         <li><a class="dropdown-item" href="/customer/report">Dealer Info</a></li>
                         {{/isEqual}}
