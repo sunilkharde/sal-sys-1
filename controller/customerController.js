@@ -420,7 +420,7 @@ class customerController {
             let sqlVeh = `Select * from cust_veh where customer_id = ${cust_id}`;
             let vehData = await executeQuery(sqlVeh);
             if (vehData.length === 0) {
-                sqlVeh = `Select 1 as sr_no, '' as reg_no, '' as veh_type, '' as ins_no, NULL as ins_date From dual`;
+                sqlVeh = `Select 1 as sr_no, '' as reg_no, '' as veh_type, '' as ins_no, NULL as ins_date, 0 as routes, 0 as outlets From dual`;
                 vehData = await executeQuery(sqlVeh);
             }
 
@@ -428,11 +428,20 @@ class customerController {
             let sqlSp = `Select * from cust_sp where customer_id = ${cust_id}`;
             let spData = await executeQuery(sqlSp);
             if (spData.length === 0) {
-                sqlSp = `select 1 as sr_no, '' as sp_type, '' as sp_name, '' as sp_mobile From dual`;
+                sqlSp = `select 1 as sr_no, '' as sp_type, '' as sp_name, '' as sp_mobile, '' as sp_edu, 0 as sp_year, 0 as sp_salary From dual`;
                 spData = await executeQuery(sqlSp);
             }
 
-            res.render("customers/customer-edit-info", { data: data1, emp_list, vehData, spData });
+            //This code is for Work Person information
+            let sqlWp = `Select * from cust_wp where customer_id = ${cust_id}`;
+            let wpData = await executeQuery(sqlWp);
+            if (wpData.length === 0) {
+                sqlWp = `select 1 as sr_no, '' as wp_type, '' as wp_name, '' as wp_mobile, '' as wp_edu, '' as wp_dob From dual`;
+                wpData = await executeQuery(sqlWp);
+            }
+
+
+            res.render("customers/customer-edit-info", { data: data1, emp_list, vehData, spData, wpData });
 
         } catch (error) {
             console.error(error);
@@ -444,7 +453,9 @@ class customerController {
 
     static updateInfo = async (req, res) => {
         const { cust_id } = req.params;
-        const { nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, geo_location, mg_id, se_id, sr_no, reg_no, veh_type, ins_no, ins_date, sp_type, sp_name, sp_mobile } = req.body;
+        const { nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, geo_location, mg_id, se_id, 
+            sr_no, reg_no, veh_type, ins_no, ins_date, routes , outlets, sp_type, sp_name, sp_mobile, sp_edu, sp_year, sp_salary,
+            wp_type, wp_name, wp_mobile, wp_edu, wp_dob} = req.body;
         const [cities_list, users_list, market_area_list, bu_list, emp_list] = await this.getData();
 
         var errors = [];
@@ -470,15 +481,22 @@ class customerController {
             let sqlVeh = `SELECT * FROM cust_veh WHERE customer_id = ${cust_id}`;
             let vehData = await executeQuery(sqlVeh);
             if (vehData.length === 0) {
-                sqlVeh = `SELECT 1 AS sr_no, '' AS reg_no, '' AS veh_type, '' AS ins_no, NULL AS ins_date FROM dual`;
+                sqlVeh = `Select 1 as sr_no, '' as reg_no, '' as veh_type, '' as ins_no, NULL as ins_date, 0 as routes, 0 as outlets From dual`;
                 vehData = await executeQuery(sqlVeh);
             }
 
             let sqlSp = `SELECT * FROM cust_sp WHERE customer_id = ${cust_id}`;
             let spData = await executeQuery(sqlSp);
             if (spData.length === 0) {
-                sqlSp = `SELECT 1 AS sr_no, '' AS sp_type, '' AS sp_name, '' AS sp_mobile FROM dual`;
+                sqlSp = `select 1 as sr_no, '' as sp_type, '' as sp_name, '' as sp_mobile, '' as sp_edu, 0 as sp_year, 0 as sp_salary From dual`;
                 spData = await executeQuery(sqlSp);
+            }
+
+            let sqlWp = `Select * from cust_wp where customer_id = ${cust_id}`;
+            let wpData = await executeQuery(sqlWp);
+            if (wpData.length === 0) {
+                sqlWp = `select 1 as sr_no, '' as wp_type, '' as wp_name, '' as wp_mobile, '' as wp_edu, '' as wp_dob From dual`;
+                wpData = await executeQuery(sqlWp);
             }
 
             res.render("customers/customer-edit-info", { errors, data: data1, vehData, spData });
@@ -520,11 +538,13 @@ class customerController {
             const vehTypeVal = Array.isArray(veh_type) ? veh_type : [veh_type];
             const insNoVal = Array.isArray(ins_no) ? ins_no : [ins_no];
             const insDateVal = Array.isArray(ins_date) ? ins_date : [ins_date];
+            const routesVal = Array.isArray(routes) ? routes : [routes];
+            const outletsVal = Array.isArray(outlets) ? outlets : [outlets];
 
             for (let i = 0; i < regNoVal.length; i++) {
                 let sr_no_val = i + 1;
-                const sqlVeh = "INSERT INTO cust_veh (customer_id, sr_no, reg_no, veh_type, ins_no, ins_date) VALUES (?, ?, ?, ?, ?, ?)";
-                await executeQuery(sqlVeh, [cust_id, sr_no_val, regNoVal[i].toUpperCase(), vehTypeVal[i], insNoVal[i], insDateVal[i]]);
+                const sqlVeh = "INSERT INTO cust_veh (customer_id, sr_no, reg_no, veh_type, ins_no, ins_date, routes, outlets) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                await executeQuery(sqlVeh, [cust_id, sr_no_val, regNoVal[i].toUpperCase(), vehTypeVal[i], insNoVal[i], insDateVal[i], routesVal[i], outletsVal[i]]);
             }
 
             // Delete and Insert Salesperson Information
@@ -533,10 +553,28 @@ class customerController {
             const spTypeVal = Array.isArray(sp_type) ? sp_type : [sp_type];
             const spNameVal = Array.isArray(sp_name) ? sp_name : [sp_name];
             const spMobileVal = Array.isArray(sp_mobile) ? sp_mobile : [sp_mobile];
+            const spEduVal = Array.isArray(sp_edu) ? sp_edu : [sp_edu];
+            const spYearVal = Array.isArray(sp_year) ? sp_year : [sp_year];
+            const spSalaryVal = Array.isArray(sp_salary) ? sp_salary : [sp_salary];
 
             for (let i = 0; i < spNameVal.length; i++) {
-                const sqlSp = "INSERT INTO cust_sp (customer_id, sr_no, sp_type, sp_name, sp_mobile) VALUES (?, ?, ?, ?, ?)";
-                await executeQuery(sqlSp, [cust_id, i + 1, spTypeVal[i], spNameVal[i], spMobileVal[i]]);
+                const sqlSp = "INSERT INTO cust_sp (customer_id, sr_no, sp_type, sp_name, sp_mobile, sp_edu, sp_year, sp_salary) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                await executeQuery(sqlSp, [cust_id, i + 1, spTypeVal[i], spNameVal[i], spMobileVal[i], spEduVal[i], spYearVal[i], spSalaryVal[i]]);
+            }
+
+            // Delete and Insert Work Person Information
+            await executeQuery("DELETE FROM cust_wp WHERE customer_id=?", [cust_id]);
+
+            const wpTypeVal = Array.isArray(wp_type) ? wp_type : [wp_type];
+            const wpNameVal = Array.isArray(wp_name) ? wp_name : [wp_name];
+            const wpMobileVal = Array.isArray(wp_mobile) ? wp_mobile : [wp_mobile];
+            const wpEduVal = Array.isArray(wp_edu) ? wp_edu : [wp_edu];
+            const wpDobVal = Array.isArray(wp_dob) ? wp_dob : [wp_dob];
+
+            for (let i = 0; i < wpNameVal.length; i++) {
+                // console.log('wp name...', wpNameVal[i])
+                const sqlWp = "INSERT INTO cust_wp (customer_id, sr_no, wp_type, wp_name, wp_mobile, wp_edu, wp_dob) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                await executeQuery(sqlWp, [cust_id, i + 1, wpTypeVal[i], wpNameVal[i], wpMobileVal[i], wpEduVal[i], wpDobVal[i]]);
             }
 
             res.redirect("/customer/view-info");
@@ -755,6 +793,8 @@ class customerController {
             res.status(500).json({ error: "Error searching customers" });
         }
     };
+    // Customer Information Report:End
+    
     
 };
 

@@ -190,6 +190,66 @@
                     </div>
                     {{!-- ************************** --}}
 
+                    {{!-- Work Person Details --}}
+                    <div class="mb-3 border p-4">
+                        <label for="wp_info_table" class="form-label"><strong>Work Person Information</strong></label>
+                        <table class="table" id="wp_info_table">
+                            <thead>
+                                <tr>
+                                    <th style="width:7%;">Sr</th>
+                                    <th style="width:18%;">WP Type</th>
+                                    <th style="width:25%;">WP Name</th>
+                                    <th style="width:15%;">Mobile No</th>
+                                    <th style="width:15%;">Education</th>
+                                    <th style="width:15%;">Birth Date</th>
+                                    <th style="width:5%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyWpInfo">
+
+                                {{#each [wpData]}}
+                                <tr>
+                                    <td><input readonly type="text" class="form-control text-end" id="sr_no_wp"
+                                            name="sr_no_wp[]" required value={{this.sr_no}}></td>
+                                    <td>
+                                        <select class="form-select" id="wp_type" name="wp_type[]"
+                                            aria-label=".form-select-sm example">
+                                            {{!-- <option value="" style="color: gray;" selected>Select Type</option> --}}
+                                            <option aria-required="true" value="Proprietor" {{#isEqual this.wp_type "Proprietor"
+                                                }}selected{{/isEqual}}>Proprietor/Partner</option>
+                                            {{!-- <option value="Accountant" {{#isEqual this.wp_type "Accountant"
+                                                }}selected{{/isEqual}}>Accountant</option>
+                                            <option value="Salesman" {{#isEqual this.wp_type "Salesman"
+                                                }}selected{{/isEqual}}>Salesman</option>
+                                            <option value="Driver" {{#isEqual this.wp_type "Driver"
+                                                }}selected{{/isEqual}}>Driver</option> --}}
+                                        </select>
+                                    </td>
+                                    <td><input type="text" class="form-control text-start" id="wp_name"
+                                            name="wp_name[]" maxlength="20" value="{{this.wp_name}}"> </td>
+                                    <td><input type="text" class="form-control text-start" id="wp_mobile"
+                                            name="wp_mobile[]" maxlength="10" value="{{this.wp_mobile}}"> </td>
+                                    <td><input type="text" class="form-control text-start" id="wp_edu"
+                                            name="wp_edu[]" maxlength="10" value="{{this.wp_edu}}"> </td>
+                                    <td><input type="date" class="form-control text-start" id="wp_dob"
+                                            name="wp_dob[]" value="{{momentYMD this.wp_dob}}"> </td>
+                                    <td>
+                                        <button type="button" id="removeWpBtn" onclick="removeSelectedWp(this)"
+                                            class="btn btn-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {{/each}}
+
+                            </tbody>
+                        </table>
+                        <div class="form-group row">
+                            <div class="col-sm-8">
+                                <button type="button" id="btnAddWp" class="btn btn-success">Add Working Person</button>
+                            </div>
+                        </div>
+                    </div>
 
                     {{!-- Vehicle details --}}
                     <div class="mb-3 border p-4">
@@ -198,10 +258,12 @@
                             <thead>
                                 <tr>
                                     <th style="width:8%;">Sr</th>
-                                    <th style="width:25%;">Reg No</th>
-                                    <th style="width:25%;">Vehicle Type</th>
-                                    <th style="width:25%;">Insurance No</th>
+                                    <th style="width:20%;">Reg No</th>
+                                    <th style="width:20%;">Vehicle Type</th>
+                                    <th style="width:15%;">Insurance No</th>
                                     <th style="width:12%;">Expiry Date</th>
+                                    <th style="width:10%;">Routes</th>
+                                    <th style="width:10%;">Outlets</th>
                                     <th style="width:5%;">Action</th>
                                 </tr>
                             </thead>
@@ -219,7 +281,11 @@
                                             maxlength="20" value="{{this.ins_no}}"> </td>
                                     <td><input type="date" class="form-control text-start" id="ins_date"
                                             name="ins_date[]" value="{{momentYMD this.ins_date}}"> </td>
-                                    <td>
+                                    <td><input type="number" class="form-control text-end" id="routes"
+                                            name="routes[]" value="{{this.routes}}"> </td>
+                                    <td><input type="number" class="form-control text-end" id="outlets"
+                                            name="outlets[]" value="{{this.outlets}}"> </td>
+                                    <td>                                    
                                         <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
                                             class="btn btn-danger">
                                             <i class="bi bi-trash"></i>
@@ -227,7 +293,6 @@
                                     </td>
                                 </tr>
                                 {{/each}}
-
                             </tbody>
                         </table>
                         <div class="form-group row">
@@ -245,9 +310,12 @@
                             <thead>
                                 <tr>
                                     <th style="width:7%;">Sr</th>
-                                    <th style="width:28%;">Employee Type</th>
-                                    <th style="width:40%;">Employee Name</th>
-                                    <th style="width:20%;">Mobile No</th>
+                                    <th style="width:18%;">Employee Type</th>
+                                    <th style="width:25%;">Employee Name</th>
+                                    <th style="width:15%;">Mobile No</th>
+                                    <th style="width:10%;">Education</th>
+                                    <th style="width:10%;">Work Year</th>
+                                    <th style="width:10%;">Salary</th>
                                     <th style="width:5%;">Action</th>
                                 </tr>
                             </thead>
@@ -276,6 +344,12 @@
                                             maxlength="20" value={{this.sp_name}}> </td>
                                     <td><input type="text" class="form-control text-start" id="sp_mobile"
                                             name="sp_mobile[]" maxlength="10" value={{this.sp_mobile}}> </td>
+                                    <td><input type="text" class="form-control text-start" id="sp_edu"
+                                            name="sp_edu[]" maxlength="10" value={{this.sp_edu}}> </td>
+                                    <td><input type="numer" class="form-control text-start" id="sp_year"
+                                            name="sp_year[]" maxlength="4" value={{this.sp_year}}> </td>
+                                    <td><input type="numer" class="form-control text-end" id="sp_salary"
+                                            name="sp_salary[]"  value={{this.sp_salary}}> </td>
                                     <td>
                                         <button type="button" id="removeSpBtn" onclick="removeSelectedSp(this)"
                                             class="btn btn-danger">
@@ -294,6 +368,7 @@
                         </div>
                     </div>
 
+                    {{!-- Submit Action --}}
                     <div class="col-md-3 d-flex justify-content-between">
                         <button id="btnSubmit" {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"
                             class="btn btn-primary mx-1">Submit</button>
@@ -321,7 +396,6 @@
         se_id.value = "";
         se_name.value = "";
     });
-
 
     const btnSE = document.getElementById('btnSE');
     btnSE.addEventListener("click", async function () {
@@ -369,7 +443,6 @@
         }
     });
 
-
 </script>
 
 <script>
@@ -382,6 +455,13 @@
 
     $(document).ready(function () {
         $('#sp_info_table').dataTable({
+            pageLength: 10,
+            responsive: true,
+        });
+    });
+
+    $(document).ready(function () {
+        $('#wp_info_table').dataTable({
             pageLength: 10,
             responsive: true,
         });
@@ -480,6 +560,49 @@
     }
 
 </script>
+
+<script>
+    const tBodyWpInfo = document.getElementById("tableBodyWpInfo");
+    const btnAddWp = document.getElementById("btnAddWp");
+
+    btnAddWp.addEventListener("click", function () {
+        // Get the last row in the table body
+        const lastRow = tBodyWpInfo.lastElementChild;
+        // Clone the last row
+        const newRow = lastRow.cloneNode(true);
+        // Clear the input fields in the new row
+        const inputs = newRow.querySelectorAll("input");
+
+        inputs.forEach(input => { input.value = ""; });
+        // Increment the serial number in the new row
+        const srNoValueWp = parseInt(lastRow.querySelector("#sr_no_wp").value);
+        const srNoInputWp = newRow.querySelector("#sr_no_wp");
+        //const srNoValueWp = parseInt(srNoInputWp.value);
+        srNoInputWp.value = srNoValueWp + 1;
+
+        // Get the newly added rate field
+        // Append the new row to the table body
+        tBodyWpInfo.appendChild(newRow);
+    });
+
+    function removeSelectedWp(element) {
+        const row = element.closest("tr");
+        if (row.rowIndex === 1) {
+            alert("First row can't be delete!");
+            return;
+        }
+
+        // Prompt user for confirmation
+        const confirmed = confirm("Are you sure you want to delete this row?");
+        if (!confirmed) {
+            return;
+        }
+        // Remove the row from the table
+        row.remove();
+    }
+
+</script>
+
 
 <script>
     function previewImage(event) {

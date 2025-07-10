@@ -224,8 +224,8 @@ app.get('/sv-crm', (req, res) => {
   // res.cookie('session', JSON.stringify(req.cookies.session), { httpOnly: false });
   // res.cookie('authToken', req.cookies.authToken, { httpOnly: false });
   const email = res.locals.user.email_id;
-  const firstChars = email ? email.slice(0, 1).toUpperCase() : ''; 
-  const secondChars = email ? email.slice(1, 2).toUpperCase() : ''; 
+  const firstChars = email ? email.slice(0, 1).toUpperCase() : '';
+  const secondChars = email ? email.slice(1, 2).toUpperCase() : '';
   const userData = {
     "userId": res.locals.user.user_id,
     "firstName": res.locals.user.first_name ? res.locals.user.first_name : firstChars,
@@ -237,7 +237,7 @@ app.get('/sv-crm', (req, res) => {
     "username": res.locals.user.username,
     "userImage": "", "loginWith": ""
   }
-  res.cookie('session', JSON.stringify(userData), { httpOnly: false });  
+  res.cookie('session', JSON.stringify(userData), { httpOnly: false });
   res.redirect('http://192.168.182.27:3000/');
 });
 
@@ -331,27 +331,83 @@ app.all('*', (req, res) => {
 //****Upload data on FTP***//
 //**************************************//
 const uploadToFTP = async (csvData) => {
-  const client = new ftp.Client();
-  client.ftp.verbose = true;
+  const remoteFTPClient = new ftp.Client();
+  const localFTPClient = new ftp.Client();
+
+  remoteFTPClient.ftp.verbose = true;
+  localFTPClient.ftp.verbose = true;
+
+  const tempFile = join(process.cwd(), 'temp.csv');
+  fs.writeFileSync(tempFile, csvData);
+
   try {
-    await client.access({
-      host: process.env.ftp_host_temp,
-      user: process.env.ftp_user_temp,
-      password: process.env.ftp_password_temp,
-      port: process.env.ftp_port
+    // // Upload to remote FTP server
+    // await remoteFTPClient.access({
+    //   host: process.env.ftp_host_temp,
+    //   user: process.env.ftp_user_temp,
+    //   password: process.env.ftp_password_temp,
+    //   port: process.env.ftp_port
+    // });
+    // await remoteFTPClient.uploadFrom(tempFile, '/Portal/PODetailReport');
+
+    // Upload to local FTP server
+    await localFTPClient.access({
+      host: process.env.ftp_host_local,
+      user: process.env.ftp_user_local,
+      password: process.env.ftp_password_local,
+      port: process.env.ftp_port_local
     });
-    //
-    const tempFile = join(process.cwd(), 'temp.csv');
-    fs.writeFileSync(tempFile, csvData);
-    await client.uploadFrom(tempFile, '/Portal/PODetailReport'); // .csv ///yashm24.sg-host.com/order_data/my_file.csv  //csvData //join(process.cwd(), 'my_file.csv')
+    await localFTPClient.uploadFrom(tempFile, '/Portal/PODetailReport');
+
     const now = new Date().toLocaleString();
-    console.log(`The file was uploaded successfully on ${now}`);
+    console.log(`File uploaded successfully to both FTP servers on ${now}`);
   } catch (error) {
-    console.error(error);
+    console.error('Error during FTP upload:', error);
+
+    // Check which FTP failed
+    if (error.message.includes('192.168.182.21')) {
+      console.error('Local FTP upload failed');
+    } else {
+      console.error('Remote FTP upload failed');
+    }
+    
   } finally {
-    client.close();
+    remoteFTPClient.close();
+    localFTPClient.close();
+    try {
+      fs.unlinkSync(tempFile); // Clean up temp file
+    } catch (err) {
+      console.error('Error deleting temp file:', err);
+    }
   }
 };
+// const uploadToFTP = async (csvData) => {
+//   const client = new ftp.Client();
+//   client.ftp.verbose = true;
+//   try {
+//     await client.access({
+//       host: process.env.ftp_host_temp,
+//       user: process.env.ftp_user_temp,
+//       password: process.env.ftp_password_temp,
+//       port: process.env.ftp_port
+//     });
+//     //
+//     const tempFile = join(process.cwd(), 'temp.csv');
+//     fs.writeFileSync(tempFile, csvData);
+//     await client.uploadFrom(tempFile, '/Portal/PODetailReport'); // .csv ///yashm24.sg-host.com/order_data/my_file.csv  //csvData //join(process.cwd(), 'my_file.csv')
+
+//      // Upload to local machine
+//     const localPath = 'D:\\Portal\\PODetailReport';
+//     fs.writeFileSync(localPath, csvData);
+
+//     const now = new Date().toLocaleString();
+//     console.log(`The file was uploaded successfully to both FTP and local machine on ${now}`);
+//   } catch (error) {
+//     console.error(error);
+//   } finally {
+//     client.close();
+//   }
+// };
 const convertToCsv = (data) => {
   const header = Object.keys(data[0]).join(',');
   const rows = data.map((row) => Object.values(row).join(','));
@@ -400,10 +456,10 @@ const selectAndUploadData = async () => {
 //setInterval(selectAndUploadData, 1 * 60 * 1000); // schedule job every hour
 const times = [[9, 32], [10, 2], [10, 32], [11, 2], [11, 32], [12, 2], [12, 32], [13, 2], [13, 32], [14, 2], [14, 32],
 [15, 2], [15, 32], [16, 2], [16, 32], [17, 2], [17, 32], [18, 2], [18, 32], [19, 2], [19, 32], [20, 2], [20, 32],
-[21, 2], [21, 32], [22, 2], [22, 32], [23, 2], [23, 32], [18, 20]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
-// times.forEach((time) => {
-//   schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
-// });
+[21, 2], [21, 32], [22, 2], [22, 32], [23, 2], [23, 32], [10, 52]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
+times.forEach((time) => {
+  schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
+});
 
 //**************************************//
 // const server = https.createServer(httpsOptions, app);

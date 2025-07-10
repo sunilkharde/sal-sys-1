@@ -472,10 +472,10 @@ class dealerPayController {
             //
             const client = new ftp.Client();
             await client.access({
-                host: process.env.ftp_host_temp,
-                user: process.env.ftp_user_temp,
-                password: process.env.ftp_password_temp,
-                port: process.env.ftp_port
+                host: process.env.ftp_host_local,
+                user: process.env.ftp_user_local,
+                password: process.env.ftp_password_local,
+                port: process.env.ftp_port_local
             });
 
             const filePath = join(process.cwd(), 'BalData.csv');
