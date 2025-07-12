@@ -457,9 +457,9 @@ const selectAndUploadData = async () => {
 const times = [[9, 32], [10, 2], [10, 32], [11, 2], [11, 32], [12, 2], [12, 32], [13, 2], [13, 32], [14, 2], [14, 32],
 [15, 2], [15, 32], [16, 2], [16, 32], [17, 2], [17, 32], [18, 2], [18, 32], [19, 2], [19, 32], [20, 2], [20, 32],
 [21, 2], [21, 32], [22, 2], [22, 32], [23, 2], [23, 32], [10, 52]]; // run at 9:00 AM, 12:00 PM, and 5:30 PM
-times.forEach((time) => {
-  schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
-});
+// times.forEach((time) => {
+//   schedule.scheduleJob({ hour: time[0], minute: time[1] }, selectAndUploadData);
+// });
 
 //**************************************//
 // const server = https.createServer(httpsOptions, app);
