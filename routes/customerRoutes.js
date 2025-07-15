@@ -22,4 +22,12 @@ router.get('/report-data', customerController.getCustomerReportData);
 router.get('/report-details/:cust_id', customerController.getCustomerDetails);
 router.get('/search', customerController.searchCustomers);
 
+
+// Benchmark
+router.get('/benchmark', customerController.viewBenchmark);
+router.get('/benchmark/add', customerController.viewAddBenchmark);
+router.post('/benchmark/add', customerController.addBenchmark);
+router.get('/benchmark/delete/:customer_id/:sr_no', customerController.deleteBenchmark);
+
+
 export default router;

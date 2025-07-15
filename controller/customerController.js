@@ -453,9 +453,9 @@ class customerController {
 
     static updateInfo = async (req, res) => {
         const { cust_id } = req.params;
-        const { nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, geo_location, mg_id, se_id, 
-            sr_no, reg_no, veh_type, ins_no, ins_date, routes , outlets, sp_type, sp_name, sp_mobile, sp_edu, sp_year, sp_salary,
-            wp_type, wp_name, wp_mobile, wp_edu, wp_dob} = req.body;
+        const { nick_name, godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, geo_location, mg_id, se_id,
+            sr_no, reg_no, veh_type, ins_no, ins_date, routes, outlets, sp_type, sp_name, sp_mobile, sp_edu, sp_year, sp_salary,
+            wp_type, wp_name, wp_mobile, wp_edu, wp_dob } = req.body;
         const [cities_list, users_list, market_area_list, bu_list, emp_list] = await this.getData();
 
         var errors = [];
@@ -758,13 +758,13 @@ class customerController {
     static searchCustomers = async (req, res) => {
         try {
             const { query } = req.query;
-            
+
             if (!query || query.length < 2) {
                 return res.json([]);
             }
-            
+
             const searchQuery = `%${query}%`;
-            
+
             const sql = `
                 SELECT customer_id, customer_name, nick_name, city, state 
                 FROM customers 
@@ -780,13 +780,13 @@ class customerController {
                 ORDER BY customer_name
                 LIMIT 10
             `;
-            
+
             const results = await executeQuery(sql, [
                 searchQuery, searchQuery, searchQuery, searchQuery,
                 searchQuery, searchQuery, searchQuery, searchQuery,
                 searchQuery
             ]);
-            
+
             res.json(results);
         } catch (error) {
             console.error(error);
@@ -794,8 +794,130 @@ class customerController {
         }
     };
     // Customer Information Report:End
-    
-    
+
+
+    /** Customer bench mark - mapping : Start */
+    static viewBenchmark = async (req, res) => {
+        try {
+            const sqlStr = `
+            SELECT cb.customer_id, cb.sr_no, cb.cust_bench_id, 
+                   c1.customer_name as main_customer_name, 
+                   c2.customer_name as benchmark_customer_name
+            FROM cust_bench cb
+            JOIN customers c1 ON cb.customer_id = c1.customer_id
+            JOIN customers c2 ON cb.cust_bench_id = c2.customer_id
+            ORDER BY cb.customer_id, cb.sr_no`;
+
+            const results = await executeQuery(sqlStr);
+            res.render('customers/customer-benchmark-view', { benchmarks: results });
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+        }
+    };
+
+    static viewAddBenchmark = async (req, res) => {
+        try {
+            // Get list of Dealers for benchmark selection
+            const [mainDealers, subDealers] = await Promise.all([
+                executeQuery(
+                    "SELECT customer_id, customer_name FROM customers WHERE customer_type='Dealer' AND status='A' ORDER BY customer_name"
+                ),
+                executeQuery(
+                    "SELECT customer_id, customer_name FROM customers WHERE customer_type='Sub-Dealer' AND status='A' ORDER BY customer_name"
+                )
+            ]);
+
+            res.render('customers/customer-benchmark-add', { mainDealers, subDealers });
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+        }
+    };
+
+    static addBenchmark = async (req, res) => {
+        const { customer_id, cust_bench_id } = req.body;
+
+        try {
+            // Fetch both dealer types once at the beginning
+            const [mainDealers, subDealers] = await Promise.all([
+                executeQuery(
+                    "SELECT customer_id, customer_name FROM customers WHERE customer_type='Dealer' AND status='A' ORDER BY customer_name"
+                ),
+                executeQuery(
+                    "SELECT customer_id, customer_name FROM customers WHERE customer_type='Sub-Dealer' AND status='A' ORDER BY customer_name"
+                )
+            ]);
+
+            // Validate input
+            if (!customer_id || !cust_bench_id) {
+                return res.render('customers/customer-benchmark-add', {
+                    mainDealers,
+                    subDealers,
+                    errors: [{ message: 'Both customer and benchmark customer are required' }]
+                });
+            }
+
+            if (customer_id === cust_bench_id) {
+                return res.render('customers/customer-benchmark-add', {
+                    mainDealers,
+                    subDealers,
+                    errors: [{ message: 'Customer cannot benchmark against themselves' }]
+                });
+            }
+
+            // Check for existing benchmark
+            const existing = await executeQuery(
+                "SELECT * FROM cust_bench WHERE customer_id=? AND cust_bench_id=?",
+                [customer_id, cust_bench_id]
+            );
+
+            if (existing.length > 0) {
+                return res.render('customers/customer-benchmark-add', {
+                    mainDealers,
+                    subDealers,
+                    errors: [{ message: 'This benchmark relationship already exists' }]
+                });
+            }
+
+            // Get next sequence number
+            const seqResult = await executeQuery(
+                "SELECT COALESCE(MAX(sr_no), 0) + 1 AS next_sr_no FROM cust_bench WHERE customer_id=?",
+                [customer_id]
+            );
+            const next_sr_no = seqResult[0].next_sr_no;
+
+            // Insert new record
+            const c_by = res.locals.user?.user_id || 0;
+            await executeQuery(
+                "INSERT INTO cust_bench (customer_id, sr_no, cust_bench_id, c_at, c_by) VALUES (?, ?, ?, CURRENT_TIMESTAMP(), ?)",
+                [customer_id, next_sr_no, cust_bench_id, c_by]
+            );
+
+            res.redirect('/customer/benchmark');
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+        }
+    };
+
+    static deleteBenchmark = async (req, res) => {
+        const { customer_id, sr_no } = req.params;
+
+        try {
+            await executeQuery(
+                "DELETE FROM cust_bench WHERE customer_id=? AND sr_no=?",
+                [customer_id, sr_no]
+            );
+
+            res.redirect('/customer/benchmark');
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+        }
+    };
+    /** Customer bench mark - mapping : End */
+
 };
 
 export default customerController
