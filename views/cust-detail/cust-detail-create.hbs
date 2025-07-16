@@ -1,0 +1,127 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 border p-4">
+            <h4 class="mb-3">Create Dealer-SubDealer Mapping</h4>
+
+            <form action="/cust-detail/create" method="post">
+                <div class="row mb-3">
+                    <label for="customer_id" class="col-sm-2 col-form-label">Dealer<span style="color: red;">*</span></label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <input type="hidden" class="form-control" id="customer_id" name="customer_id" value="{{data.customer_id}}">
+                            <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                value="{{#if data.customer_name}}{{data.customer_name}}{{/if}}" 
+                                placeholder="Select Dealer" readonly>
+                            <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#dealerModal">
+                                <i class="bi bi-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h5>Sub-Dealers List</h5>
+                        <table class="table table-bordered" id="subDealerTable">
+                            <thead>
+                                <tr>
+                                    <th>Sub-Dealer</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subDealerTableBody">
+                                {{#each details}}
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="details[cust_detail_id][]" value="{{this.cust_detail_id}}">
+                                        {{this.customer_name}} ({{this.ext_code}})
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm remove-row">
+                                            <i class="bi bi-trash"></i> Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                                {{/each}}
+                                <tr id="addRow">
+                                    <td colspan="2">
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subDealerModal">
+                                            <i class="bi bi-plus-circle"></i> Add Sub-Dealer
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12 d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='/cust-detail/view'">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{> _lov-cust-details dealer=true}}
+{{> _lov-cust-details subdealer=true}}
+
+<script>
+    // Handle Dealer selection
+    function handleSelectButtoncustomers(button) {
+        const row = button.closest('tr');
+        const customer_id = row.querySelector('td:nth-child(1)').textContent;
+        const customer_name = row.querySelector('td:nth-child(2)').textContent;
+        
+        document.getElementById('customer_id').value = customer_id;
+        document.getElementById('customer_name').value = customer_name;
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('dealerModal'));
+        modal.hide();
+    }
+
+    // Handle Sub-Dealer selection
+    function handleSelectButtonSubDealer(button) {
+        const row = button.closest('tr');
+        const cust_detail_id = row.querySelector('td:nth-child(1)').textContent;
+        const customer_name = row.querySelector('td:nth-child(2)').textContent;
+        const ext_code = row.querySelector('td:nth-child(7)').textContent;
+        
+        // Add new row to the table
+        const tableBody = document.getElementById('subDealerTableBody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>
+                <input type="hidden" name="details[cust_detail_id][]" value="${cust_detail_id}">
+                ${customer_name} (${ext_code})
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm remove-row">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </td>
+        `;
+        
+        // Insert before the "add row" button
+        tableBody.insertBefore(newRow, document.getElementById('addRow'));
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('subDealerModal'));
+        modal.hide();
+    }
+
+    // Remove row
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row')) {
+            e.target.closest('tr').remove();
+        }
+    });
+
+    // Initialize DataTables
+    $(document).ready(function() {
+        $('#dealerTable').DataTable();
+        $('#subDealerTable').DataTable();
+    });
+</script>

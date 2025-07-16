@@ -1,0 +1,107 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 border p-4">
+            <h4 class="mb-3">Edit Dealer-SubDealer Mapping</h4>
+
+            <form action="/cust-detail/update/{{data.customer_id}}" method="post">
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label">Dealer</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" value="{{data.customer_name}} ({{data.ext_code}})" readonly>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h5>Sub-Dealers List</h5>
+                        <table class="table table-bordered" id="subDealerTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sub-Dealer</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subDealerTableBody">
+                                {{#each details}}
+                                <tr>
+                                    <td>{{this.sr_no}}</td>
+                                    <td>
+                                        <input type="hidden" name="details[cust_detail_id][]" value="{{this.cust_detail_id}}">
+                                        {{this.customer_name}} ({{this.ext_code}})
+                                    </td>
+                                    <td>
+                                        <a href="/cust-detail/delete/{{../data.customer_id}}/{{this.sr_no}}" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-trash"></i> Remove
+                                        </a>
+                                    </td>
+                                </tr>
+                                {{/each}}
+                                <tr id="addRow">
+                                    <td colspan="3">
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subDealerModal">
+                                            <i class="bi bi-plus-circle"></i> Add Sub-Dealer
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12 d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='/cust-detail/view'">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{> _lov-cust-details subdealer=true}}
+
+<script>
+    // Handle Sub-Dealer selection
+    function handleSelectButtonSubDealer(button) {
+        const row = button.closest('tr');
+        const cust_detail_id = row.querySelector('td:nth-child(1)').textContent;
+        const customer_name = row.querySelector('td:nth-child(2)').textContent;
+        const ext_code = row.querySelector('td:nth-child(7)').textContent;
+        
+        // Add new row to the table
+        const tableBody = document.getElementById('subDealerTableBody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>New</td>
+            <td>
+                <input type="hidden" name="details[cust_detail_id][]" value="${cust_detail_id}">
+                ${customer_name} (${ext_code})
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm remove-row">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </td>
+        `;
+        
+        // Insert before the "add row" button
+        tableBody.insertBefore(newRow, document.getElementById('addRow'));
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('subDealerModal'));
+        modal.hide();
+    }
+
+    // Remove row
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row')) {
+            e.target.closest('tr').remove();
+        }
+    });
+
+    // Initialize DataTables
+    $(document).ready(function() {
+        $('#subDealerTable').DataTable();
+    });
+</script>

@@ -26,6 +26,7 @@ import circularRoute from "./routes/circularRoute.js";
 import vanclaimRoute from "./routes/vanclaimRoutes.js"
 import consumerRoute from "./routes/consumerRoutes.js";
 import shopRoutes from './routes/shopRoutes.js';
+import custDetailRoutes from './routes/custDetailRoutes.js';
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
@@ -212,6 +213,7 @@ app.use('/circular', circularRoute);
 app.use('/vanclaim', vanclaimRoute);
 app.use('/consumer', consumerRoute);
 app.use('/shop', shopRoutes);
+app.use('/cust-detail', custDetailRoutes);
 
 // Log incoming requests
 /*app.use((req, res, next) => {

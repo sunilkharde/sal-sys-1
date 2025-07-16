@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <!-- dealerModal -->
+    <div class="modal fade" id="dealerModal" tabindex="-1" aria-labelledby="dealerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dealerModalLabel">Select Dealer from list...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table" id="dealerTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer Name</th>
+                                <th>Nick Name</th>
+                                <th>City-Pin</th>
+                                <th>Market Area</th>
+                                <th>Type</th>
+                                <th>SAP Code</th>
+                                <th>ASM</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each dealer_list}}
+                            <tr>
+                                <td>{{this.customer_id}}</td>
+                                <td>{{this.customer_name}}</td>
+                                <td>{{this.nick_name}}</td>
+                                <td>{{this.city_pin}}</td>
+                                <td>{{this.market_area}}</td>
+                                <td>{{this.customer_type}}</td>
+                                <td>{{this.ext_code}}</td>
+                                <td>{{this.mg_name}}</td>
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn-info btn-sm"
+                                        onclick="handleSelectButtoncustomers(this)">
+                                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- subDealerModal -->
+    <div class="modal fade" id="subDealerModal" tabindex="-1" aria-labelledby="subDealerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="subDealerModalLabel">Select Sub-Dealer from list...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table" id="subDealerListTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer Name</th>
+                                <th>Nick Name</th>
+                                <th>City-Pin</th>
+                                <th>Market Area</th>
+                                <th>Type</th>
+                                <th>SAP Code</th>
+                                <th>ASM</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each subdealer_list}}
+                            <tr>
+                                <td>{{this.customer_id}}</td>
+                                <td>{{this.customer_name}}</td>
+                                <td>{{this.nick_name}}</td>
+                                <td>{{this.city_pin}}</td>
+                                <td>{{this.market_area}}</td>
+                                <td>{{this.customer_type}}</td>
+                                <td>{{this.ext_code}}</td>
+                                <td>{{this.mg_name}}</td>
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn-info btn-sm"
+                                        onclick="handleSelectButtonSubDealer(this)">
+                                        <i class="bi bi-check2-square"></i>&nbsp;Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #dealerModal .modal-dialog,
+        #subDealerModal .modal-dialog {
+            max-width: 1400px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $('#dealerTable').DataTable({
+                pageLength: 10
+            });
+            $('#subDealerListTable').DataTable({
+                pageLength: 10
+            });
+        });
+    </script>
+</body>
+</html>
