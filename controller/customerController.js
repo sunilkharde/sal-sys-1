@@ -821,10 +821,10 @@ class customerController {
             // Get list of Dealers for benchmark selection
             const [mainDealers, subDealers] = await Promise.all([
                 executeQuery(
-                    "SELECT customer_id, customer_name FROM customers WHERE customer_type='Dealer' AND status='A' ORDER BY customer_name"
+                    "SELECT customer_id, customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name"
                 ),
                 executeQuery(
-                    "SELECT customer_id, customer_name FROM customers WHERE customer_type='Sub-Dealer' AND status='A' ORDER BY customer_name"
+                    "SELECT customer_id, customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name"
                 )
             ]);
 
@@ -842,10 +842,10 @@ class customerController {
             // Fetch both dealer types once at the beginning
             const [mainDealers, subDealers] = await Promise.all([
                 executeQuery(
-                    "SELECT customer_id, customer_name FROM customers WHERE customer_type='Dealer' AND status='A' ORDER BY customer_name"
+                    "SELECT customer_id, customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name"
                 ),
                 executeQuery(
-                    "SELECT customer_id, customer_name FROM customers WHERE customer_type='Sub-Dealer' AND status='A' ORDER BY customer_name"
+                    "SELECT customer_id, customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name"
                 )
             ]);
 
