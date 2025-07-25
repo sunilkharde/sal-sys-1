@@ -406,14 +406,23 @@ class custTargetController {
             for (let i = 0; i < targetDataFromExcel.length; i++) {
                 const targetRow = targetDataFromExcel[i];
 
+                // console.log(`Processing row ${i + 1}:`, targetRow);
+
                 const startDate = moment(`${targetRow[yearColumn].split('-')[0]}-04-01`).format('YYYY-MM-DD');
                 const endDate = moment(`${targetRow[yearColumn].split('-')[1]}-03-31`).format('YYYY-MM-DD');
 
-                const custData = await executeQuery(`Select * FROM customers Where ext_code=${targetRow[sap_codeColumn]}`);
-                const buData = await executeQuery(`Select * FROM business_units Where bu_code=${targetRow[bu_codeColumn]}`);
-                const groupData = await executeQuery(`Select * FROM groups Where group_code=${targetRow[group_codeColumn]}`);
+                // const custData = await executeQuery(`Select * FROM customers Where ext_code=${targetRow[sap_codeColumn]}`);
+                // const buData = await executeQuery(`Select * FROM business_units Where bu_code=${targetRow[bu_codeColumn]}`);
+                // const groupData = await executeQuery(`Select * FROM groups Where group_code=${targetRow[group_codeColumn]}`);
+
+                // To these (with proper parameterized queries):
+                const custData = await executeQuery(`Select * FROM customers Where ext_code=?`, [targetRow[sap_codeColumn]]);
+                const buData = await executeQuery(`Select * FROM business_units Where bu_code=?`, [targetRow[bu_codeColumn]]);
+                const groupData = await executeQuery(`Select * FROM groups Where group_code=?`, [targetRow[group_codeColumn]]);
 
                 if (custData.length > 0 && buData.length > 0 && groupData.length > 0) {
+
+                    // console.log('Customer, BU, and Group data found:', custData[0], buData[0], groupData[0]);
 
                     const targetAllowSql = " SELECT a.* " +
                         " FROM customers AS a  " +
