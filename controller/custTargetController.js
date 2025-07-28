@@ -57,7 +57,6 @@ class custTargetController {
         }
     }
 
-
     static view = async (req, res) => {
         try {
             const alert = req.query.alert;
@@ -343,15 +342,17 @@ class custTargetController {
         }
     };
 
+
+
     static targetImport = async (req, res) => {
         try {
-            res.render('custTarget/custTarget-upload');
+            const alert = req.query.alert || req.query.error || req.query.success;
+            res.render('custTarget/custTarget-upload', alert ? { alert } : {});
         } catch (error) {
             console.error(error);
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
     }
-
 
     static async logToTxt(logData) {
         const logFileName = 'ImportDataLogs.txt';
@@ -369,6 +370,553 @@ class custTargetController {
     }
 
     static targetUpload = async (req, res) => {
+        try {
+            if (!req.file) {
+                req.flash('error', 'No file uploaded.');
+                return res.redirect('/custTarget/upload');
+            }
+
+            const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const targetDataFromExcel = xlsx.utils.sheet_to_json(sheet);
+
+            // Find column names (case insensitive)
+            const sap_codeColumn = Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'sap code');
+            const bu_codeColumn = Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'bu code');
+            const group_codeColumn = Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'group code');
+            const yearColumn = Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'year');
+            const monthColumns = {
+                apr: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'apr'),
+                may: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'may'),
+                jun: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'jun'),
+                jul: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'jul'),
+                aug: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'aug'),
+                sep: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'sep'),
+                oct: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'oct'),
+                nov: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'nov'),
+                dec: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'dec'),
+                jan: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'jan'),
+                feb: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'feb'),
+                mar: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'mar')
+            };
+
+            // Validate required columns
+            if (!sap_codeColumn || !bu_codeColumn || !group_codeColumn || !yearColumn ||
+                Object.values(monthColumns).some(col => !col)) {
+                return res.status(400).send("Required columns are missing. Please ensure the file contains: 'SAP Code', 'BU Code', 'Group Code', 'Year', and all month columns.");
+            }
+
+            const c_by = res.locals.user?.user_id || 0;
+            const errorLog = [];
+            const excelTargets = [];
+            let skippedRecords = 0;
+            const inputRecordsMap = new Map(); // To track duplicates within the input file
+
+            // Process each row in the Excel file
+            for (let i = 0; i < targetDataFromExcel.length; i++) {
+                const targetRow = targetDataFromExcel[i];
+                const sapCode = targetRow[sap_codeColumn];
+                const buCode = targetRow[bu_codeColumn];
+                const groupCode = targetRow[group_codeColumn];
+                const year = targetRow[yearColumn];
+
+                try {
+                    // Validate required fields
+                    if (!sapCode || !buCode || !groupCode || !year) {
+                        errorLog.push(`Row ${i + 1}: Missing required field (SAP: ${sapCode}, BU: ${buCode}, Group: ${groupCode}, Year: ${year})`);
+                        skippedRecords++;
+                        continue;
+                    }
+
+                    // Calculate total target for the year (Apr-Mar)
+                    let yearlyTotal = 0;
+                    for (const [month, colName] of Object.entries(monthColumns)) {
+                        const targetValue = parseFloat(targetRow[colName]) || 0;
+                        yearlyTotal += targetValue;
+                    }
+
+                    // Skip if yearly total is 0 or less
+                    if (yearlyTotal <= 0) {
+                        errorLog.push(`Row ${i + 1}: Skipped - Yearly target total is 0 or less for SAP: ${sapCode}, BU: ${buCode}, Group: ${groupCode}`);
+                        skippedRecords++;
+                        continue;
+                    }
+
+                    // Get customer, BU, and group data
+                    const [custData, buData, groupData] = await Promise.all([
+                        executeQuery(`SELECT * FROM customers WHERE ext_code = ?`, [sapCode]),
+                        executeQuery(`SELECT * FROM business_units WHERE bu_code = ?`, [buCode]),
+                        executeQuery(`SELECT * FROM groups WHERE group_code = ?`, [groupCode])
+                    ]);
+
+                    // Check for invalid references
+                    if (custData.length === 0) {
+                        errorLog.push(`Row ${i + 1}: Invalid SAP Code - ${sapCode}`);
+                        skippedRecords++;
+                        continue;
+                    }
+                    if (buData.length === 0) {
+                        errorLog.push(`Row ${i + 1}: Invalid BU Code - ${buCode}`);
+                        skippedRecords++;
+                        continue;
+                    }
+                    if (groupData.length === 0) {
+                        errorLog.push(`Row ${i + 1}: Invalid Group Code - ${groupCode}`);
+                        skippedRecords++;
+                        continue;
+                    }
+
+                    // Process monthly targets
+                    const startDate = moment(`${year.split('-')[0]}-04-01`);
+                    for (const [month, colName] of Object.entries(monthColumns)) {
+                        const targetValue = targetRow[colName] || 0;
+                        const targetDate = new Date(startDate);
+
+                        // Adjust month (April is month 3 in JavaScript Date)
+                        if (month === 'apr') targetDate.setMonth(3);
+                        else if (month === 'may') targetDate.setMonth(4);
+                        else if (month === 'jun') targetDate.setMonth(5);
+                        else if (month === 'jul') targetDate.setMonth(6);
+                        else if (month === 'aug') targetDate.setMonth(7);
+                        else if (month === 'sep') targetDate.setMonth(8);
+                        else if (month === 'oct') targetDate.setMonth(9);
+                        else if (month === 'nov') targetDate.setMonth(10);
+                        else if (month === 'dec') targetDate.setMonth(11);
+                        else if (month === 'jan') {
+                            targetDate.setFullYear(targetDate.getFullYear() + 1);
+                            targetDate.setMonth(0);
+                        }
+                        else if (month === 'feb') {
+                            targetDate.setFullYear(targetDate.getFullYear() + 1);
+                            targetDate.setMonth(1);
+                        }
+                        else if (month === 'mar') {
+                            targetDate.setFullYear(targetDate.getFullYear() + 1);
+                            targetDate.setMonth(2);
+                        }
+
+                        const formattedDate = moment(targetDate).format('YYYY-MM-DD');
+                        const recordKey = `${custData[0].customer_id}-${buData[0].bu_id}-${groupData[0].group_id}-${formattedDate}`;
+
+                        // Check for duplicates within the input file
+                        if (inputRecordsMap.has(recordKey)) {
+                            errorLog.push(`Row ${i + 1}: Duplicate target in input file for ${sapCode}, ${buCode}, ${groupCode}, ${formattedDate}`);
+                            skippedRecords++;
+                            continue;
+                        }
+
+                        inputRecordsMap.set(recordKey, true);
+
+                        excelTargets.push({
+                            customer_id: custData[0].customer_id,
+                            bu_id: buData[0].bu_id,
+                            group_id: groupData[0].group_id,
+                            target_date: targetDate,
+                            target_value: targetValue,
+                            ext_code: sapCode,
+                            bu_code: buCode,
+                            group_code: groupCode,
+                            recordKey: recordKey
+                        });
+                    }
+                } catch (err) {
+                    errorLog.push(`Row ${i + 1}: Error processing - ${err.message}`);
+                    skippedRecords++;
+                    continue;
+                }
+            }
+
+            // Check if we have any valid targets to process
+            if (excelTargets.length === 0) {
+                const message = skippedRecords > 0 ?
+                    'No valid targets found in the file. All records had errors or zero yearly totals.' :
+                    'No target data found in the file.';
+
+                console.error('Upload Errors:', errorLog);
+                return res.redirect('/custTarget/upload?error=' + encodeURIComponent(message));
+            }
+
+            // Check for existing targets in database - now in batches
+            const BATCH_SIZE = 100;
+            const existingTargets = [];
+            const newTargets = [];
+
+            for (let i = 0; i < excelTargets.length; i += BATCH_SIZE) {
+                const batch = excelTargets.slice(i, i + BATCH_SIZE);
+                const batchKeys = batch.map(t => [
+                    t.customer_id,
+                    t.bu_id,
+                    t.group_id,
+                    moment(t.target_date).format('YYYY-MM-DD')
+                ]);
+
+                try {
+                    const batchExisting = await executeQuery(`
+                SELECT customer_id, bu_id, group_id, target_date 
+                FROM cust_target 
+                WHERE (customer_id, bu_id, group_id, target_date) IN (?)
+            `, [batchKeys]);
+
+                    const existingKeys = new Set(
+                        batchExisting.map(t =>
+                            `${t.customer_id}-${t.bu_id}-${t.group_id}-${moment(t.target_date).format('YYYY-MM-DD')}`
+                        )
+                    );
+
+                    // Filter out duplicates
+                    batch.forEach(t => {
+                        if (existingKeys.has(t.recordKey)) {
+                            existingTargets.push(t);
+                        } else {
+                            newTargets.push(t);
+                        }
+                    });
+
+                } catch (err) {
+                    console.error(`Error processing batch ${i / BATCH_SIZE + 1}:`, err);
+                    // Mark all records in this batch as errors
+                    batch.forEach(t => {
+                        errorLog.push(`Record ${t.ext_code}, ${t.bu_code}, ${t.group_code}, ${moment(t.target_date).format('YYYY-MM-DD')}: Error checking existence - ${err.message}`);
+                        skippedRecords++;
+                    });
+                }
+            }
+
+            // Insert new targets in batches
+            let addedCount = 0;
+            if (newTargets.length > 0) {
+                for (let i = 0; i < newTargets.length; i += BATCH_SIZE) {
+                    const batch = newTargets.slice(i, i + BATCH_SIZE);
+                    const values = batch.map(t => [
+                        t.customer_id,
+                        t.bu_id,
+                        t.group_id,
+                        moment(t.target_date).format('YYYY-MM-DD'),
+                        t.target_value,
+                        moment().format('YYYY-MM-DD HH:mm:ss'), // current timestamp
+                        c_by
+                    ]);
+
+                    try {
+                        await executeQuery(
+                            "INSERT INTO cust_target (customer_id, bu_id, group_id, target_date, target_value, c_at, c_by) VALUES ?",
+                            [values]
+                        );
+                        addedCount += batch.length;
+                    } catch (err) {
+                        console.error(`Error inserting batch ${i / BATCH_SIZE + 1}:`, err);
+                        // Add all records in this batch to error log
+                        batch.forEach(t => {
+                            errorLog.push(`Record ${t.ext_code}, ${t.bu_code}, ${t.group_code}, ${moment(t.target_date).format('YYYY-MM-DD')}: Insert failed - ${err.message}`);
+                            skippedRecords++;
+                        });
+                    }
+                }
+            }
+
+            // Log results
+            const resultMessage = `Processed ${targetDataFromExcel.length} rows. ` +
+                `Added ${addedCount} targets, skipped ${skippedRecords} rows with errors or zero yearly totals, ` +
+                `${existingTargets.length} duplicates found in database.`;
+
+            console.log(resultMessage);
+            // if (errorLog.length > 0) {
+            //     console.error('Detailed Errors:', errorLog);
+            // }
+
+            // return res.redirect('/custTarget/upload?success=' + encodeURIComponent(resultMessage));
+
+            // Return response
+            res.status(200).json({
+                success: true,
+                message: resultMessage,
+                added: addedCount,
+                skipped: skippedRecords,
+                duplicates: existingTargets.length,
+                errors: errorLog.length > 0 ? errorLog : undefined
+            });
+
+        } catch (error) {
+            console.error('Upload Failed:', error);
+            return res.redirect('/custTarget/upload?error=' + encodeURIComponent(error.message));
+        }
+    };
+
+    static targetUpload_old2 = async (req, res) => {
+        try {
+            if (!req.file) {
+                req.flash('error', 'No file uploaded.');
+                return res.redirect('/custTarget/upload');
+            }
+
+            const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const targetDataFromExcel = xlsx.utils.sheet_to_json(sheet);
+
+            // Find column names (case insensitive)
+            const sap_codeColumn = Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'sap code');
+            const bu_codeColumn = Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'bu code');
+            const group_codeColumn = Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'group code');
+            const yearColumn = Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'year');
+            const monthColumns = {
+                apr: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'apr'),
+                may: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'may'),
+                jun: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'jun'),
+                jul: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'jul'),
+                aug: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'aug'),
+                sep: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'sep'),
+                oct: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'oct'),
+                nov: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'nov'),
+                dec: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'dec'),
+                jan: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'jan'),
+                feb: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'feb'),
+                mar: Object.keys(targetDataFromExcel[0]).find(key => key.toLowerCase() === 'mar')
+            };
+
+            // Validate required columns
+            if (!sap_codeColumn || !bu_codeColumn || !group_codeColumn || !yearColumn ||
+                Object.values(monthColumns).some(col => !col)) {
+                return res.status(400).send("Required columns are missing. Please ensure the file contains: 'SAP Code', 'BU Code', 'Group Code', 'Year', and all month columns.");
+            }
+
+            const c_by = res.locals.user?.user_id || 0;
+            const errorLog = [];
+            const excelTargets = [];
+            let skippedRecords = 0;
+            const inputRecordsMap = new Map(); // To track duplicates within the input file
+
+            // Process each row in the Excel file
+            for (let i = 0; i < targetDataFromExcel.length; i++) {
+                const targetRow = targetDataFromExcel[i];
+                const sapCode = targetRow[sap_codeColumn];
+                const buCode = targetRow[bu_codeColumn];
+                const groupCode = targetRow[group_codeColumn];
+                const year = targetRow[yearColumn];
+
+                try {
+                    // Validate required fields
+                    if (!sapCode || !buCode || !groupCode || !year) {
+                        errorLog.push(`Row ${i + 1}: Missing required field (SAP: ${sapCode}, BU: ${buCode}, Group: ${groupCode}, Year: ${year})`);
+                        skippedRecords++;
+                        continue;
+                    }
+
+                    // Get customer, BU, and group data
+                    const [custData, buData, groupData] = await Promise.all([
+                        executeQuery(`SELECT * FROM customers WHERE ext_code = ?`, [sapCode]),
+                        executeQuery(`SELECT * FROM business_units WHERE bu_code = ?`, [buCode]),
+                        executeQuery(`SELECT * FROM groups WHERE group_code = ?`, [groupCode])
+                    ]);
+
+                    // Check for invalid references
+                    if (custData.length === 0) {
+                        errorLog.push(`Row ${i + 1}: Invalid SAP Code - ${sapCode}`);
+                        skippedRecords++;
+                        continue;
+                    }
+                    if (buData.length === 0) {
+                        errorLog.push(`Row ${i + 1}: Invalid BU Code - ${buCode}`);
+                        skippedRecords++;
+                        continue;
+                    }
+                    if (groupData.length === 0) {
+                        errorLog.push(`Row ${i + 1}: Invalid Group Code - ${groupCode}`);
+                        skippedRecords++;
+                        continue;
+                    }
+
+                    // Process monthly targets
+                    const startDate = moment(`${year.split('-')[0]}-04-01`);
+                    for (const [month, colName] of Object.entries(monthColumns)) {
+                        const targetValue = targetRow[colName] || 0;
+                        const targetDate = new Date(startDate);
+
+                        // Adjust month (April is month 3 in JavaScript Date)
+                        if (month === 'apr') targetDate.setMonth(3);
+                        else if (month === 'may') targetDate.setMonth(4);
+                        else if (month === 'jun') targetDate.setMonth(5);
+                        else if (month === 'jul') targetDate.setMonth(6);
+                        else if (month === 'aug') targetDate.setMonth(7);
+                        else if (month === 'sep') targetDate.setMonth(8);
+                        else if (month === 'oct') targetDate.setMonth(9);
+                        else if (month === 'nov') targetDate.setMonth(10);
+                        else if (month === 'dec') targetDate.setMonth(11);
+                        else if (month === 'jan') {
+                            targetDate.setFullYear(targetDate.getFullYear() + 1);
+                            targetDate.setMonth(0);
+                        }
+                        else if (month === 'feb') {
+                            targetDate.setFullYear(targetDate.getFullYear() + 1);
+                            targetDate.setMonth(1);
+                        }
+                        else if (month === 'mar') {
+                            targetDate.setFullYear(targetDate.getFullYear() + 1);
+                            targetDate.setMonth(2);
+                        }
+
+                        const formattedDate = moment(targetDate).format('YYYY-MM-DD');
+                        const recordKey = `${custData[0].customer_id}-${buData[0].bu_id}-${groupData[0].group_id}-${formattedDate}`;
+
+                        // Check for duplicates within the input file
+                        if (inputRecordsMap.has(recordKey)) {
+                            errorLog.push(`Row ${i + 1}: Duplicate target in input file for ${sapCode}, ${buCode}, ${groupCode}, ${formattedDate}`);
+                            skippedRecords++;
+                            continue;
+                        }
+
+                        inputRecordsMap.set(recordKey, true);
+
+                        excelTargets.push({
+                            customer_id: custData[0].customer_id,
+                            bu_id: buData[0].bu_id,
+                            group_id: groupData[0].group_id,
+                            target_date: targetDate,
+                            target_value: targetValue,
+                            ext_code: sapCode,
+                            bu_code: buCode,
+                            group_code: groupCode,
+                            recordKey: recordKey
+                        });
+                    }
+                } catch (err) {
+                    errorLog.push(`Row ${i + 1}: Error processing - ${err.message}`);
+                    skippedRecords++;
+                    continue;
+                }
+            }
+
+            // Check if we have any valid targets to process
+            if (excelTargets.length === 0) {
+                const message = skippedRecords > 0 ?
+                    'No valid targets found in the file. All records had errors.' :
+                    'No target data found in the file.';
+
+                console.error('Upload Errors:', errorLog);
+                return res.status(400).json({
+                    success: false,
+                    message,
+                    errors: errorLog
+                });
+            }
+
+            // Check for existing targets in database - now in batches
+            const BATCH_SIZE = 100;
+            const existingTargets = [];
+            const newTargets = [];
+
+            for (let i = 0; i < excelTargets.length; i += BATCH_SIZE) {
+                const batch = excelTargets.slice(i, i + BATCH_SIZE);
+                const batchKeys = batch.map(t => [
+                    t.customer_id,
+                    t.bu_id,
+                    t.group_id,
+                    moment(t.target_date).format('YYYY-MM-DD')
+                ]);
+
+                try {
+                    const batchExisting = await executeQuery(`
+                    SELECT customer_id, bu_id, group_id, target_date 
+                    FROM cust_target 
+                    WHERE (customer_id, bu_id, group_id, target_date) IN (?)
+                `, [batchKeys]);
+
+                    const existingKeys = new Set(
+                        batchExisting.map(t =>
+                            `${t.customer_id}-${t.bu_id}-${t.group_id}-${moment(t.target_date).format('YYYY-MM-DD')}`
+                        )
+                    );
+
+                    // Filter out duplicates
+                    batch.forEach(t => {
+                        if (existingKeys.has(t.recordKey)) {
+                            existingTargets.push(t);
+                        } else {
+                            newTargets.push(t);
+                        }
+                    });
+
+                } catch (err) {
+                    console.error(`Error processing batch ${i / BATCH_SIZE + 1}:`, err);
+                    // Mark all records in this batch as errors
+                    batch.forEach(t => {
+                        errorLog.push(`Record ${t.ext_code}, ${t.bu_code}, ${t.group_code}, ${moment(t.target_date).format('YYYY-MM-DD')}: Error checking existence - ${err.message}`);
+                        skippedRecords++;
+                    });
+                }
+            }
+
+            // console.log(`Found ${existingTargets.length} existing targets, ${newTargets.length} new targets to insert.`);
+
+            // Insert new targets in batches
+            let addedCount = 0;
+            if (newTargets.length > 0) {
+                for (let i = 0; i < newTargets.length; i += BATCH_SIZE) {
+                    const batch = newTargets.slice(i, i + BATCH_SIZE);
+                    const values = batch.map(t => [
+                        t.customer_id,
+                        t.bu_id,
+                        t.group_id,
+                        moment(t.target_date).format('YYYY-MM-DD'),
+                        t.target_value,
+                        moment().format('YYYY-MM-DD HH:mm:ss'), // current timestamp
+                        c_by
+                    ]);
+
+                    try {
+                        await executeQuery(
+                            "INSERT INTO cust_target (customer_id, bu_id, group_id, target_date, target_value, c_at, c_by) VALUES ?",
+                            [values]
+                        );
+                        addedCount += batch.length;
+                    } catch (err) {
+                        console.error(`Error inserting batch ${i / BATCH_SIZE + 1}:`, err);
+                        // Add all records in this batch to error log
+                        batch.forEach(t => {
+                            errorLog.push(`Record ${t.ext_code}, ${t.bu_code}, ${t.group_code}, ${moment(t.target_date).format('YYYY-MM-DD')}: Insert failed - ${err.message}`);
+                            skippedRecords++;
+                        });
+                    }
+                }
+            }
+
+            // Log results
+            const resultMessage = `Processed ${targetDataFromExcel.length} rows. ` +
+                `Added ${addedCount} targets, skipped ${skippedRecords} rows with errors, ` +
+                `${existingTargets.length} duplicates found in database.`;
+
+            console.log(resultMessage);
+            // if (errorLog.length > 0) {
+            //     console.error('Detailed Errors:', errorLog);
+            // }
+
+            return res.redirect('/custTarget/upload?success=' + encodeURIComponent(resultMessage));
+            // return res.redirect('/custTarget/upload?alert=' + encodeURIComponent(resultMessage));
+            // return res.redirect('/custTarget/upload?alert=Target+added+successfully');
+
+            // // Return response
+            // res.status(200).json({
+            //     success: true,
+            //     message: resultMessage,
+            //     added: addedCount,
+            //     skipped: skippedRecords,
+            //     duplicates: existingTargets.length,
+            //     errors: errorLog.length > 0 ? errorLog : undefined
+            // });
+
+        } catch (error) {
+            console.error('Upload Failed:', error);
+            return res.redirect('/custTarget/upload?error=' + encodeURIComponent(error.message));
+            // res.status(500).json({
+            //     success: false,
+            //     message: 'Internal Server Error',
+            //     error: error.message
+            // });
+        }
+    };
+
+    static targetUpload_old = async (req, res) => {
         const invalidTargetList = [];
         try {
             if (!req.file) {

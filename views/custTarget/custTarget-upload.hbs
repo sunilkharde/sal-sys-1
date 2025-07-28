@@ -1,8 +1,26 @@
 <div class="container">
+
+    <!-- Add this message section at the top of your container -->
+    {{#if query.success}}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>Success!</strong> {{query.success}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {{/if}}
+
+    {{#if query.error}}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error!</strong> {{query.error}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {{/if}}
+
+
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h4 style="margin-bottom: 0px;">Dealer Targets...</h4>
     </div>
-    <p style="margin-top: 1px; color: grey ;">Sales targets ensure a healthy business lifecycle. Initially, having sales goals helps to create a sense of accountability and responsibility amongst your sales team.
+    <p style="margin-top: 1px; color: grey ;">Sales targets ensure a healthy business lifecycle. Initially, having sales
+        goals helps to create a sense of accountability and responsibility amongst your sales team.
     </p>
 
     <form id="formCustTargetUpload" action="/custTarget/upload" method="POST" enctype="multipart/form-data">
@@ -13,7 +31,8 @@
                     <input type="file" name="file" accept=".xlsx" required>&nbsp;&nbsp;&nbsp;
                     <button class="btn btn-outline-success" type="submit" id="btnPan">Upload</button>
                 </div>
-                <span style="color:red;">Excel file format requires a column titled 'SAP Code', 'BU Code', 'Group Code', 'Year' and 'Monthly Target Value'.</span>
+                <span style="color:red;">Excel file format requires a column titled 'SAP Code', 'BU Code', 'Group Code',
+                    'Year' and 'Monthly Target Value'.</span>
             </div>
         </div>
     </form>
@@ -52,7 +71,8 @@
                 <tbody>
                     {{#each custTargetData}}
                     <tr>
-                        <td style="font-style: italic; color:{{#isEqual this.reqType null}}red{{else}}green{{/isEqual}};">
+                        <td
+                            style="font-style: italic; color:{{#isEqual this.reqType null}}red{{else}}green{{/isEqual}};">
                             {{#isEqual this.reqType null}}Historic{{else}}Recent{{/isEqual}}</td>
                         <td>{{this.accountStatus}}</td>
                         <td>{{this.custTargetountNumber}}</td>
@@ -103,6 +123,12 @@
 
     <script>
         $(document).ready(function () {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function () {
+                $('.alert').alert('close');
+            }, 60000);
+
+            // Your existing DataTable initialization
             $('#custTargetTable').dataTable({
                 pageLength: 25,
                 scrollX: true,
