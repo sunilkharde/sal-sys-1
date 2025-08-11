@@ -12,7 +12,6 @@ class consumerController {
         }
     }
 
-
     static viewBlank = async (req, res) => {
         const [cities_list] = await this.getData();
         res.render('consumers/consumer-create', { cities_list });

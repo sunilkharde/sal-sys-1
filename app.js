@@ -27,6 +27,7 @@ import vanclaimRoute from "./routes/vanclaimRoutes.js"
 import consumerRoute from "./routes/consumerRoutes.js";
 import shopRoutes from './routes/shopRoutes.js';
 import custDetailRoutes from './routes/custDetailRoutes.js';
+import sapSalesRoutes from './routes/sapSalesRoutes.js';
 
 import ftp from 'basic-ftp';
 import fs from 'fs';
@@ -214,6 +215,7 @@ app.use('/vanclaim', vanclaimRoute);
 app.use('/consumer', consumerRoute);
 app.use('/shop', shopRoutes);
 app.use('/cust-detail', custDetailRoutes);
+app.use('/sap-data', sapSalesRoutes);
 
 // Log incoming requests
 /*app.use((req, res, next) => {
