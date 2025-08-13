@@ -1,5 +1,67 @@
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin-bottom: 20px;">List of Dealers</h4>
+    </div>
+
+    <table class="table" id="customersInfoTable">
+        <thead>
+            <tr>
+                <th style="width:5%;">CustID</th>
+                <th style="width:25%;">Dealer Name</th>
+                <th style="width:15%;">Contact Person</th>
+                <th style="width:15%;">City-Pin</th>
+                <th style="width:10%;">District</th>
+                <th style="width:10%;">SAP Code</th>
+                <th style="width:10%;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each customers}}
+            <tr>
+                <td>{{this.customer_id}}</td>
+                <td>{{this.customer_name}}</td>
+                <td>{{this.nick_name}}</td>
+                <td>{{this.city_pin}}</td>
+                <td>{{this.district}}</td>
+                <td>{{this.ext_code}}</td>
+                <td>
+                    <div class="btn-group gap-2" role="group" aria-label="Basic example">
+                        <a href="/customer/view-report/{{this.customer_id}}" class="btn btn-info btn-sm"
+                            title="View Report">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </a>
+                        <a href="/customer/update-info/{{this.customer_id}}" class="btn btn-primary btn-sm"
+                            title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function () {
+            $('#customersInfoTable').DataTable({
+                pageLength: 10,
+                responsive: true,
+                columnDefs: [
+                    { orderable: false, targets: [6] } // Make actions column non-sortable
+                ],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search dealers...",
+                }
+            });
+        });
+    </script>
+</div>
+
+
+
+{{!-- <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
         <h4 style=" margin-bottom: 20px;">List of Dealers</h4>
 
     </div>
@@ -44,4 +106,4 @@
         });
     </script>
 
-</div>
+</div> --}}

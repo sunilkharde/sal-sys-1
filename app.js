@@ -173,6 +173,15 @@ const addHBS = function (...values) {
 const jsonHelper = function (context) {
   return JSON.stringify(context);
 };
+
+// Add these to your existing helpers
+const gtHBS = function (a, b) {
+  return a > b;
+};
+const subtractHBS = function (a, b) {
+  return Math.round(a - b);
+};
+
 // view engine setup
 app.set('views', join(process.cwd(), 'views'));
 app.set('view engine', 'hbs');
@@ -194,7 +203,24 @@ app.engine('hbs', exphbs.engine({
     momentDDD: momentDDD_HBS,
     add: addHBS,
     json: jsonHelper,
+
+    round: function (value) {
+      return Math.round(value);
+    },
+    // You can also add these additional number formatting helpers:
+    formatNumber: function (value) {
+      return value ? Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "0";
+    },
+    formatCurrency: function (value) {
+      return value ? "₹" + Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "₹0";
+    },
+    formatPercent: function (value) {
+      return Math.round(value);
+    },
+    gt: gtHBS,
+    subtract: subtractHBS,
   }
+
 }));
 
 // Load auth routes
@@ -374,7 +400,7 @@ const uploadToFTP = async (csvData) => {
     } else {
       console.error('Remote FTP upload failed');
     }
-    
+
   } finally {
     remoteFTPClient.close();
     localFTPClient.close();

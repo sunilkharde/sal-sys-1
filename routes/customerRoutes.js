@@ -15,6 +15,7 @@ router.get('/view-info', customerController.viewAllInfo);
 router.get('/update-info/:cust_id', customerController.editInfo);
 // router.post('/update-info/:cust_id', customerController.updateInfo);
 router.post('/update-info/:cust_id', upload.single('photo'), customerController.updateInfo);
+router.get('/view-report/:cust_id', customerController.viewInfoReport);
 
 // Add this to customerRoutes.js
 router.get('/report', customerController.customerReport);

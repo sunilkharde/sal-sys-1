@@ -18,7 +18,7 @@
                         <select class="form-select" id="customer_id" name="customer_id" required>
                             <option value="">-- Select Customer --</option>
                             {{#each mainDealers}}
-                            <option value="{{this.customer_id}}">{{this.customer_name}}</option>
+                            <option value="{{this.customer_id}}">{{this.customer_name}} - {{this.customer_id}}</option>
                             {{/each}}
                         </select>
                     </div>

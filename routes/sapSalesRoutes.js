@@ -1,11 +1,19 @@
-import express from "express";
+import express from 'express';
+
+import sapSalesController from '../controller/sapSalesController.js';
+import sapImportController from '../controller/sapImportController.js';
+
 const router = express.Router();
-import SapSalesController from "../controller/sapSalesController.js";
 
-// Display the sales processing page
-router.get('/process-sap-data', SapSalesController.showSalesProcessingPage);
+// Existing routes
+router.get('/process-sap-data', sapSalesController.showSalesProcessingPage);
+router.post('/process-sap-data', sapSalesController.processSalesDataForAllBUs);
 
-// Process sales data for all business units
-router.post('/process-sap-data', SapSalesController.processSalesDataForAllBUs);
+// New import routes
+router.get('/import', sapImportController.showImportPage);
+router.post('/import', sapImportController.importSalesData);
+router.get('/import-history', sapImportController.getImportHistory);
+// router.get('/import-details/:batch/:buId', sapImportController.getImportDetails);
+
 
 export default router;

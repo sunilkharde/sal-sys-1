@@ -26,6 +26,8 @@ class sapSalesController {
                 SalesEmployeeTo: params.salesEmployeeTo || '',
                 MaterialGroupFrom: params.materialGroupFrom || '',
                 MaterialGroupTo: params.materialGroupTo || '',
+                CustomerFrom: params.customerFrom || '',
+                CustomerTo: params.customerTo || ''
             });
 
             return response.data;
@@ -120,6 +122,7 @@ class sapSalesController {
                     await this.updateGroupInformation(
                         product.group_id || nextGroupId,
                         {
+                            group_code: record.materialGroup,
                             group_name: record.materialGroupDescription,
                             p_group_code: record.priceGroup,
                             p_group_name: record.priceGroupDescription
@@ -164,7 +167,7 @@ class sapSalesController {
                 VALUES (?, ?, ?, ?, 1, "A", ?, ?)`,
                 [
                     groupId,
-                    groupData.p_group_code,
+                    groupData.group_code,
                     groupData.group_name,
                     groupData.group_name.substring(0, 20),
                     groupData.p_group_code,
@@ -174,9 +177,10 @@ class sapSalesController {
         } else {
             await executeQuery(
                 `UPDATE groups 
-                SET group_name = ?, p_group_code = ?, p_group_name = ? 
+                SET group_code = ?, group_name = ?, p_group_code = ?, p_group_name = ? 
                 WHERE group_id = ?`,
                 [
+                    groupData.group_code,
                     groupData.group_name,
                     groupData.p_group_code,
                     groupData.p_group_name,

@@ -2,6 +2,7 @@ import { executeQuery } from '../db.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import moment from 'moment';
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -584,99 +585,190 @@ class customerController {
         }
     };
 
-    static updateInfo_Old = async (req, res) => {
+    static viewInfoReport = async (req, res) => {
         const { cust_id } = req.params;
-        const { godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, sr_no, reg_no, veh_type, ins_no, ins_date, sp_type, sp_name, sp_mobile } = req.body;
-        // const data = req.body;
-
-        var errors = [];
-        if (isNaN(godown_area) || godown_area <= 0) {
-            errors.push({ message: "Godown area cannot be blank" });
-        }
-        if (reg_no === undefined || reg_no.length === 0) {
-            errors.push({ message: "Enter vehicle details" });
-        }
-        if (sp_name === undefined || sp_name.length === 0) {
-            errors.push({ message: "Enter salesman details" });
-        }
-        if (errors.length) {
-            const sqlStr = "Select a.*,CONCAT(b.username,' [', b.email_id,']') as username,c.market_area" +
-                " From customers as a LEFT JOIN users as b ON (a.user_id=b.user_id)" +
-                " LEFT JOIN market_area as c ON (a.market_area_id=c.market_area_id)" +
-                " Where a.customer_id= ?";
-            const params = [cust_id];
-            const results = await executeQuery(sqlStr, params);
-            let data1 = results[0];
-
-            ///This code is for Vehicle information
-            let sqlVeh = `Select * from cust_veh where customer_id = ${cust_id}`;
-            let vehData = await executeQuery(sqlVeh);
-            if (vehData.length === 0) {
-                sqlVeh = `select 1 as sr_no, '' as reg_no, '' as veh_type, '' as ins_no, NULL as ins_date from dual`;
-                vehData = await executeQuery(sqlVeh);
-            }
-
-            let sqlSp = `Select * from cust_sp where customer_id = ${cust_id}`;
-            let spData = await executeQuery(sqlSp);
-            if (spData.length === 0) {
-                sqlVeh = `select 1 as sr_no, '' as sp_type, '' as sp_name, '' as sp_mobile From dual`;
-                spData = await executeQuery(sqlSp);
-            }
-
-            res.render("customers/customer-edit-info", { errors, data: data1, vehData, spData });
-            return;
-        }
+        const { from_date, to_date } = req.query;
 
         try {
-            var upd_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const sqlStr = "Update customers Set godown_area=?, total_counters=?, gst_no=?, cust_care_no=?," +
-                " add1=?, add2=?, add3=?, city=?, pin_code=?, district=?, state=?," +
-                " upd_by=?, upd_at=CURRENT_TIMESTAMP WHERE customer_id=?";
-            const params = [godown_area, total_counters, gst_no, cust_care_no, add1, add2, add3, city, pin_code, district, state, upd_by, cust_id,];
-            await executeQuery(sqlStr, params);
+            // 1. Get complete customer info
+            const sqlCustomer = `
+                SELECT a.*, 
+                    CONCAT(b.last_name, ' ', b.first_name) AS mg_name,
+                    CONCAT(c.last_name, ' ', c.first_name) AS se_name,
+                    d.market_area
+                FROM customers a
+                LEFT JOIN employees b ON a.mg_id = b.emp_id
+                LEFT JOIN employees c ON a.se_id = c.emp_id
+                LEFT JOIN market_area d ON a.market_area_id = d.market_area_id
+                WHERE a.customer_id = ?`;
+            const customerData = await executeQuery(sqlCustomer, [cust_id]);
 
-            // Delete records from cust_veh
-            const sqlVeh = "Delete FROM cust_veh WHERE customer_id=?";
-            const paramsVeh = [cust_id];
-            await executeQuery(sqlVeh, paramsVeh);
-
-            const regNoVal = Array.isArray(reg_no) ? reg_no : [reg_no];
-            const vehTypeVal = Array.isArray(veh_type) ? veh_type : [veh_type];
-            const insNoVal = Array.isArray(ins_no) ? ins_no : [ins_no];
-            const insDateVal = Array.isArray(ins_date) ? ins_date : [ins_date];
-
-            for (let i = 0; i < reg_no.length; i++) {
-                let sr_no_val = i + 1;
-                const regNoUpper = regNoVal[i].toUpperCase();
-                const sqlVeh = "Insert into cust_veh (customer_id,sr_no,reg_no,veh_type,ins_no,ins_date) values (?,?,?,?,?,?)";
-                const paramsVeh = [cust_id, sr_no_val, regNoUpper, vehTypeVal[i], insNoVal[i], insDateVal[i]];
-                await executeQuery(sqlVeh, paramsVeh);
+            if (customerData.length === 0) {
+                return res.status(404).send("Customer not found");
             }
 
-            // Delete records from cust_sp
-            const sqlSp = "Delete FROM cust_sp WHERE customer_id=?";
-            const paramsSp = [cust_id];
-            await executeQuery(sqlSp, paramsSp);
+            // 2. Get Work Person Details
+            const wpData = await executeQuery(`
+                SELECT * FROM cust_wp 
+                WHERE customer_id = ?
+                ORDER BY sr_no`, [cust_id]);
 
-            const spTypeVal = Array.isArray(sp_type) ? sp_type : [sp_type];
-            const spNameVal = Array.isArray(sp_name) ? sp_name : [sp_name];
-            const spMobileVal = Array.isArray(sp_mobile) ? sp_mobile : [sp_mobile];
+            // 3. Get Vehicle Details
+            const vehData = await executeQuery(`
+                SELECT * FROM cust_veh 
+                WHERE customer_id = ?
+                ORDER BY sr_no`, [cust_id]);
 
-            for (let i = 0; i < sp_name.length; i++) {
-                const sr_no_val = i + 1;
-                const sqlSp = "Insert into cust_sp (customer_id,sr_no,sp_type,sp_name,sp_mobile) values (?,?,?,?,?)";
-                const paramsSp = [cust_id, sr_no_val, spTypeVal[i], spNameVal[i], spMobileVal[i]];
-                await executeQuery(sqlSp, paramsSp);
+            // 4. Get Salesman Details
+            const spData = await executeQuery(`
+                SELECT * FROM cust_sp 
+                WHERE customer_id = ?
+                ORDER BY sr_no`, [cust_id]);
+
+            // 5. Get sales data
+            const sapCustomerNumber = customerData[0].ext_code.padStart(10, '0');
+
+            const defaultFromDate = moment().subtract(12, 'months');
+            const queryFromDate = from_date || defaultFromDate.format('YYYY-MM-DD');
+            const queryToDate = to_date || moment().format('YYYY-MM-DD');
+
+            // Sales summary
+            const sqlSalesSummary = `
+                SELECT 
+                    SUM(quantity) AS totalQty,
+                    SUM(quantity * item_price) AS totalValue,
+                    COUNT(DISTINCT material_group) AS categoryCount,
+                    SUM(quantity * item_price) / TIMESTAMPDIFF(MONTH, ?, ?) AS avgMonthly
+                FROM sap_sales
+                WHERE customer_number = ?
+                AND billing_date BETWEEN ? AND ?`;
+
+            const salesSummary = await executeQuery(sqlSalesSummary, [
+                queryFromDate, queryToDate,
+                sapCustomerNumber, queryFromDate, queryToDate
+            ]);
+
+            // Material group performance
+            const sqlMaterialGroup = `
+                SELECT 
+                    material_group,
+                    material_group_description,
+                    SUM(quantity) AS quantity,
+                    SUM(quantity * item_price) AS total_value,
+                    (SUM(quantity * item_price) / ? * 100) AS percent_value
+                FROM sap_sales
+                WHERE customer_number = ?
+                AND billing_date BETWEEN ? AND ?
+                GROUP BY material_group, material_group_description
+                ORDER BY total_value DESC`;
+
+            const materialGroupPerformance = await executeQuery(sqlMaterialGroup, [
+                salesSummary[0].totalValue || 1,
+                sapCustomerNumber, queryFromDate, queryToDate
+            ]);
+
+            // Monthly trend
+            const sqlMonthlyTrend = `
+                SELECT 
+                    DATE_FORMAT(billing_date, '%Y-%m') AS month,
+                    SUM(quantity * item_price) AS total_value
+                FROM sap_sales
+                WHERE customer_number = ?
+                AND billing_date BETWEEN ? AND ?
+                GROUP BY DATE_FORMAT(billing_date, '%Y-%m')
+                ORDER BY month`;
+
+            const monthlyTrend = await executeQuery(sqlMonthlyTrend, [
+                sapCustomerNumber, queryFromDate, queryToDate
+            ]);
+
+            // Get customer ranking and top 5 performers
+            const sqlCustomerRanking = `
+                WITH market_area_sales AS (
+                    SELECT 
+                        c.customer_id,
+                        c.customer_name,
+                        c.ext_code,
+                        ROUND(SUM(s.quantity * s.item_price), 0) AS total_sales,
+                        SUM(s.quantity) AS total_quantity
+                    FROM customers c
+                    JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
+                    WHERE s.billing_date BETWEEN ? AND ?
+                    AND c.market_area_id = ?
+                    GROUP BY c.customer_id, c.customer_name, c.ext_code
+                )
+                SELECT 
+                    customer_id,
+                    customer_name,
+                    ext_code,
+                    total_sales,
+                    total_quantity,
+                    RANK() OVER (ORDER BY total_sales DESC) AS sales_rank
+                FROM market_area_sales
+                ORDER BY total_sales DESC`;
+            
+                const rankingData = await executeQuery(sqlCustomerRanking, [
+                queryFromDate, queryToDate, customerData[0].market_area_id
+            ]);            
+            
+            // Get top 10 customers
+            let topCustomers = rankingData.slice(0, 10);            
+
+            // Find current customer's rank
+            const currentCustomerRank = rankingData.find(c => c.customer_id == cust_id);
+
+            // If current customer not in top 10, add them to the list
+            if (currentCustomerRank && !topCustomers.some(c => c.customer_id == cust_id)) {
+                topCustomers.push(currentCustomerRank);
+            }
+            
+
+            // Get benchmark competitors data if exists
+            let benchmarkData = [];
+            const sqlBenchmark = `
+                SELECT 
+                    c.customer_id,
+                    c.customer_name,
+                    c.ext_code,
+                    ROUND(SUM(s.quantity * s.item_price), 0) AS total_sales
+                FROM customers c
+                JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
+                WHERE s.billing_date BETWEEN ? AND ?
+                AND c.customer_id IN (
+                    SELECT cust_bench_id FROM cust_bench WHERE customer_id = ?
+                )
+                GROUP BY c.customer_id, c.customer_name, c.ext_code
+                ORDER BY total_sales DESC`;
+
+            const hasBenchmarks = await executeQuery(
+                "SELECT COUNT(*) as count FROM cust_bench WHERE customer_id = ?",
+                [cust_id]
+            );
+
+            if (hasBenchmarks[0].count > 0) {
+                benchmarkData = await executeQuery(sqlBenchmark, [
+                    queryFromDate, queryToDate, cust_id
+                ]);
             }
 
-            res.redirect("/customer/view-info");
-            // res.redirect('/customer/view?alert=Update+Customer+successfully');
+            res.render("customers/customer-view-report", {
+                data: customerData[0],
+                salesSummary: salesSummary[0],
+                materialGroupPerformance,
+                monthlyTrend,
+                wpData,
+                vehData,
+                spData,
+                topCustomers,
+                currentCustomerRank,
+                benchmarkData,
+                from_date: queryFromDate,
+                to_date: queryToDate
+            });
 
-        } catch (err) {
-            console.error(err);
-            return res.render("customer/view-info", { alert: `Internal server error` });
-        } finally {
-            //conn.release();
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Internal server error");
         }
     };
 
@@ -806,7 +898,7 @@ class customerController {
             FROM cust_bench cb
             JOIN customers c1 ON cb.customer_id = c1.customer_id
             JOIN customers c2 ON cb.cust_bench_id = c2.customer_id
-            ORDER BY cb.customer_id, cb.sr_no`;
+            ORDER BY c1.customer_name`;
 
             const results = await executeQuery(sqlStr);
             res.render('customers/customer-benchmark-view', { benchmarks: results });
@@ -821,10 +913,10 @@ class customerController {
             // Get list of Dealers for benchmark selection
             const [mainDealers, subDealers] = await Promise.all([
                 executeQuery(
-                    "SELECT customer_id, customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name"
+                    "SELECT customer_id, TRIM(customer_name) as customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY TRIM(customer_name)"
                 ),
                 executeQuery(
-                    "SELECT customer_id, customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name"
+                    "SELECT customer_id, TRIM(customer_name) as customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY TRIM(customer_name)"
                 )
             ]);
 
@@ -842,10 +934,10 @@ class customerController {
             // Fetch both dealer types once at the beginning
             const [mainDealers, subDealers] = await Promise.all([
                 executeQuery(
-                    "SELECT customer_id, customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name"
+                    "SELECT customer_id, TRIM(customer_name) as customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY TRIM(customer_name)"
                 ),
                 executeQuery(
-                    "SELECT customer_id, customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name"
+                    "SELECT customer_id, TRIM(customer_name) as customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY TRIM(customer_name)"
                 )
             ]);
 
