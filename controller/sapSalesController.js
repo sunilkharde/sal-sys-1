@@ -167,11 +167,11 @@ class sapSalesController {
                 VALUES (?, ?, ?, ?, 1, "A", ?, ?)`,
                 [
                     groupId,
-                    groupData.group_code,
-                    groupData.group_name,
-                    groupData.group_name.substring(0, 20),
                     groupData.p_group_code,
-                    groupData.p_group_name
+                    groupData.p_group_name,
+                    groupData.p_group_name.substring(0, 20),
+                    groupData.group_code,
+                    groupData.group_name
                 ]
             );
         } else {
@@ -180,10 +180,10 @@ class sapSalesController {
                 SET group_code = ?, group_name = ?, p_group_code = ?, p_group_name = ? 
                 WHERE group_id = ?`,
                 [
-                    groupData.group_code,
-                    groupData.group_name,
                     groupData.p_group_code,
                     groupData.p_group_name,
+                    groupData.group_code,
+                    groupData.group_name,
                     groupId
                 ]
             );

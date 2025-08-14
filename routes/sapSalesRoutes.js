@@ -13,7 +13,7 @@ router.post('/process-sap-data', sapSalesController.processSalesDataForAllBUs);
 router.get('/import', sapImportController.showImportPage);
 router.post('/import', sapImportController.importSalesData);
 router.get('/import-history', sapImportController.getImportHistory);
-// router.get('/import-details/:batch/:buId', sapImportController.getImportDetails);
+router.get('/import-details/:importBatch/:buId?', sapImportController.showImportDetails);
 
 
 export default router;

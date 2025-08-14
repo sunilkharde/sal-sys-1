@@ -181,6 +181,13 @@ const gtHBS = function (a, b) {
 const subtractHBS = function (a, b) {
   return Math.round(a - b);
 };
+const multiplyHBS = function (a, b) {
+  return a * b;
+};
+const divideHBS = function (a, b) {
+  if (b === 0) return 0; // Prevent division by zero
+  return a / b;
+};
 
 // view engine setup
 app.set('views', join(process.cwd(), 'views'));
@@ -218,9 +225,18 @@ app.engine('hbs', exphbs.engine({
       return Math.round(value);
     },
     gt: gtHBS,
-    subtract: subtractHBS,
+    subtract: subtractHBS,    
+    multiply: multiplyHBS,
+    divide: divideHBS,    
+    // You might also want to add these for better number formatting:
+    fixed: function(value, decimals) {
+      return Number(value).toFixed(decimals || 2);
+    },
+    percent: function(value) {
+      return (value * 100).toFixed(1) + '%';
+    }
   }
-
+  
 }));
 
 // Load auth routes
