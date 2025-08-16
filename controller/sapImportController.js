@@ -59,6 +59,20 @@ class sapImportController {
 
     static deleteExistingRecords = async (buId, dateFrom, dateTo) => {
         try {
+
+            // Additionally delete records older than 36 months
+            const thirtySixMonthsAgo = moment().subtract(36, 'months').format('YYYY-MM-DD');
+            const deletedOldCount = await executeQuery(
+                `DELETE FROM sap_sales 
+                WHERE bu_id = ? 
+                AND billing_date < ?`,
+                [
+                    buId,
+                    thirtySixMonthsAgo
+                ]
+            );
+
+            // Delete records in the specified date range
             const deletedCount = await executeQuery(
                 `DELETE FROM sap_sales 
                 WHERE bu_id = ? 
@@ -70,8 +84,14 @@ class sapImportController {
                 ]
             );
 
+            console.log(`Deleted ${deletedOldCount.affectedRows} records older than 36 months for BU ${buId}`);
             console.log(`Deleted ${deletedCount.affectedRows} existing records for BU ${buId}`);
-            return deletedCount.affectedRows;
+
+            return {
+                oldDeletes: deletedOldCount.affectedRows,
+                recentDeletes: deletedCount.affectedRows
+            };
+
         } catch (error) {
             console.error('Error deleting existing records:', error);
             throw error;
@@ -208,25 +228,23 @@ class sapImportController {
                     }
                 }
 
-                // If we have a product (either found or newly created), update group info
+                // If we have a product, update group info
                 if (product) {
-                    const maxGroup = await executeQuery('SELECT MAX(group_id) AS max_id FROM groups');
-                    const nextGroupId = maxGroup[0].max_id ? maxGroup[0].max_id + 1 : 1;
-
-                    await this.updateGroupInformation(
-                        product.group_id || nextGroupId,
+                    const groupId = await this.updateGroupInformation(
+                        product.group_id, // Will be null for new products
                         {
-                            group_code: record.priceGroup,
+                            group_code: record.priceGroup.trim(),
                             group_name: record.priceGroupDescription,
                             p_group_code: record.materialGroup,
                             p_group_name: record.materialGroupDescription
                         }
                     );
 
+                    // Update product with the correct group_id if it was null
                     if (!product.group_id) {
                         await executeQuery(
                             'UPDATE products SET group_id = ? WHERE product_id = ?',
-                            [nextGroupId, product.product_id]
+                            [groupId, product.product_id]
                         );
                     }
 
@@ -240,65 +258,51 @@ class sapImportController {
         return processedCount;
     }
 
-    static findCustomerByExtCode = async (extCode) => {
-        const rows = await executeQuery(
-            'SELECT customer_id FROM customers WHERE ext_code = ? AND status = "A"',
-            [extCode]
-        );
-        return rows[0] || null;
-    }
-
     static createNewProduct = async (materialNumber, record) => {
         // Get the next product ID
         const maxProduct = await executeQuery('SELECT MAX(product_id) AS max_id FROM products');
         const nextProductId = maxProduct[0].max_id ? maxProduct[0].max_id + 1 : 1;
 
-        // Get the next group ID
-        const maxGroup = await executeQuery('SELECT MAX(group_id) AS max_id FROM groups');
-        const nextGroupId = maxGroup[0].max_id ? maxGroup[0].max_id + 1 : 1;
-
-        // Create the product
+        // Create the product with null group_id (will be updated later)
         await executeQuery(
             `INSERT INTO products (
-                product_id, product_name, description, unit_id, category_id, 
-                rate, ext_code, group_id, status, cf_val, c_at, c_by
-            ) VALUES (?, ?, ?, 1, 1, 0, ?, ?, 'A', 1, NOW(), 1)`,
+            product_id, product_name, description, unit_id, category_id, 
+            rate, ext_code, group_id, status, cf_val, c_at, c_by
+        ) VALUES (?, ?, ?, 1, 1, 0, ?, NULL, 'I', 1, NOW(), 1)`,
             [
                 nextProductId,
                 record.materialDescription || `Product ${materialNumber}`,
                 record.materialDescription || '',
-                materialNumber,
-                nextGroupId
+                materialNumber
             ]
         );
 
         return {
             product_id: nextProductId,
-            group_id: nextGroupId
+            group_id: null // Will be set in updateGroupInformation
         };
-    }
-    
-    static findProductByExtCode = async (extCode) => {
-        const rows = await executeQuery(
-            'SELECT product_id, product_name, group_id FROM products WHERE ext_code = ? AND status = "A"',
-            [extCode]
-        );
-        return rows[0] || null;
     }
 
     static updateGroupInformation = async (groupId, groupData) => {
+        // First try to find existing group by code
         const existingGroup = await executeQuery(
-            'SELECT group_id FROM groups WHERE group_id = ?',
-            [groupId]
+            'SELECT group_id FROM groups WHERE group_code = ?',
+            [groupData.group_code]
         );
 
+        const timestamp = moment().format('YYMMDDHHmmss'); // Format timestamp
+
         if (existingGroup.length === 0) {
+            // For new groups, always generate a new ID - ignore the provided groupId
+            const maxGroup = await executeQuery('SELECT MAX(group_id) AS max_id FROM groups');
+            const newGroupId = maxGroup[0].max_id ? maxGroup[0].max_id + 1 : 1;
+
             await executeQuery(
                 `INSERT INTO groups 
-                (group_id, group_code, group_name, group_short, seq_sr, status, p_group_code, p_group_name) 
-                VALUES (?, ?, ?, ?, 1, "A", ?, ?)`,
+            (group_id, group_code, group_name, group_short, seq_sr, status, p_group_code, p_group_name, c_at, c_by) 
+            VALUES (?, ?, ?, ?, 1, "A", ?, ?, NOW(), 1)`,
                 [
-                    groupId,
+                    newGroupId,
                     groupData.group_code,
                     groupData.group_name,
                     groupData.group_name.substring(0, 20),
@@ -306,20 +310,48 @@ class sapImportController {
                     groupData.p_group_name
                 ]
             );
+            return newGroupId;
         } else {
+            // Update existing group
+            const existingGroupId = existingGroup[0].group_id;
             await executeQuery(
                 `UPDATE groups 
-                SET group_code = ?, group_name = ?, p_group_code = ?, p_group_name = ? 
-                WHERE group_id = ?`,
+            SET group_name = ?, group_short = ?, p_group_code = ?, p_group_name = ?, u_at = NOW(), u_by = 1
+            WHERE group_id = ?`,
                 [
-                    groupData.group_code,
                     groupData.group_name,
+                    groupData.group_name.substring(0, 20),
                     groupData.p_group_code,
                     groupData.p_group_name,
-                    groupId
+                    existingGroupId
                 ]
             );
+            return existingGroupId;
         }
+    }
+
+    static findProductByExtCode = async (extCode) => {
+        const rows = await executeQuery(
+            'SELECT product_id, product_name, group_id FROM products WHERE ext_code = ?',  //  AND status = "A"
+            [extCode]
+        );
+        return rows[0] || null;
+    }
+
+    static findCustomerByExtCode = async (extCode) => {
+        const rows = await executeQuery(
+            'SELECT customer_id FROM customers WHERE ext_code = ?', // AND status = "A" 
+            [extCode]
+        );
+        return rows[0] || null;
+    }
+
+    static async findGroupByCode(groupCode) {
+        const rows = await executeQuery(
+            'SELECT group_id FROM groups WHERE group_code = ?',
+            [groupCode]
+        );
+        return rows[0] || null;
     }
 
     static getImportHistory = async (req, res) => {
