@@ -361,32 +361,54 @@ class customerController {
 
     //To view all customer to update additional Information 
     static viewAllInfo = async (req, res) => {
-        // retrieve the alert message from the query parameters
         const alert = req.query.alert;
         try {
             var sp_code = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
 
-            //to select user from emp code
             const sqlUser = `Select emp_id from employees where user_id = ${sp_code}`;
             const empData = await executeQuery(sqlUser);
             let empID = 0;
             if (empData.length > 0) {
-                empID = empData[0].emp_id
+                empID = empData[0].emp_id;
             }
 
-            let sqlStr = "Select a.customer_id,a.customer_name,a.nick_name,CONCAT(a.city,' ',a.pin_code) as city_pin,a.district,b.market_area,a.ext_code" +
-                " From customers as a, market_area as b " +
-                " Where a.market_area_id=b.market_area_id";
+            let sqlStr = "Select a.customer_id, a.customer_name, a.nick_name, a.city, CONCAT(a.city,' ',a.pin_code) as city_pin, a.district, b.market_area, a.ext_code " +
+                "From customers as a, market_area as b " +
+                "Where a.market_area_id = b.market_area_id";
+
             if (!["Admin", "Read", "Support"].includes(res.locals.user.user_role)) {
-                sqlStr = sqlStr + ` and (mg_id = ${empID} or se_id = ${empID})`;
+                sqlStr += ` and (mg_id = ${empID} or se_id = ${empID})`;
             }
-            // const paramsVeh = [empData[0].emp_id, empData[0].emp_id];
-            const results = await executeQuery(sqlStr); //, paramsVeh);
 
-            res.render("customers/customer-view-info", { customers: results, alert });
+            const results = await executeQuery(sqlStr);
+
+            // Get unique districts and cities for filters
+            const districts = [...new Set(results.map(item => item.district))].sort();
+
+            // Group cities by district for dependent dropdown
+            const citiesByDistrict = {};
+            results.forEach(item => {
+                if (!citiesByDistrict[item.district]) {
+                    citiesByDistrict[item.district] = new Set();
+                }
+                citiesByDistrict[item.district].add(item.city);
+            });
+
+            // Convert Sets to Arrays for JSON serialization
+            const citiesByDistrictSerializable = {};
+            Object.keys(citiesByDistrict).forEach(district => {
+                citiesByDistrictSerializable[district] = Array.from(citiesByDistrict[district]).sort();
+            });
+
+            res.render("customers/customer-view-info", {
+                customers: results,
+                districts,
+                citiesByDistrict: JSON.stringify(citiesByDistrictSerializable),
+                alert
+            });
         } catch (error) {
             console.error(error);
-            // Handle the error
+            res.status(500).send("Error fetching customer data");
         }
     };
 
@@ -585,6 +607,11 @@ class customerController {
         }
     };
 
+    static getFinancialYearStart = (currentDate) => {
+        const year = currentDate.month() >= 3 ? currentDate.year() : currentDate.year() - 1;
+        return moment([year, 3, 1]); // April is month 3 in moment (0-indexed)
+    };
+
     static viewInfoReport = async (req, res) => {
         const { cust_id } = req.params;
         const { from_date, to_date, material_group } = req.query;
@@ -628,9 +655,11 @@ class customerController {
             // 5. Get sales data
             const sapCustomerNumber = customerData[0].ext_code.padStart(10, '0');
 
-            const defaultFromDate = moment().subtract(12, 'months');
+            const currentDate = moment();
+            const financialYearStart = this.getFinancialYearStart(currentDate);
+            const defaultFromDate = financialYearStart;
             const queryFromDate = from_date || defaultFromDate.format('YYYY-MM-DD');
-            const queryToDate = to_date || moment().format('YYYY-MM-DD');
+            const queryToDate = to_date || currentDate.format('YYYY-MM-DD');
 
             // Add material group filter to WHERE clauses
             const materialGroupFilter = material_group ? `AND material_group = '${material_group}'` : '';
@@ -984,13 +1013,20 @@ class customerController {
     static viewBenchmark = async (req, res) => {
         try {
             const sqlStr = `
-            SELECT cb.customer_id, cb.sr_no, cb.cust_bench_id, 
-                   c1.customer_name as main_customer_name, 
-                   c2.customer_name as benchmark_customer_name
-            FROM cust_bench cb
-            JOIN customers c1 ON cb.customer_id = c1.customer_id
-            JOIN customers c2 ON cb.cust_bench_id = c2.customer_id
-            ORDER BY c1.customer_name`;
+                SELECT 
+                    cb.customer_id, 
+                    cb.sr_no, 
+                    cb.cust_bench_id, 
+                    c1.customer_name as main_customer_name,
+                    c1.district as main_district,
+                    c1.city as main_city,
+                    c2.customer_name as benchmark_customer_name,
+                    c2.district as bench_district,
+                    c2.city as bench_city
+                FROM cust_bench cb
+                JOIN customers c1 ON cb.customer_id = c1.customer_id
+                JOIN customers c2 ON cb.cust_bench_id = c2.customer_id
+                ORDER BY c1.customer_name`;
 
             const results = await executeQuery(sqlStr);
             res.render('customers/customer-benchmark-view', { benchmarks: results });
@@ -1002,17 +1038,23 @@ class customerController {
 
     static viewAddBenchmark = async (req, res) => {
         try {
-            // Get list of Dealers for benchmark selection
-            const [mainDealers, subDealers] = await Promise.all([
-                executeQuery(
-                    "SELECT customer_id, TRIM(customer_name) as customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY TRIM(customer_name)"
-                ),
-                executeQuery(
-                    "SELECT customer_id, TRIM(customer_name) as customer_name FROM customers WHERE customer_type In ('Dealer','Sub-Dealer') AND status='A' ORDER BY TRIM(customer_name)"
-                )
-            ]);
+            // Get unique districts from active dealers
+            const districts = await executeQuery(`
+            SELECT DISTINCT district as district_name 
+            FROM customers 
+            WHERE customer_type IN ('Dealer','Sub-Dealer') AND status='A' AND district IS NOT NULL
+            ORDER BY district
+        `);
 
-            res.render('customers/customer-benchmark-add', { mainDealers, subDealers });
+            // Get all active dealers for fallback
+            const dealers = await executeQuery(
+                "SELECT customer_id, TRIM(customer_name) as customer_name, district, city FROM customers WHERE customer_type IN ('Dealer','Sub-Dealer') AND status='A' ORDER BY TRIM(customer_name)"
+            );
+
+            res.render('customers/customer-benchmark-add', {
+                districts,
+                dealers
+            });
         } catch (error) {
             console.error(error);
             res.status(500).send('Internal Server Error');
@@ -1101,6 +1143,37 @@ class customerController {
         }
     };
     /** Customer bench mark - mapping : End */
+
+    /**
+     * Filter Cities and Customers
+     */
+    static filterCities = async (req, res) => {
+        try {
+            const { district } = req.query;
+            const cities = await executeQuery(
+                "SELECT DISTINCT city FROM customers WHERE district = ? AND customer_type IN ('Dealer','Sub-Dealer') AND status='A' AND city IS NOT NULL ORDER BY city",
+                [district]
+            );
+            res.json(cities);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    };
+
+    static filterCustomers = async (req, res) => {
+        try {
+            const { district, city } = req.query;
+            const customers = await executeQuery(
+                "SELECT customer_id, customer_name FROM customers WHERE district = ? AND city = ? AND customer_type IN ('Dealer','Sub-Dealer') AND status='A' ORDER BY customer_name",
+                [district, city]
+            );
+            res.json(customers);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    };
 
 };
 

@@ -29,6 +29,8 @@ router.get('/benchmark', customerController.viewBenchmark);
 router.get('/benchmark/add', customerController.viewAddBenchmark);
 router.post('/benchmark/add', customerController.addBenchmark);
 router.get('/benchmark/delete/:customer_id/:sr_no', customerController.deleteBenchmark);
+router.get('/benchmark/cities', customerController.filterCities);
+router.get('/benchmark/customers', customerController.filterCustomers);    
 
 
 export default router;

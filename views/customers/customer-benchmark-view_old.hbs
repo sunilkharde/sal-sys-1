@@ -8,24 +8,21 @@
 
             {{#if benchmarks.length}}
             <div class="table-responsive">
-                <!-- In your customer-benchmark-view template -->
                 <table class="table table-striped table-hover" id="benchmarksTable">
                     <thead class="table-dark">
                         <tr>
-                            <th>Main Customer</th>
-                            <th>District/City</th>
+                            {{!-- <th>#</th> --}}
+                            <th>Customer</th>
                             <th>Benchmark Customer</th>
-                            <th>District/City</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#each benchmarks}}
                         <tr>
+                            {{!-- <td>{{this.sr_no}}</td> --}}
                             <td>{{this.main_customer_name}}</td>
-                            <td>{{this.main_district}} / {{this.main_city}}</td>
                             <td>{{this.benchmark_customer_name}}</td>
-                            <td>{{this.bench_district}} / {{this.bench_city}}</td>
                             <td>
                                 <a href="/customer/benchmark/delete/{{this.customer_id}}/{{this.sr_no}}"
                                     class="btn btn-danger btn-sm"

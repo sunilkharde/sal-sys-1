@@ -3,107 +3,155 @@
         <h4 style="margin-bottom: 20px;">List of Dealers</h4>
     </div>
 
-    <table class="table" id="customersInfoTable">
-        <thead>
-            <tr>
-                <th style="width:5%;">CustID</th>
-                <th style="width:25%;">Dealer Name</th>
-                <th style="width:15%;">Contact Person</th>
-                <th style="width:15%;">City-Pin</th>
-                <th style="width:10%;">District</th>
-                <th style="width:10%;">SAP Code</th>
-                <th style="width:10%;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each customers}}
-            <tr>
-                <td>{{this.customer_id}}</td>
-                <td>{{this.customer_name}}</td>
-                <td>{{this.nick_name}}</td>
-                <td>{{this.city_pin}}</td>
-                <td>{{this.district}}</td>
-                <td>{{this.ext_code}}</td>
-                <td>
-                    <div class="btn-group gap-2" role="group" aria-label="Basic example">
-                        <a href="/customer/view-report/{{this.customer_id}}" class="btn btn-info btn-sm"
-                            title="View Report">
-                            <i class="bi bi-file-earmark-text"></i>
-                        </a>
-                        <a href="/customer/update-info/{{this.customer_id}}" class="btn btn-primary btn-sm"
-                            title="Edit">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            {{/each}}
-        </tbody>
-    </table>
-
-    <script>
-        $(document).ready(function () {
-            $('#customersInfoTable').DataTable({
-                pageLength: 10,
-                responsive: true,
-                columnDefs: [
-                    { orderable: false, targets: [6] } // Make actions column non-sortable
-                ],
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search dealers...",
-                }
-            });
-        });
-    </script>
-</div>
-
-
-
-{{!-- <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h4 style=" margin-bottom: 20px;">List of Dealers</h4>
-
+    <!-- Filter Controls -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label for="districtFilter" class="form-label">District</label>
+            <select id="districtFilter" class="form-select">
+                <option value="">All Districts</option>
+                {{#each districts}}
+                <option value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="cityFilter" class="form-label">City</label>
+            <select id="cityFilter" class="form-select" disabled>
+                <option value="">All Cities</option>
+                <!-- Cities will be populated dynamically -->
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button id="resetFilters" class="btn btn-secondary">Reset Filters</button>
+        </div>
     </div>
 
-    <table class="table" id="customersInfoTable">
-        <thead>
-            <tr>
-                <th style="width:5%;">CustID</th>
-                <th style="width:30%;">Dealer Name</th>
-                <th style="width:20%;">Contact Person</th>
-                <th style="width:20%;">City-Pin</th>
-                <th style="width:10%;">District</th>
-                <th style="width:10%;">SAP Code</th>
-                <th style="width:5%;">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each customers}}
-            <tr>
-                <td>{{this.customer_id}}</td>
-                <td>{{this.customer_name}}</td>
-                <td>{{this.nick_name}}</td>
-                <td>{{this.city_pin}}</td>
-                <td>{{this.district}}</td>
-                <td>{{this.ext_code}}</td>
-                <td>
-                    <a href="/customer/update-info/{{this.customer_id}}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                </td>
-            </tr>
-            {{/each}}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-striped" id="customersInfoTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer Name</th>
+                    <th>Contact Person</th>
+                    <th hidden>City</th>
+                    <th>City with Pin</th>
+                    <th>District</th>
+                    <th>SAP Code</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each customers}}
+                <tr>
+                    <td>{{this.customer_id}}</td>
+                    <td>{{this.customer_name}}</td>
+                    <td>{{this.nick_name}}</td>
+                    <td hidden>{{this.city}}</td>
+                    <td>{{this.city_pin}}</td>
+                    <td>{{this.district}}</td>
+                    <td>{{this.ext_code}}</td>
+                    <td>
+                        <div class="btn-group gap-2" role="group" aria-label="Basic example">
+                            <a href="/customer/view-report/{{this.customer_id}}" class="btn btn-info btn-sm"
+                                title="View Report">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </a>
+                            <a href="/customer/update-info/{{this.customer_id}}" class="btn btn-primary btn-sm"
+                                title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-    <script>
-        $(document).ready(function () {
-            $('#customersInfoTable').dataTable({
-                pageLength: 10,
-                responsive: true,
-            });
+<script>
+    $(document).ready(function () {
+        // Parse the cities grouped by district
+        const citiesByDistrict = JSON.parse('{{{citiesByDistrict}}}');
+
+        // Initialize DataTable
+        var table = $('#customersInfoTable').DataTable({
+            dom: '<"top"lf>rt<"bottom"ip>',
+            pageLength: 10,
+            responsive: true,
+            columns: [
+                { data: 'customer_id' },
+                { data: 'customer_name' },
+                { data: 'city', visible: false }, // Hidden column for city
+                { data: 'nick_name' },
+                { data: 'city_pin' },
+                { data: 'district' },
+                { data: 'ext_code' },
+                { data: null, orderable: false }
+            ],
+            columnDefs: [
+                {
+                    targets: [7], // Actions column
+                    render: function (data, type, row) {
+                        return `
+                            <div class="btn-group gap-2" role="group">
+                                <a href="/customer/view-report/${row.customer_id}" class="btn btn-info btn-sm" title="View Report">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </a>
+                                <a href="/customer/update-info/${row.customer_id}" class="btn btn-primary btn-sm" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search dealers...",
+            }
         });
-    </script>
 
-</div> --}}
+        // District filter change event
+        $('#districtFilter').on('change', function () {
+            const selectedDistrict = $(this).val();
+            const cityDropdown = $('#cityFilter');
+
+            // Reset city dropdown
+            cityDropdown.empty().append('<option value="">All Cities</option>');
+
+            if (selectedDistrict) {
+                cityDropdown.prop('disabled', false);
+
+                // Add cities for the selected district
+                if (citiesByDistrict[selectedDistrict]) {
+                    citiesByDistrict[selectedDistrict].forEach(city => {
+                        cityDropdown.append(`<option value="${city}">${city}</option>`);
+                    });
+                }
+
+                // Apply district filter to the table
+                table.column(5).search(selectedDistrict).draw();
+            } else {
+                cityDropdown.prop('disabled', true);
+                table.column(5).search('').draw();
+            }
+
+            // Reset city filter when district changes
+            table.column(3).search('').draw();
+        });
+
+        // City filter change event
+        $('#cityFilter').on('change', function () {
+            const selectedCity = $(this).val();
+            table.column(3).search(selectedCity).draw();
+        });
+
+        // Reset filters
+        $('#resetFilters').on('click', function () {
+            $('#districtFilter').val('').trigger('change');
+            $('#cityFilter').val('').prop('disabled', true);
+            table.search('').columns().search('').draw();
+        });
+    });
+</script>
