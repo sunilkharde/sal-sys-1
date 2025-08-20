@@ -160,6 +160,9 @@ const jsonHelper = function (context) {
 const gtHBS = function (a, b) {
   return a > b;
 };
+const ltHBS = function (a, b) {
+  return a < b;
+};
 const subtractHBS = function (a, b) {
   return Math.round(a - b);
 };
@@ -181,7 +184,6 @@ const momentAddHBS = function (date, amount, unit, format) {
   }
   return modifiedDate.format('YYYY-MM-DD'); // Default format
 };
-// Add this helper to your Handlebars configuration
 const getBenchmarkData = function (benchmarkComparison, materialGroup, extCodeKey) {
   const category = benchmarkComparison.find(cat => cat.material_group === materialGroup);
   if (!category || !category.benchmarks) return null;
@@ -204,6 +206,7 @@ app.engine('hbs', exphbs.engine({
     isEquals: isEqualsHBS,
     eq: eqHBS,
     gt: gtHBS,
+    lt: ltHBS,
     includes: includesHBS,
 
     // Type checking

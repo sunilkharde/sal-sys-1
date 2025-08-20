@@ -3,18 +3,30 @@
         <!-- Sales Performance Section -->
         <div class="row justify-content-center mt-4">
             <div class="col-lg-11 border p-4 rounded">
-                <h4 class="mb-3">Performance Parameters</h4>
-
-                <!-- Date Range Filter -->
-                <form method="get" action="/customer/view-report/{{data.customer_id}}" class="row g-3 mb-4">
+        
+                <!-- Header with title & badge -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Customer Performance Report</h4>
+                    <a href="/customer/view-info" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                </div>
+                <h5 class="mb-3">
+                    Customer: <strong>{{data.customer_name}} ({{data.ext_code}})</strong>
+                </h5>
+        
+                <!-- Filter Form -->
+                <form method="get" action="/customer/view-report/{{data.customer_id}}" class="row g-3 align-items-end mb-3">
                     <div class="col-md-3">
                         <label for="from_date" class="form-label">From Date</label>
                         <input type="date" class="form-control" id="from_date" name="from_date" value="{{from_date}}">
                     </div>
+        
                     <div class="col-md-3">
                         <label for="to_date" class="form-label">To Date</label>
                         <input type="date" class="form-control" id="to_date" name="to_date" value="{{to_date}}">
                     </div>
+        
                     <div class="col-md-3">
                         <label for="material_group" class="form-label">Product Category</label>
                         <select class="form-select" id="material_group" name="material_group">
@@ -26,14 +38,14 @@
                             </option>
                             {{/each}}
                         </select>
-
                     </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary me-2">Apply Filter</button>
+        
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Apply Filter</button>
                         <a href="/customer/view-report/{{data.customer_id}}" class="btn btn-outline-secondary">Reset</a>
                     </div>
+        
                 </form>
-
             </div>
         </div>
         
@@ -115,61 +127,40 @@
             </div>
         </div>
         {{/if}}
-        
-        <!-- Benchmark Competitors Section -->
-        {{#if benchmarkData.length}}
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-11 border p-4 rounded">
-                <h4 class="mb-3">Benchmark Competitors ({{from_date}} to {{to_date}} vs {{lastYearFromDate}} to {{lastYearToDate}})</h4>
 
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Competitor Name</th>
-                                <th class="text-end">LY Qty</th>
-                                <th class="text-end">CY Qty</th>
-                                <th class="text-end">Diff</th>
-                                <th class="text-end">Growth %</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#each benchmarkData}}
-                            <tr>
-                                <td>{{add @index 1}}</td>
-                                <td>{{this.customer_name}} ({{this.city}})</td>
-                                <td class="text-end">{{formatNumber this.lastYearQty}}</td>
-                                <td class="text-end">{{formatNumber this.currentYearQty}}</td>
-                                <td class="text-end {{#if (gt this.growth_percent 0)}}text-success{{else}}text-danger{{/if}}">
-                                    {{formatNumber (subtract this.currentYearQty this.lastYearQty)}}
-                                </td>
-                                <td class="text-end {{#if (gt this.growth_percent 0)}}text-success{{else}}text-danger{{/if}}">
-                                    {{formatNumber this.growth_percent}}%
-                                </td>
-                            </tr>
-                            {{/each}}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        {{/if}}
-        
         <!-- Customer Ranking Section -->
         <div class="row justify-content-center mt-4">
             <div class="col-lg-11 border p-4 rounded">
-                <h4 class="mb-3">Market Area Performance ({{momentDMY from_date}} to {{momentDMY to_date}} vs {{momentDMY lastYearFromDate}} to {{momentDMY lastYearToDate}})</h4>
+                <h4 class="mb-3">District Performance - {{currentCustomerRank.district}}
+                    <small class="text-muted">
+                        ({{momentDMY from_date}} to {{momentDMY to_date}} vs {{momentDMY lastYearFromDate}} to {{momentDMY
+                        lastYearToDate}})
+                        {{#if selected_material_group}}
+                        - Filtered by: {{selected_material_group}}
+                        {{/if}}
+                    </small>
+                </h4>
 
                 {{#if currentCustomerRank}}
                 <div class="alert alert-info">
-                    <strong>Your Rank:</strong> #{{currentCustomerRank.sales_rank}} in market area
-                    with total quantity of {{formatNumber currentCustomerRank.currentYearQty}} Bags (LY: {{formatNumber currentCustomerRank.lastYearQty}})
+                    <strong>Your Rank:</strong> #{{currentCustomerRank.sales_rank}} of {{allDistrictCustomers.length}}
+                    in {{currentCustomerRank.district}} district
+                    with total qty of {{formatNumber currentCustomerRank.currentYearQty}}
+                    (LY: {{formatNumber currentCustomerRank.lastYearQty}})
                     <br>
-                    <strong>Growth:</strong> 
-                    <span class="{{#if (gt currentCustomerRank.growth_percent 0)}}text-success{{else}}text-danger{{/if}}">
+                    <strong>Growth:</strong>
+                    <span
+                        class="{{#if (gt currentCustomerRank.growth_percent 0)}}text-success{{else if (lt currentCustomerRank.growth_percent 0)}}text-danger{{/if}}">
+                        {{#if currentCustomerRank.growth_percent}}
                         {{formatNumber currentCustomerRank.growth_percent}}%
+                        {{else}}
+                        N/A (no previous year data)
+                        {{/if}}
                     </span>
+                    {{#if selected_material_group}}
+                    <br>
+                    <small class="text-muted">Ranking based on selected material group only</small>
+                    {{/if}}
                 </div>
                 {{/if}}
 
@@ -179,6 +170,7 @@
                             <tr>
                                 <th>Rank</th>
                                 <th>Customer Name</th>
+                                <th>City</th>
                                 <th>Top Categories</th>
                                 <th class="text-end">LY Qty</th>
                                 <th class="text-end">CY Qty</th>
@@ -186,34 +178,63 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {{#if topCustomers.length}}
                             {{#each topCustomers}}
                             <tr class="{{#eq this.ext_code_key ../data.ext_code_key}}table-primary{{/eq}}">
-                                <td class="text-center">{{this.sales_rank}}</td>
-                                <td>
-                                    {{this.customer_name}} ({{this.city}})
+                                <td class="text-end">
+                                    {{this.sales_rank}}
+                                    {{!-- {{#eq this.ext_code_key ../data.ext_code_key}}
+                                    <span class="badge bg-primary ms-1">You</span>
+                                    {{/eq}} --}}
                                 </td>
+                                <td>{{this.customer_name}}</td>
+                                <td>{{this.city}}</td>
                                 <td>
                                     {{#if this.top_categories}}
-                                        {{#each this.top_categories}}
-                                            <span class="badge bg-secondary me-1">{{this}}</span>
-                                        {{/each}}
+                                    {{#each this.top_categories}}
+                                    <span class="badge bg-secondary bg-opacity-10 text-dark me-1">{{this}}</span>
+                                    {{/each}}
                                     {{else}}
-                                        <span class="text-muted">No category data</span>
+                                    <span class="text-muted">&nbsp;</span>
                                     {{/if}}
                                 </td>
                                 <td class="text-end">{{formatNumber this.lastYearQty}}</td>
                                 <td class="text-end">{{formatNumber this.currentYearQty}}</td>
-                                <td class="text-end {{#if (gt this.growth_percent 0)}}text-success{{else}}text-danger{{/if}}">
+                                <td
+                                    class="text-end {{#if (gt this.growth_percent 0)}}text-success{{else if (lt this.growth_percent 0)}}text-danger{{/if}}">
+                                    {{#if this.growth_percent}}
                                     {{formatNumber this.growth_percent}}%
+                                    {{else}}
+                                    N/A
+                                    {{/if}}
                                 </td>
                             </tr>
                             {{/each}}
+                            {{else}}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    No customers found with sales in {{currentCustomerRank.district}} district
+                                    {{#if selected_material_group}}
+                                    for material group: {{selected_material_group}}
+                                    {{/if}}
+                                </td>
+                            </tr>
+                            {{/if}}
                         </tbody>
                     </table>
                 </div>
+
+                {{#if (gt allDistrictCustomers.length 10)}}
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        Showing top 10 customers and current customer ({{topCustomers.length}} of
+                        {{allDistrictCustomers.length}} total)
+                    </small>
+                </div>
+                {{/if}}
             </div>
         </div>
-
+        
         {{!-- Sales Performance Section --}}
         <div class="row justify-content-center mt-4">
             <div class="col-lg-11 border p-4 rounded">
@@ -336,7 +357,6 @@
                 </div>
             </div>
         </div>
-
 
         <hr class="my-4">
         <!-- Customer Information Section -->
@@ -610,12 +630,13 @@
                 responsive: true
             });
 
-            $('.benchmark-table').DataTable({
+            /*$('.benchmark-table').DataTable({
                 ordering: true,
                 paging: false,
                 info: false
-            });
-
+                //searching: false,
+                //responsive: true,
+            });*/
 
             // Category Distribution Chart
             if (categoryLabels.length > 0) {
@@ -684,11 +705,9 @@
         });
     </script>
 
-    
     <script>
         // Print functionality
         document.getElementById('printButton').addEventListener('click', function () {
             window.print();
         });
     </script>
-

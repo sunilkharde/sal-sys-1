@@ -760,87 +760,126 @@ class customerController {
                 lastFYStart, lastFYEnd
             ]);
 
-            // 7. Get customer ranking - grouped by ext_code_key with top categories
+            // 7. Get customer ranking - optimized for material group filtering
             const sqlCustomerRanking = `
-                WITH market_area_sales AS (
+                WITH district_sales AS (
                     SELECT 
                         c.ext_code_key,
                         MAX(c.customer_name) AS customer_name,
                         MAX(c.city) AS city,
+                        MAX(c.district) AS district,
                         ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS currentYearSales,
                         SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
                         ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS lastYearSales,
                         SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS lastYearQty
                     FROM customers c
                     JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
-                    WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
-                    AND c.market_area_id = ?
+                    WHERE c.district = ?
+                    AND (
+                        (s.billing_date BETWEEN ? AND ?) OR 
+                        (s.billing_date BETWEEN ? AND ?)
+                    )
                     ${materialGroupFilter}
                     GROUP BY c.ext_code_key
+                    HAVING currentYearQty > 0 OR lastYearQty > 0
                 ),
                 category_ranking AS (
                     SELECT 
                         c.ext_code_key,
                         s.material_group_description,
                         SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
-                        ROW_NUMBER() OVER (PARTITION BY c.ext_code_key ORDER BY SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) DESC) as category_rank
+                        ROW_NUMBER() OVER (
+                            PARTITION BY c.ext_code_key 
+                            ORDER BY SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) DESC
+                        ) as category_rank
                     FROM customers c
                     JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
                     WHERE s.billing_date BETWEEN ? AND ?
-                    AND c.market_area_id = ?
+                    AND c.district = ?
                     ${materialGroupFilter}
                     GROUP BY c.ext_code_key, s.material_group_description
+                ),
+                ranked_customers AS (
+                    SELECT 
+                        ds.ext_code_key,
+                        ds.customer_name,
+                        ds.city,
+                        ds.district,
+                        ds.currentYearSales,
+                        ds.currentYearQty,
+                        ds.lastYearSales,
+                        ds.lastYearQty,
+                        RANK() OVER (
+                            ORDER BY ds.currentYearQty DESC, ds.customer_name ASC
+                        ) AS sales_rank,
+                        CASE 
+                            WHEN ds.lastYearQty = 0 THEN NULL 
+                            ELSE ROUND(((ds.currentYearQty - ds.lastYearQty) / ds.lastYearQty * 100), 2) 
+                        END AS growth_percent,
+                        GROUP_CONCAT(
+                            CASE WHEN cr.category_rank <= 3 THEN cr.material_group_description END 
+                            ORDER BY cr.category_rank
+                        ) AS top_categories
+                    FROM district_sales ds
+                    LEFT JOIN category_ranking cr ON ds.ext_code_key = cr.ext_code_key AND cr.category_rank <= 3
+                    GROUP BY ds.ext_code_key, ds.customer_name, ds.city, ds.district, 
+                            ds.currentYearSales, ds.currentYearQty, ds.lastYearSales, ds.lastYearQty
                 )
-                SELECT 
-                    mas.ext_code_key,
-                    mas.customer_name,
-                    mas.city,
-                    mas.currentYearSales,
-                    mas.currentYearQty,
-                    mas.lastYearSales,
-                    mas.lastYearQty,
-                    RANK() OVER (ORDER BY mas.currentYearQty DESC) AS sales_rank,
-                    CASE 
-                        WHEN mas.lastYearQty = 0 THEN NULL 
-                        ELSE ROUND(((mas.currentYearQty - mas.lastYearQty) / mas.lastYearQty * 100), 2) 
-                    END AS growth_percent,
-                    GROUP_CONCAT(CASE WHEN cr.category_rank <= 3 THEN cr.material_group_description END ORDER BY cr.category_rank) AS top_categories
-                FROM market_area_sales mas
-                LEFT JOIN category_ranking cr ON mas.ext_code_key = cr.ext_code_key AND cr.category_rank <= 3
-                GROUP BY mas.ext_code_key, mas.customer_name, mas.city, mas.currentYearSales, mas.currentYearQty, mas.lastYearSales, mas.lastYearQty
-                ORDER BY mas.currentYearQty DESC`;
+                SELECT * FROM ranked_customers
+                ORDER BY sales_rank ASC, customer_name ASC;
+                `;
 
             const rankingData = await executeQuery(sqlCustomerRanking, [
+                // Current year sales
                 queryFromDate, queryToDate,
                 queryFromDate, queryToDate,
+
+                // Last year sales  
                 lastYearFromDate, lastYearToDate,
                 lastYearFromDate, lastYearToDate,
+
+                // District filter
+                customerData[0].district,
+
+                // Date ranges for both periods
                 queryFromDate, queryToDate,
                 lastYearFromDate, lastYearToDate,
-                customerData[0].market_area_id,
+
+                // Category ranking - current year only
                 queryFromDate, queryToDate,
                 queryFromDate, queryToDate,
                 queryFromDate, queryToDate,
-                customerData[0].market_area_id
+                customerData[0].district
             ]);
 
             // Process the top categories string into an array
             rankingData.forEach(customer => {
                 if (customer.top_categories) {
-                    customer.top_categories = customer.top_categories.split(',').slice(0, 3);
+                    customer.top_categories = customer.top_categories.split(',').filter(Boolean).slice(0, 3);
                 }
             });
 
+            // Get all customers in the district
+            const allDistrictCustomers = rankingData.filter(customer =>
+                customer.district === customerData[0].district
+            );
+
             // Get top 10 customers
-            let topCustomers = rankingData.slice(0, 10);
+            let topCustomers = allDistrictCustomers.slice(0, 10);
 
             // Find current customer's rank
-            const currentCustomerRank = rankingData.find(c => c.ext_code_key === sapCustomerExtKey);
+            const currentCustomerRank = allDistrictCustomers.find(c =>
+                c.ext_code_key === sapCustomerExtKey
+            );
 
             // If current customer not in top 10, add them to the list
             if (currentCustomerRank && !topCustomers.some(c => c.ext_code_key === sapCustomerExtKey)) {
                 topCustomers.push(currentCustomerRank);
+
+                // Sort again to maintain ranking order
+                topCustomers.sort((a, b) => a.sales_rank - b.sales_rank);
             }
+
 
             // 8. Benchmark comparison
             const hasBenchmarks = await executeQuery(
@@ -905,7 +944,8 @@ class customerController {
                         lastYearFromDate, lastYearToDate,
                         queryFromDate, queryToDate,
                         lastYearFromDate, lastYearToDate,
-                        benchmarkIds
+                        benchmarkIds,
+                        allDistrictCustomers
                     ]
                 );
 
@@ -1110,6 +1150,7 @@ class customerController {
                 spData,
                 topCustomers,
                 currentCustomerRank,
+                allDistrictCustomers,
                 from_date: queryFromDate,
                 to_date: queryToDate,
                 lastYearFromDate,
