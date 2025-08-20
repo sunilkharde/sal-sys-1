@@ -760,39 +760,55 @@ class customerController {
                 lastFYStart, lastFYEnd
             ]);
 
-            // 7. Get customer ranking - grouped by ext_code_key
+            // 7. Get customer ranking - grouped by ext_code_key with top categories
             const sqlCustomerRanking = `
-            WITH market_area_sales AS (
+                WITH market_area_sales AS (
+                    SELECT 
+                        c.ext_code_key,
+                        MAX(c.customer_name) AS customer_name,
+                        MAX(c.city) AS city,
+                        ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS currentYearSales,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
+                        ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS lastYearSales,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS lastYearQty
+                    FROM customers c
+                    JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
+                    WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
+                    AND c.market_area_id = ?
+                    ${materialGroupFilter}
+                    GROUP BY c.ext_code_key
+                ),
+                category_ranking AS (
+                    SELECT 
+                        c.ext_code_key,
+                        s.material_group_description,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
+                        ROW_NUMBER() OVER (PARTITION BY c.ext_code_key ORDER BY SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) DESC) as category_rank
+                    FROM customers c
+                    JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
+                    WHERE s.billing_date BETWEEN ? AND ?
+                    AND c.market_area_id = ?
+                    ${materialGroupFilter}
+                    GROUP BY c.ext_code_key, s.material_group_description
+                )
                 SELECT 
-                    c.ext_code_key,
-                    MAX(c.customer_name) AS customer_name,
-                    MAX(c.city) AS city,
-                    ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS currentYearSales,
-                    SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
-                    ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS lastYearSales,
-                    SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS lastYearQty
-                FROM customers c
-                JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
-                WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
-                AND c.market_area_id = ?
-                ${materialGroupFilter}
-                GROUP BY c.ext_code_key
-            )
-            SELECT 
-                ext_code_key,
-                customer_name,
-                city,
-                currentYearSales,
-                currentYearQty,
-                lastYearSales,
-                lastYearQty,
-                RANK() OVER (ORDER BY currentYearQty DESC) AS sales_rank,
-                CASE 
-                    WHEN lastYearQty = 0 THEN NULL 
-                    ELSE ROUND(((currentYearQty - lastYearQty) / lastYearQty * 100), 2) 
-                END AS growth_percent
-            FROM market_area_sales
-            ORDER BY currentYearQty DESC`;
+                    mas.ext_code_key,
+                    mas.customer_name,
+                    mas.city,
+                    mas.currentYearSales,
+                    mas.currentYearQty,
+                    mas.lastYearSales,
+                    mas.lastYearQty,
+                    RANK() OVER (ORDER BY mas.currentYearQty DESC) AS sales_rank,
+                    CASE 
+                        WHEN mas.lastYearQty = 0 THEN NULL 
+                        ELSE ROUND(((mas.currentYearQty - mas.lastYearQty) / mas.lastYearQty * 100), 2) 
+                    END AS growth_percent,
+                    GROUP_CONCAT(CASE WHEN cr.category_rank <= 3 THEN cr.material_group_description END ORDER BY cr.category_rank) AS top_categories
+                FROM market_area_sales mas
+                LEFT JOIN category_ranking cr ON mas.ext_code_key = cr.ext_code_key AND cr.category_rank <= 3
+                GROUP BY mas.ext_code_key, mas.customer_name, mas.city, mas.currentYearSales, mas.currentYearQty, mas.lastYearSales, mas.lastYearQty
+                ORDER BY mas.currentYearQty DESC`;
 
             const rankingData = await executeQuery(sqlCustomerRanking, [
                 queryFromDate, queryToDate,
@@ -801,8 +817,19 @@ class customerController {
                 lastYearFromDate, lastYearToDate,
                 queryFromDate, queryToDate,
                 lastYearFromDate, lastYearToDate,
+                customerData[0].market_area_id,
+                queryFromDate, queryToDate,
+                queryFromDate, queryToDate,
+                queryFromDate, queryToDate,
                 customerData[0].market_area_id
             ]);
+
+            // Process the top categories string into an array
+            rankingData.forEach(customer => {
+                if (customer.top_categories) {
+                    customer.top_categories = customer.top_categories.split(',').slice(0, 3);
+                }
+            });
 
             // Get top 10 customers
             let topCustomers = rankingData.slice(0, 10);

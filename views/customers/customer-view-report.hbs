@@ -155,7 +155,7 @@
             </div>
         </div>
         {{/if}}
-
+        
         <!-- Customer Ranking Section -->
         <div class="row justify-content-center mt-4">
             <div class="col-lg-11 border p-4 rounded">
@@ -179,6 +179,7 @@
                             <tr>
                                 <th>Rank</th>
                                 <th>Customer Name</th>
+                                <th>Top Categories</th>
                                 <th class="text-end">LY Qty</th>
                                 <th class="text-end">CY Qty</th>
                                 <th class="text-end">Growth %</th>
@@ -190,6 +191,15 @@
                                 <td class="text-center">{{this.sales_rank}}</td>
                                 <td>
                                     {{this.customer_name}} ({{this.city}})
+                                </td>
+                                <td>
+                                    {{#if this.top_categories}}
+                                        {{#each this.top_categories}}
+                                            <span class="badge bg-secondary me-1">{{this}}</span>
+                                        {{/each}}
+                                    {{else}}
+                                        <span class="text-muted">No category data</span>
+                                    {{/if}}
                                 </td>
                                 <td class="text-end">{{formatNumber this.lastYearQty}}</td>
                                 <td class="text-end">{{formatNumber this.currentYearQty}}</td>
