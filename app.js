@@ -83,23 +83,10 @@ app.use('/cors-api', function (req, res, next) {
   next();
 });
 
-// // Middleware to log data
-// app.use((req, res, next) => {
-//   const logData = `${new Date().toISOString()} - ${req.method} ${req.url}\n`;
-//   console.log(logData);
 
-//   fs.appendFile('log.txt', logData, (err) => {
-//     if (err) {
-//       console.error('Error writing to log file:', err);
-//     }
-//   });
-
-//   next();
-// });
-
-
-//start-define custome helpers //Use === value match, == string match
-
+/**
+ * Custom Handlebars helpers for date formatting and other utilities.
+ */
 const momentDDDD_HBS = function (date, format) {
   if (typeof format === 'string') {
     return moment(date, format).format('dddd');
@@ -158,9 +145,6 @@ const isEqualHelperHandlerbar = function (variable, ...values) {
   const isEqual = values.some((value) => variable === value);
   return isEqual ? options.fn(this) : options.inverse(this);
 };
-// const addHBS = function(a, b) {
-//   return Number(a) + Number(b);
-// };
 const addHBS = function (...values) {
   let sum = 0;
   values.forEach((value) => {
@@ -173,8 +157,6 @@ const addHBS = function (...values) {
 const jsonHelper = function (context) {
   return JSON.stringify(context);
 };
-
-// Add these to your existing helpers
 const gtHBS = function (a, b) {
   return a > b;
 };
@@ -188,6 +170,25 @@ const divideHBS = function (a, b) {
   if (b === 0) return 0; // Prevent division by zero
   return a / b;
 };
+const momentAddHBS = function (date, amount, unit, format) {
+  const momentDate = moment(date);
+  if (!momentDate.isValid()) return date; // Return original if invalid date
+
+  const modifiedDate = momentDate.add(amount, unit);
+
+  if (format) {
+    return modifiedDate.format(format);
+  }
+  return modifiedDate.format('YYYY-MM-DD'); // Default format
+};
+// Add this helper to your Handlebars configuration
+const getBenchmarkData = function (benchmarkComparison, materialGroup, extCodeKey) {
+  const category = benchmarkComparison.find(cat => cat.material_group === materialGroup);
+  if (!category || !category.benchmarks) return null;
+
+  return category.benchmarks.find(bench => bench.ext_code_key === extCodeKey);
+};
+//end-define custome helpers
 
 // view engine setup
 app.set('views', join(process.cwd(), 'views'));
@@ -198,45 +199,101 @@ app.engine('hbs', exphbs.engine({
   layoutsDir: join(process.cwd(), '/views/layouts/'),
   partialsDir: join(process.cwd(), '/views/partials'),
   helpers: {
+    // Comparison helpers
     isEqual: isEqualHelperHandlerbar,
     isEquals: isEqualsHBS,
     eq: eqHBS,
+    gt: gtHBS,
     includes: includesHBS,
+
+    // Type checking
     isArray: isArrayHBS,
+
+    // Date formatting
+    moment: function (dateString, inputFormat, outputFormat) {
+      return moment(dateString, inputFormat).format(outputFormat);
+    },
     momentDMY: momentDMY_HBS,
     momentYMD: momentYMD_HBS,
     momentDMYHm: momentDMYHm_HBS,
     momentDDDD: momentDDDD_HBS,
     momentDDD: momentDDD_HBS,
-    add: addHBS,
-    json: jsonHelper,
+    momentAdd: momentAddHBS,
 
-    round: function (value) {
-      return Math.round(value);
-    },
-    // You can also add these additional number formatting helpers:
+    // Math operations
+    add: addHBS,
+    subtract: subtractHBS,
+    multiply: multiplyHBS,
+    divide: divideHBS,
+
+    // Number formatting
     formatNumber: function (value) {
-      return value ? Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "0";
+      return value ? Math.round(value).toLocaleString() : '0';
     },
     formatCurrency: function (value) {
-      return value ? "₹" + Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "₹0";
+      return value ? '₹' + Math.round(value).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '₹0';
     },
     formatPercent: function (value) {
       return Math.round(value);
     },
-    gt: gtHBS,
-    subtract: subtractHBS,    
-    multiply: multiplyHBS,
-    divide: divideHBS,    
-    // You might also want to add these for better number formatting:
-    fixed: function(value, decimals) {
+    fixed: function (value, decimals) {
       return Number(value).toFixed(decimals || 2);
     },
-    percent: function(value) {
+    percent: function (value) {
       return (value * 100).toFixed(1) + '%';
-    }
+    },
+    round: function (value) {
+      return Math.round(value);
+    },
+
+    // String operations
+    hasData: function (value, options) {
+      return (value !== null && value !== undefined) ?
+        options.fn(this) : options.inverse(this);
+    },
+
+    growthClass: function (growthPercent) {
+      if (growthPercent > 0) return 'text-success';
+      if (growthPercent < 0) return 'text-danger';
+      return '';
+    },
+
+    // In your app.js helpers section, replace the group helper with this:
+    group: function (array, options) {
+      const property = options.hash.by;   // <-- get "by" from hash
+
+      if (!Array.isArray(array) || array.length === 0) {
+        return options.inverse(this);
+      }
+
+      const groups = {};
+      array.forEach(item => {
+        const key = item[property];
+        if (!groups[key]) {
+          groups[key] = [];
+        }
+        groups[key].push(item);
+      });
+
+      const result = Object.keys(groups).map(key => ({
+        value: key,
+        items: groups[key]
+      }));
+
+      // Merge with parent context
+      const newContext = Object.assign({}, this, {
+        groups: result
+      });
+
+      return options.fn(newContext);
+    },
+    
+    getBenchmarkData: getBenchmarkData,
+
+    // JSON helper
+    json: jsonHelper
   }
-  
+
 }));
 
 // Load auth routes
