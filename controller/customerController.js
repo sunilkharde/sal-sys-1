@@ -656,6 +656,16 @@ class customerController {
             const lastFYStart = financialYearStart.clone().subtract(1, 'year').format('YYYY-MM-DD');
             const lastFYEnd = financialYearStart.clone().subtract(1, 'day').format('YYYY-MM-DD');
 
+            // console.log('Financial Year Start:', financialYearStart.format('YYYY-MM-DD'));
+            // console.log('Query From Date:', queryFromDate);
+            // console.log('Query To Date:', queryToDate);
+            // console.log('Last Year From Date:', lastYearFromDate);
+            // console.log('Last Year To Date:', lastYearToDate);
+            // console.log('Current FY Start:', currentFYStart);
+            // console.log('Current FY End:', currentFYEnd);
+            // console.log('Last FY Start:', lastFYStart);
+            // console.log('Last FY End:', lastFYEnd);
+
             const sapCustomerNumber = customerData[0].ext_code.padStart(10, '0');
             const sapCustomerExtKey = customerData[0].ext_code_key;
 
@@ -740,25 +750,56 @@ class customerController {
                 };
             });
 
-            // 6. Monthly trend - whole financial year
+            // 6. Monthly trend - whole financial year (modified for proper chart display)
             const sqlMonthlyTrend = `
             SELECT 
-                DATE_FORMAT(billing_date, '%Y-%m') AS month,
-                SUM(CASE WHEN billing_date BETWEEN ? AND ? THEN quantity * item_price ELSE 0 END) AS currentYearValue,
-                SUM(CASE WHEN billing_date BETWEEN ? AND ? THEN quantity * item_price ELSE 0 END) AS lastYearValue
+                DATE_FORMAT(billing_date, '%m') AS month_num,
+                DATE_FORMAT(billing_date, '%b') AS month_name,
+                YEAR(billing_date) AS year,
+                SUM(quantity * item_price) AS value,
+                SUM(quantity) AS qty
             FROM sap_sales
             WHERE customer_number = ?
-            AND (billing_date BETWEEN ? AND ? OR billing_date BETWEEN ? AND ?)
-            GROUP BY DATE_FORMAT(billing_date, '%Y-%m')
-            ORDER BY month`;
+            AND (
+                (billing_date BETWEEN ? AND ?) OR 
+                (billing_date BETWEEN ? AND ?)
+            )
+            ${materialGroupFilter}
+            GROUP BY YEAR(billing_date), DATE_FORMAT(billing_date, '%m'), DATE_FORMAT(billing_date, '%b')
+            ORDER BY year, month_num`;
 
-            const monthlyTrend = await executeQuery(sqlMonthlyTrend, [
-                currentFYStart, currentFYEnd,
-                lastFYStart, lastFYEnd,
+            const monthlyTrendRaw = await executeQuery(sqlMonthlyTrend, [
                 sapCustomerNumber,
                 currentFYStart, currentFYEnd,
                 lastFYStart, lastFYEnd
             ]);
+
+            // Process the raw data for chart display
+            const monthlyTrend = { labels: [], currentYear: [], lastYear: [] };
+
+            // Get current and last financial years
+            const currentYear = moment().year();
+            const lastYear = currentYear - 1;
+
+            // Initialize arrays with zeros for all months
+            const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+            months.forEach(month => {
+                monthlyTrend.labels.push(month);
+                monthlyTrend.currentYear.push(0);
+                monthlyTrend.lastYear.push(0);
+            });
+
+            // Fill in the actual data
+            monthlyTrendRaw.forEach(item => {
+                const monthIndex = months.indexOf(item.month_name);
+                if (monthIndex !== -1) {
+                    if (item.year === currentYear) {
+                        monthlyTrend.currentYear[monthIndex] = item.qty;
+                    } else if (item.year === lastYear) {
+                        monthlyTrend.lastYear[monthIndex] = item.qty;
+                    }
+                }
+            });
 
             // 7. Get customer ranking - optimized for material group filtering
             const sqlCustomerRanking = `
@@ -1151,10 +1192,17 @@ class customerController {
                 topCustomers,
                 currentCustomerRank,
                 allDistrictCustomers,
+                // Financial year dates
                 from_date: queryFromDate,
                 to_date: queryToDate,
                 lastYearFromDate,
                 lastYearToDate,
+                currentFYStart,
+                currentFYEnd,
+                lastFYStart,
+                lastFYEnd,
+                finYear: moment(lastFYStart).format('YYYY') + '-' + moment(lastFYEnd).format('YYYY'), // e.g. 2022-2023
+                // SAP customer details
                 selected_material_group: material_group,
                 material_groups: allMaterialGroups.map(mg => ({
                     value: mg.material_group,

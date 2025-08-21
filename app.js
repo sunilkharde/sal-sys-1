@@ -184,12 +184,6 @@ const momentAddHBS = function (date, amount, unit, format) {
   }
   return modifiedDate.format('YYYY-MM-DD'); // Default format
 };
-const getBenchmarkData = function (benchmarkComparison, materialGroup, extCodeKey) {
-  const category = benchmarkComparison.find(cat => cat.material_group === materialGroup);
-  if (!category || !category.benchmarks) return null;
-
-  return category.benchmarks.find(bench => bench.ext_code_key === extCodeKey);
-};
 //end-define custome helpers
 
 // view engine setup
@@ -249,49 +243,12 @@ app.engine('hbs', exphbs.engine({
       return Math.round(value);
     },
 
-    // String operations
-    hasData: function (value, options) {
-      return (value !== null && value !== undefined) ?
-        options.fn(this) : options.inverse(this);
-    },
-
+    // Growth class for styling
     growthClass: function (growthPercent) {
       if (growthPercent > 0) return 'text-success';
       if (growthPercent < 0) return 'text-danger';
       return '';
-    },
-
-    // In your app.js helpers section, replace the group helper with this:
-    group: function (array, options) {
-      const property = options.hash.by;   // <-- get "by" from hash
-
-      if (!Array.isArray(array) || array.length === 0) {
-        return options.inverse(this);
-      }
-
-      const groups = {};
-      array.forEach(item => {
-        const key = item[property];
-        if (!groups[key]) {
-          groups[key] = [];
-        }
-        groups[key].push(item);
-      });
-
-      const result = Object.keys(groups).map(key => ({
-        value: key,
-        items: groups[key]
-      }));
-
-      // Merge with parent context
-      const newContext = Object.assign({}, this, {
-        groups: result
-      });
-
-      return options.fn(newContext);
-    },
-    
-    getBenchmarkData: getBenchmarkData,
+    },    
 
     // JSON helper
     json: jsonHelper

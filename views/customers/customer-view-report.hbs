@@ -1,713 +1,761 @@
- <div class="container">
+<div class="container">
 
-        <!-- Sales Performance Section -->
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-11 border p-4 rounded">
-        
-                <!-- Header with title & badge -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">Customer Performance Report</h4>
-                    <a href="/customer/view-info" class="btn btn-sm btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Back
-                    </a>
-                </div>
-                <h5 class="mb-3">
-                    Customer: <strong>{{data.customer_name}} ({{data.ext_code}})</strong>
-                </h5>
-        
-                <!-- Filter Form -->
-                <form method="get" action="/customer/view-report/{{data.customer_id}}" class="row g-3 align-items-end mb-3">
-                    <div class="col-md-3">
-                        <label for="from_date" class="form-label">From Date</label>
-                        <input type="date" class="form-control" id="from_date" name="from_date" value="{{from_date}}">
-                    </div>
-        
-                    <div class="col-md-3">
-                        <label for="to_date" class="form-label">To Date</label>
-                        <input type="date" class="form-control" id="to_date" name="to_date" value="{{to_date}}">
-                    </div>
-        
-                    <div class="col-md-3">
-                        <label for="material_group" class="form-label">Product Category</label>
-                        <select class="form-select" id="material_group" name="material_group">
-                            <option value="">All Categories</option>
-                            {{#each material_groups}}
-                            <option value="{{this.value}}" {{#isEqual this.value
-                                ../selected_material_group}}selected{{/isEqual}}>
-                                {{this.label}}
-                            </option>
-                            {{/each}}
-                        </select>
-                    </div>
-        
-                    <div class="col-md-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">Apply Filter</button>
-                        <a href="/customer/view-report/{{data.customer_id}}" class="btn btn-outline-secondary">Reset</a>
-                    </div>
-        
-                </form>
+    <!-- Sales Performance Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-11 border p-4 rounded">
+
+            <!-- Header with title & badge -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Customer Performance Report</h4>
+                <a href="/customer/view-info" class="btn btn-sm btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
             </div>
+            <h5 class="mb-3">
+                Customer: <strong>{{data.customer_name}} ({{data.ext_code}})</strong>
+            </h5>
+
+            <!-- Filter Form -->
+            <form method="get" action="/customer/view-report/{{data.customer_id}}" class="row g-3 align-items-end mb-3">
+                <div class="col-md-3">
+                    <label for="from_date" class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="from_date" name="from_date" value="{{from_date}}">
+                </div>
+
+                <div class="col-md-3">
+                    <label for="to_date" class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="to_date" name="to_date" value="{{to_date}}">
+                </div>
+
+                <div class="col-md-3">
+                    <label for="material_group" class="form-label">Product Category</label>
+                    <select class="form-select" id="material_group" name="material_group">
+                        <option value="">All Categories</option>
+                        {{#each material_groups}}
+                        <option value="{{this.value}}" {{#isEqual this.value
+                            ../selected_material_group}}selected{{/isEqual}}>
+                            {{this.label}}
+                        </option>
+                        {{/each}}
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    <a href="/customer/view-report/{{data.customer_id}}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+
+            </form>
         </div>
-        
-        <!-- Add Benchmark Comparison Section -->
-        {{#if hasBenchmarks}}
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-11 border p-4 rounded">
-                <h4 class="mb-3">Category-wise Benchmark Comparison</h4>
-                {{#if benchmarkData}}
-                    {{#each benchmarkData.groupedData}}
-                    {{!-- <h5 class="mt-3">{{@key}} Products</h5> --}}
-                    <h5 class="mt-3" style="font-weight: 700; color: #2c3e50; padding: 10px 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef;">
-                        {{@key}} Products
-                    </h5>
-                    <div class="table-responsive border rounded mb-4">
-                        <table class="table table-sm table-bordered benchmark-table">
-                            <thead class="table-light">
-                                <tr>
-                                    <th rowspan="2" class="border-top">Category</th>
-                                    {{!-- <th colspan="3" class="text-center">{{../benchmarkData.header.currentCustomer.name}}</th> --}}
-                                    <th colspan="3" class="text-center border-top">{{../benchmarkData.header.currentCustomer.city}}</th>
-                                    {{#each ../benchmarkData.header.benchmarks}}
-                                    {{!-- <th colspan="3" class="text-center">{{customer_name}} ({{city}})</th> --}}
-                                    <th colspan="3" class="text-center border-top">{{city}}</th>
-                                    {{/each}}
-                                </tr>
-                                <tr>
-                                    <!-- Current Customer headers -->
-                                    <th class="text-end">LY Qty</th>
-                                    <th class="text-end">CY Qty</th>
-                                    <th class="text-end">Growth %</th>
-                                    <!-- Benchmark headers -->
-                                    {{#each ../benchmarkData.header.benchmarks}}
-                                    <th class="text-end">LY Qty</th>
-                                    <th class="text-end">CY Qty</th>
-                                    <th class="text-end">Growth %</th>
-                                    {{/each}}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{#each this}}
-                                <tr>
-                                    <td>{{material_group_description}}</td>
-                                    
-                                    <!-- Current Customer Data -->
-                                    <td class="text-end">{{formatNumber current_customer.lastYearQty}}</td>
-                                    <td class="text-end">{{formatNumber current_customer.currentYearQty}}</td>
-                                    <td class="text-end {{growthClass current_customer.growthPercent}}">
-                                        {{#if current_customer.growthPercent}}
-                                        {{formatNumber current_customer.growthPercent}}%
-                                        {{else}}
-                                        -
-                                        {{/if}}
-                                    </td>
-
-                                    <!-- Benchmarks Data -->
-                                    {{#each benchmarks}}
-                                    <td class="text-end">{{formatNumber lastYearQty}}</td>
-                                    <td class="text-end">{{formatNumber currentYearQty}}</td>
-                                    <td class="text-end {{growthClass growthPercent}}">
-                                        {{#if growthPercent}}
-                                        {{formatNumber growthPercent}}%
-                                        {{else}}
-                                        -
-                                        {{/if}}
-                                    </td>
-                                    {{/each}}
-                                </tr>
-                                {{/each}}
-                            </tbody>
-                        </table>
-                    </div>
-                    {{/each}}
-                {{else}}
-                    <div class="alert alert-info">
-                        No benchmark comparison data available for the selected period.
-                    </div>
-                {{/if}}
-            </div>
-        </div>
-        {{/if}}
-
-        <!-- Customer Ranking Section -->
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-11 border p-4 rounded">
-                <h4 class="mb-3">District Performance - {{currentCustomerRank.district}}
-                    <small class="text-muted">
-                        ({{momentDMY from_date}} to {{momentDMY to_date}} vs {{momentDMY lastYearFromDate}} to {{momentDMY
-                        lastYearToDate}})
-                        {{#if selected_material_group}}
-                        - Filtered by: {{selected_material_group}}
-                        {{/if}}
-                    </small>
-                </h4>
-
-                {{#if currentCustomerRank}}
-                <div class="alert alert-info">
-                    <strong>Your Rank:</strong> #{{currentCustomerRank.sales_rank}} of {{allDistrictCustomers.length}}
-                    in {{currentCustomerRank.district}} district
-                    with total qty of {{formatNumber currentCustomerRank.currentYearQty}}
-                    (LY: {{formatNumber currentCustomerRank.lastYearQty}})
-                    <br>
-                    <strong>Growth:</strong>
-                    <span
-                        class="{{#if (gt currentCustomerRank.growth_percent 0)}}text-success{{else if (lt currentCustomerRank.growth_percent 0)}}text-danger{{/if}}">
-                        {{#if currentCustomerRank.growth_percent}}
-                        {{formatNumber currentCustomerRank.growth_percent}}%
-                        {{else}}
-                        N/A (no previous year data)
-                        {{/if}}
-                    </span>
-                    {{#if selected_material_group}}
-                    <br>
-                    <small class="text-muted">Ranking based on selected material group only</small>
-                    {{/if}}
-                </div>
-                {{/if}}
-
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Rank</th>
-                                <th>Customer Name</th>
-                                <th>City</th>
-                                <th>Top Categories</th>
-                                <th class="text-end">LY Qty</th>
-                                <th class="text-end">CY Qty</th>
-                                <th class="text-end">Growth %</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#if topCustomers.length}}
-                            {{#each topCustomers}}
-                            <tr class="{{#eq this.ext_code_key ../data.ext_code_key}}table-primary{{/eq}}">
-                                <td class="text-end">
-                                    {{this.sales_rank}}
-                                    {{!-- {{#eq this.ext_code_key ../data.ext_code_key}}
-                                    <span class="badge bg-primary ms-1">You</span>
-                                    {{/eq}} --}}
-                                </td>
-                                <td>{{this.customer_name}}</td>
-                                <td>{{this.city}}</td>
-                                <td>
-                                    {{#if this.top_categories}}
-                                    {{#each this.top_categories}}
-                                    <span class="badge bg-secondary bg-opacity-10 text-dark me-1">{{this}}</span>
-                                    {{/each}}
-                                    {{else}}
-                                    <span class="text-muted">&nbsp;</span>
-                                    {{/if}}
-                                </td>
-                                <td class="text-end">{{formatNumber this.lastYearQty}}</td>
-                                <td class="text-end">{{formatNumber this.currentYearQty}}</td>
-                                <td
-                                    class="text-end {{#if (gt this.growth_percent 0)}}text-success{{else if (lt this.growth_percent 0)}}text-danger{{/if}}">
-                                    {{#if this.growth_percent}}
-                                    {{formatNumber this.growth_percent}}%
-                                    {{else}}
-                                    N/A
-                                    {{/if}}
-                                </td>
-                            </tr>
-                            {{/each}}
-                            {{else}}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">
-                                    No customers found with sales in {{currentCustomerRank.district}} district
-                                    {{#if selected_material_group}}
-                                    for material group: {{selected_material_group}}
-                                    {{/if}}
-                                </td>
-                            </tr>
-                            {{/if}}
-                        </tbody>
-                    </table>
-                </div>
-
-                {{#if (gt allDistrictCustomers.length 10)}}
-                <div class="text-center mt-3">
-                    <small class="text-muted">
-                        Showing top 10 customers and current customer ({{topCustomers.length}} of
-                        {{allDistrictCustomers.length}} total)
-                    </small>
-                </div>
-                {{/if}}
-            </div>
-        </div>
-        
-        {{!-- Sales Performance Section --}}
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-11 border p-4 rounded">
-                <h4 class="mb-3">Sales Performance ({{momentDMY from_date}} to {{momentDMY to_date}} vs {{momentDMY lastYearFromDate}} to {{momentDMY lastYearToDate}})</h4>
-
-                <!-- Sales Summary Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="card text-white bg-primary mb-3 h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Total Quantity</h6>
-                                <p class="card-text display-6">{{formatNumber salesSummary.currentYearQty}}</p>
-                                <p class="card-text">
-                                    <small>LY: {{formatNumber salesSummary.lastYearQty}}</small><br>
-                                    <small class="{{#if (gt salesSummary.growthPercent 0)}}text-success{{else}}text-danger{{/if}}">
-                                        {{formatNumber salesSummary.growthPercent}}%
-                                    </small>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-success mb-3 h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Total Value</h6>
-                                <p class="card-text display-6">{{formatCurrency salesSummary.currentYearValue}}</p>
-                                <p class="card-text">
-                                    <small>LY: {{formatCurrency salesSummary.lastYearValue}}</small>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-info mb-3 h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Avg. Monthly</h6>
-                                <p class="card-text display-6">{{formatCurrency salesSummary.avgMonthly}}</p>
-                                <p class="card-text"><small>Current Period</small></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-secondary mb-3 h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">Categories</h6>
-                                <p class="card-text display-6">{{salesSummary.categoryCount}}</p>
-                                <p class="card-text"><small>Product Categories</small></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Material Group Performance -->
-                <div class="row mb-4">
-                    <div class="col-md-8">
-                        <div class="card h-100">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">Sales by Product Category</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover" id="materialGroupTable">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Category</th>
-                                                <th class="text-end">LY Qty</th>
-                                                <th class="text-end">CY Qty</th>
-                                                <th class="text-end">Diff</th>
-                                                <th class="text-end">Growth %</th>
-                                                <th class="text-end">CY Value</th>
-                                                <th class="text-end">CY %</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {{#each materialGroupPerformance}}
-                                            <tr>
-                                                <td>{{this.material_group_description}}</td>
-                                                <td class="text-end">{{formatNumber this.lastYearQty}}</td>
-                                                <td class="text-end">{{formatNumber this.currentYearQty}}</td>
-                                                <td class="text-end {{#if (gt this.growthPercent 0)}}text-success{{else}}text-danger{{/if}}">
-                                                    {{formatNumber (subtract this.currentYearQty this.lastYearQty)}}
-                                                </td>
-                                                <td class="text-end {{#if (gt this.growthPercent 0)}}text-success{{else}}text-danger{{/if}}">
-                                                    {{formatNumber this.growthPercent}}%
-                                                </td>
-                                                <td class="text-end">{{formatCurrency this.currentYearValue}}</td>
-                                                <td class="text-end">{{formatNumber this.currentYearPercent}}%</td>
-                                            </tr>
-                                            {{/each}}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">Category Distribution</h5>
-                            </div>
-                            <div class="card-body" style="position: relative; height: 250px;">
-                                <canvas id="categoryChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Monthly Trend Chart -->
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">Monthly Sales Trend (Financial Year)</h5>
-                            </div>
-                            <div class="card-body" style="position: relative; height: 300px;">
-                                <canvas id="monthlyTrendChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <hr class="my-4">
-        <!-- Customer Information Section -->
-        <div class="row justify-content-center">
-            <div class="col-lg-11 border p-4 rounded shadow-sm bg-light">
-
-                <!-- Header Row -->
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-                    <h4 class="mb-2 mb-md-0">
-                        Customer: - {{data.customer_name}} ({{data.ext_code}})
-                    </h4>
-                    <div>
-                        <a href="/customer/view-info" class="btn btn-sm btn-secondary me-2">
-                            <i class="bi bi-arrow-left"></i> Back
-                        </a>
-                        {{!-- <a href="/customer/update-info/{{data.customer_id}}" class="btn btn-sm btn-primary me-2">
-                            <i class="bi bi-pencil"></i> Edit
-                        </a> --}}
-                        {{!-- <div class="no-print text-center mt-3">
-                            <button class="btn btn-primary" id="printButton">
-                                <i class="bi bi-printer"></i> Print Report
-                            </button>
-                        </div> --}}
-                    </div>
-                </div>
-
-                <!-- Information Grid -->
-                <div class="row g-3">
-                    <!-- Basic Info -->
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Firm Name:</label>
-                        <div>{{data.customer_name}}</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Contact Person:</label>
-                        <div>{{data.nick_name}}</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Contact Number:</label>
-                        <div>{{data.cust_care_no}}</div>
-                    </div>
-
-                    <!-- Address Info -->
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Office Address:</label>
-                        <div>{{data.add1}}</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Godown Address:</label>
-                        <div>{{data.add2}} {{data.add3}}</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Location:</label>
-                        <div>{{data.city}} - {{data.pin_code}}, {{data.district}}, {{data.state}}</div>
-                    </div>
-
-                    <!-- Business Info -->
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">GST Number:</label>
-                        <div>{{data.gst_no}}</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Godown Area:</label>
-                        <div>{{data.godown_area}} sq.ft.</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Counters:</label>
-                        <div>{{data.total_counters}}</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Market Area:</label>
-                        <div>{{data.market_area}}</div>
-                    </div>
-
-                    <!-- Sales Info & Photo -->
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Sales Manager:</label>
-                        <div>{{data.mg_name}}</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Sales Executive:</label>
-                        <div>{{data.se_name}}</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Proprietor Photo:</label>
-                        <div>
-                            <img src="{{data.geo_location}}" alt="Customer Photo" class="img-thumbnail mt-1"
-                                style="max-width: 100px;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Work Person Details Section -->
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-11 border p-4 rounded">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">Work Person Details</h4>
-                    <span class="badge bg-primary">{{wpData.length}} Persons</span>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover" id="wpTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Type</th>
-                                <th>Name</th>
-                                <th>Mobile</th>
-                                <th>Education</th>
-                                <th>Birth Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#each wpData}}
-                            <tr>
-                                <td>{{this.sr_no}}</td>
-                                <td>{{this.wp_type}}</td>
-                                <td>{{this.wp_name}}</td>
-                                <td>{{this.wp_mobile}}</td>
-                                <td>{{this.wp_edu}}</td>
-                                <td>{{momentYMD this.wp_dob}}</td>
-                            </tr>
-                            {{/each}}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Vehicle Details Section -->
-        <div class="row justify-content-center mt-4">
-            <div class="col-lg-11 border p-4 rounded">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">Vehicle Details</h4>
-                    <span class="badge bg-primary">{{vehData.length}} Vehicles</span>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover" id="vehTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Reg No</th>
-                                <th>Type</th>
-                                <th>Insurance No</th>
-                                <th>Expiry Date</th>
-                                <th class="text-end">Routes</th>
-                                <th class="text-end">Outlets</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#each vehData}}
-                            <tr>
-                                <td>{{this.sr_no}}</td>
-                                <td class="text-uppercase">{{this.reg_no}}</td>
-                                <td>{{this.veh_type}}</td>
-                                <td>{{this.ins_no}}</td>
-                                <td>{{momentYMD this.ins_date}}</td>
-                                <td class="text-end">{{this.routes}}</td>
-                                <td class="text-end">{{this.outlets}}</td>
-                            </tr>
-                            {{/each}}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Salesman Details Section -->
-        <div class="row justify-content-center mt-4 mb-5">
-            <div class="col-lg-11 border p-4 rounded">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">Salesman Details</h4>
-                    <span class="badge bg-primary">{{spData.length}} Salesmen</span>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover" id="spTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Type</th>
-                                <th>Name</th>
-                                <th>Mobile</th>
-                                <th>Education</th>
-                                <th class="text-end">Exp (Yrs)</th>
-                                <th class="text-end">Salary</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#each spData}}
-                            <tr>
-                                <td>{{this.sr_no}}</td>
-                                <td>{{this.sp_type}}</td>
-                                <td>{{this.sp_name}}</td>
-                                <td>{{this.sp_mobile}}</td>
-                                <td>{{this.sp_edu}}</td>
-                                <td class="text-end">{{this.sp_year}}</td>
-                                <td class="text-end">{{formatCurrency this.sp_salary}}</td>
-                            </tr>
-                            {{/each}}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
     </div>
 
+    <!-- Add Benchmark Comparison Section -->
+    {{#if hasBenchmarks}}
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-11 border p-4 rounded">
+            <h4 class="mb-3">Category-wise Benchmark Comparison</h4>
+            {{#if benchmarkData}}
+            {{#each benchmarkData.groupedData}}
+            {{!-- <h5 class="mt-3">{{@key}} Products</h5> --}}
+            <h5 class="mt-3"
+                style="font-weight: 700; color: #2c3e50; padding: 10px 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef;">
+                {{@key}} Products
+            </h5>
+            <div class="table-responsive border rounded mb-4">
+                <table class="table table-sm table-bordered benchmark-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th rowspan="2" class="border-top">Category</th>
+                            {{!-- <th colspan="3" class="text-center">{{../benchmarkData.header.currentCustomer.name}}
+                            </th> --}}
+                            <th colspan="3" class="text-center border-top">
+                                {{../benchmarkData.header.currentCustomer.city}}</th>
+                            {{#each ../benchmarkData.header.benchmarks}}
+                            {{!-- <th colspan="3" class="text-center">{{customer_name}} ({{city}})</th> --}}
+                            <th colspan="3" class="text-center border-top">{{city}}</th>
+                            {{/each}}
+                        </tr>
+                        <tr>
+                            <!-- Current Customer headers -->
+                            <th class="text-end">LY Qty</th>
+                            <th class="text-end">CY Qty</th>
+                            <th class="text-end">Growth %</th>
+                            <!-- Benchmark headers -->
+                            {{#each ../benchmarkData.header.benchmarks}}
+                            <th class="text-end">LY Qty</th>
+                            <th class="text-end">CY Qty</th>
+                            <th class="text-end">Growth %</th>
+                            {{/each}}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each this}}
+                        <tr>
+                            <td>{{material_group_description}}</td>
 
-    <script>
-        // Prepare data for charts
-        const categoryLabels = [
-            {{#each materialGroupPerformance}}
-            "{{this.material_group_description}}",
+                            <!-- Current Customer Data -->
+                            <td class="text-end">{{formatNumber current_customer.lastYearQty}}</td>
+                            <td class="text-end">{{formatNumber current_customer.currentYearQty}}</td>
+                            <td class="text-end {{growthClass current_customer.growthPercent}}">
+                                {{#if current_customer.growthPercent}}
+                                {{formatNumber current_customer.growthPercent}}%
+                                {{else}}
+                                -
+                                {{/if}}
+                            </td>
+
+                            <!-- Benchmarks Data -->
+                            {{#each benchmarks}}
+                            <td class="text-end">{{formatNumber lastYearQty}}</td>
+                            <td class="text-end">{{formatNumber currentYearQty}}</td>
+                            <td class="text-end {{growthClass growthPercent}}">
+                                {{#if growthPercent}}
+                                {{formatNumber growthPercent}}%
+                                {{else}}
+                                -
+                                {{/if}}
+                            </td>
+                            {{/each}}
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
             {{/each}}
+            {{else}}
+            <div class="alert alert-info">
+                No benchmark comparison data available for the selected period.
+            </div>
+            {{/if}}
+        </div>
+    </div>
+    {{/if}}
+
+    <!-- Customer Ranking Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-11 border p-4 rounded">
+            <h4 class="mb-3">District Performance - {{currentCustomerRank.district}}
+                <small class="text-muted">
+                    ({{momentDMY from_date}} to {{momentDMY to_date}} vs {{momentDMY lastYearFromDate}} to {{momentDMY
+                    lastYearToDate}})
+                    {{#if selected_material_group}}
+                    - Filtered by: {{selected_material_group}}
+                    {{/if}}
+                </small>
+            </h4>
+
+            {{#if currentCustomerRank}}
+            <div class="alert alert-info">
+                <strong>Your Rank:</strong> #{{currentCustomerRank.sales_rank}} of {{allDistrictCustomers.length}}
+                in {{currentCustomerRank.district}} district
+                with total qty of {{formatNumber currentCustomerRank.currentYearQty}}
+                (LY: {{formatNumber currentCustomerRank.lastYearQty}})
+                <br>
+                <strong>Growth:</strong>
+                <span
+                    class="{{#if (gt currentCustomerRank.growth_percent 0)}}text-success{{else if (lt currentCustomerRank.growth_percent 0)}}text-danger{{/if}}">
+                    {{#if currentCustomerRank.growth_percent}}
+                    {{formatNumber currentCustomerRank.growth_percent}}%
+                    {{else}}
+                    N/A (no previous year data)
+                    {{/if}}
+                </span>
+                {{#if selected_material_group}}
+                <br>
+                <small class="text-muted">Ranking based on selected material group only</small>
+                {{/if}}
+            </div>
+            {{/if}}
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Customer Name</th>
+                            <th>City</th>
+                            <th>Top Categories</th>
+                            <th class="text-end">LY Qty</th>
+                            <th class="text-end">CY Qty</th>
+                            <th class="text-end">Growth %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#if topCustomers.length}}
+                        {{#each topCustomers}}
+                        <tr class="{{#eq this.ext_code_key ../data.ext_code_key}}table-primary{{/eq}}">
+                            <td class="text-end">
+                                {{this.sales_rank}}
+                                {{!-- {{#eq this.ext_code_key ../data.ext_code_key}}
+                                <span class="badge bg-primary ms-1">You</span>
+                                {{/eq}} --}}
+                            </td>
+                            <td>{{this.customer_name}}</td>
+                            <td>{{this.city}}</td>
+                            <td>
+                                {{#if this.top_categories}}
+                                {{#each this.top_categories}}
+                                <span class="badge bg-secondary bg-opacity-10 text-dark me-1">{{this}}</span>
+                                {{/each}}
+                                {{else}}
+                                <span class="text-muted">&nbsp;</span>
+                                {{/if}}
+                            </td>
+                            <td class="text-end">{{formatNumber this.lastYearQty}}</td>
+                            <td class="text-end">{{formatNumber this.currentYearQty}}</td>
+                            <td
+                                class="text-end {{#if (gt this.growth_percent 0)}}text-success{{else if (lt this.growth_percent 0)}}text-danger{{/if}}">
+                                {{#if this.growth_percent}}
+                                {{formatNumber this.growth_percent}}%
+                                {{else}}
+                                N/A
+                                {{/if}}
+                            </td>
+                        </tr>
+                        {{/each}}
+                        {{else}}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                No customers found with sales in {{currentCustomerRank.district}} district
+                                {{#if selected_material_group}}
+                                for material group: {{selected_material_group}}
+                                {{/if}}
+                            </td>
+                        </tr>
+                        {{/if}}
+                    </tbody>
+                </table>
+            </div>
+
+            {{#if (gt allDistrictCustomers.length 10)}}
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    Showing top 10 customers and current customer ({{topCustomers.length}} of
+                    {{allDistrictCustomers.length}} total)
+                </small>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+
+    {{!-- Sales Performance Section --}}
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-11 border p-4 rounded">
+            <h4 class="mb-3">Sales Performance ({{momentDMY from_date}} to {{momentDMY to_date}} vs {{momentDMY
+                lastYearFromDate}} to {{momentDMY lastYearToDate}})</h4>
+
+            <!-- Sales Summary Cards -->
+            {{!-- <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary mb-3 h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Total Quantity</h6>
+                            <p class="card-text display-6">{{formatNumber salesSummary.currentYearQty}}</p>
+                            <p class="card-text">
+                                <small>LY: {{formatNumber salesSummary.lastYearQty}}</small><br>
+                                <small
+                                    class="{{#if (gt salesSummary.growthPercent 0)}}text-success{{else}}text-danger{{/if}}">
+                                    {{formatNumber salesSummary.growthPercent}}%
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-success mb-3 h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Total Value</h6>
+                            <p class="card-text display-6">{{formatCurrency salesSummary.currentYearValue}}</p>
+                            <p class="card-text">
+                                <small>LY: {{formatCurrency salesSummary.lastYearValue}}</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info mb-3 h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Avg. Monthly</h6>
+                            <p class="card-text display-6">{{formatCurrency salesSummary.avgMonthly}}</p>
+                            <p class="card-text"><small>Current Period</small></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-secondary mb-3 h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Categories</h6>
+                            <p class="card-text display-6">{{salesSummary.categoryCount}}</p>
+                            <p class="card-text"><small>Product Categories</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div> --}}
+
+            <!-- Material Group Performance -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Sales by Product Category</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" id="materialGroupTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-end">LY Qty</th>
+                                            <th class="text-end">CY Qty</th>
+                                            <th class="text-end">Diff</th>
+                                            <th class="text-end">Growth %</th>
+                                            <th class="text-end">CY Value</th>
+                                            <th class="text-end">CY %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{#each materialGroupPerformance}}
+                                        <tr>
+                                            <td>{{this.material_group_description}}</td>
+                                            <td class="text-end">{{formatNumber this.lastYearQty}}</td>
+                                            <td class="text-end">{{formatNumber this.currentYearQty}}</td>
+                                            <td
+                                                class="text-end {{#if (gt this.growthPercent 0)}}text-success{{else}}text-danger{{/if}}">
+                                                {{formatNumber (subtract this.currentYearQty this.lastYearQty)}}
+                                            </td>
+                                            <td
+                                                class="text-end {{#if (gt this.growthPercent 0)}}text-success{{else}}text-danger{{/if}}">
+                                                {{formatNumber this.growthPercent}}%
+                                            </td>
+                                            <td class="text-end">{{formatCurrency this.currentYearValue}}</td>
+                                            <td class="text-end">{{formatNumber this.currentYearPercent}}%</td>
+                                        </tr>
+                                        {{/each}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Category Distribution</h5>
+                        </div>
+                        <div class="card-body" style="position: relative; height: 250px;">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Trend Chart -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Monthly Sales Trend (Financial Year: {{finYear}})</h5>
+                        </div>
+                        <div class="card-body" style="position: relative; height: 300px;">
+                            <canvas id="monthlyTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <hr class="my-4">
+    <!-- Customer Information Section -->
+    <div class="row justify-content-center">
+        <div class="col-lg-11 border p-4 rounded shadow-sm bg-light">
+
+            <!-- Header Row -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                <h4 class="mb-2 mb-md-0">
+                    Customer: - {{data.customer_name}} ({{data.ext_code}})
+                </h4>
+                <div>
+                    <a href="/customer/view-info" class="btn btn-sm btn-secondary me-2">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                    {{!-- <a href="/customer/update-info/{{data.customer_id}}" class="btn btn-sm btn-primary me-2">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a> --}}
+                    {{!-- <div class="no-print text-center mt-3">
+                        <button class="btn btn-primary" id="printButton">
+                            <i class="bi bi-printer"></i> Print Report
+                        </button>
+                    </div> --}}
+                </div>
+            </div>
+
+            <!-- Information Grid -->
+            <div class="row g-3">
+                <!-- Basic Info -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Firm Name:</label>
+                    <div>{{data.customer_name}}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Contact Person:</label>
+                    <div>{{data.nick_name}}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Contact Number:</label>
+                    <div>{{data.cust_care_no}}</div>
+                </div>
+
+                <!-- Address Info -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Office Address:</label>
+                    <div>{{data.add1}}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Godown Address:</label>
+                    <div>{{data.add2}} {{data.add3}}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Location:</label>
+                    <div>{{data.city}} - {{data.pin_code}}, {{data.district}}, {{data.state}}</div>
+                </div>
+
+                <!-- Business Info -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">GST Number:</label>
+                    <div>{{data.gst_no}}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Godown Area:</label>
+                    <div>{{data.godown_area}} sq.ft.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Counters:</label>
+                    <div>{{data.total_counters}}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Market Area:</label>
+                    <div>{{data.market_area}}</div>
+                </div>
+
+                <!-- Sales Info & Photo -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Sales Manager:</label>
+                    <div>{{data.mg_name}}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Sales Executive:</label>
+                    <div>{{data.se_name}}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Proprietor Photo:</label>
+                    <div>
+                        <img src="{{data.geo_location}}" alt="Customer Photo" class="img-thumbnail mt-1"
+                            style="max-width: 100px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Person Details Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-11 border p-4 rounded">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Work Person Details</h4>
+                <span class="badge bg-primary">{{wpData.length}} Persons</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover" id="wpTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Mobile</th>
+                            <th>Education</th>
+                            <th>Birth Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each wpData}}
+                        <tr>
+                            <td>{{this.sr_no}}</td>
+                            <td>{{this.wp_type}}</td>
+                            <td>{{this.wp_name}}</td>
+                            <td>{{this.wp_mobile}}</td>
+                            <td>{{this.wp_edu}}</td>
+                            <td>{{momentYMD this.wp_dob}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Details Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-11 border p-4 rounded">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Vehicle Details</h4>
+                <span class="badge bg-primary">{{vehData.length}} Vehicles</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover" id="vehTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Reg No</th>
+                            <th>Type</th>
+                            <th>Insurance No</th>
+                            <th>Expiry Date</th>
+                            <th class="text-end">Routes</th>
+                            <th class="text-end">Outlets</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each vehData}}
+                        <tr>
+                            <td>{{this.sr_no}}</td>
+                            <td class="text-uppercase">{{this.reg_no}}</td>
+                            <td>{{this.veh_type}}</td>
+                            <td>{{this.ins_no}}</td>
+                            <td>{{momentYMD this.ins_date}}</td>
+                            <td class="text-end">{{this.routes}}</td>
+                            <td class="text-end">{{this.outlets}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salesman Details Section -->
+    <div class="row justify-content-center mt-4 mb-5">
+        <div class="col-lg-11 border p-4 rounded">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Salesman Details</h4>
+                <span class="badge bg-primary">{{spData.length}} Salesmen</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover" id="spTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Mobile</th>
+                            <th>Education</th>
+                            <th class="text-end">Exp (Yrs)</th>
+                            <th class="text-end">Salary</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each spData}}
+                        <tr>
+                            <td>{{this.sr_no}}</td>
+                            <td>{{this.sp_type}}</td>
+                            <td>{{this.sp_name}}</td>
+                            <td>{{this.sp_mobile}}</td>
+                            <td>{{this.sp_edu}}</td>
+                            <td class="text-end">{{this.sp_year}}</td>
+                            <td class="text-end">{{formatCurrency this.sp_salary}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Initialize DataTables
+        $('#materialGroupTable').DataTable({
+            order: [[1, 'desc']],
+            pageLength: 10,
+            dom: '<"top"i>rt<"bottom"lp><"clear">',
+            responsive: true
+        });
+
+        $('#wpTable').DataTable({
+            pageLength: 5,
+            dom: '<"top"i>rt<"bottom"lp><"clear">',
+            responsive: true
+        });
+
+        $('#vehTable').DataTable({
+            pageLength: 5,
+            dom: '<"top"i>rt<"bottom"lp><"clear">',
+            responsive: true
+        });
+
+        $('#spTable').DataTable({
+            pageLength: 5,
+            dom: '<"top"i>rt<"bottom"lp><"clear">',
+            responsive: true
+        });
+
+        /*$('.benchmark-table').DataTable({
+            ordering: true,
+            paging: false,
+            info: false
+            //searching: false,
+            //responsive: true,
+        });*/
+
+    });
+</script>
+
+<script>
+    // Prepare data for charts
+    const categoryLabels = [
+        {{#each materialGroupPerformance}}
+        "{{this.material_group_description}}",
+        {{/each }}
         ];
 
-        const categoryData = [
-            {{#each materialGroupPerformance}}
-            {{this.currentYearValue}},
-            {{/each}}
+    const categoryData = [
+        {{#each materialGroupPerformance}}
+        {{this.currentYearValue}},
+        {{/each}}
         ];
 
-        const trendLabels = [
-            {{#each monthlyTrend}}
-            "{{moment month 'YYYY-MM' 'MMM'}}",
-            {{/each}}
-        ];
-
-        const trendCurrentYearData = [
-            {{#each monthlyTrend}}
-            {{this.currentYearValue}},
-            {{/each}}
-        ];
-
-        const trendLastYearData = [
-            {{#each monthlyTrend}}
-            {{this.lastYearValue}},
-            {{/each}}
-        ];
-    </script>
-
-    <script>
-        $(document).ready(function () {
-            // Initialize DataTables
-            $('#materialGroupTable').DataTable({
-                order: [[1, 'desc']],
-                pageLength: 5,
-                dom: '<"top"i>rt<"bottom"lp><"clear">',
-                responsive: true
+    $(document).ready(function () {
+        // Category Distribution Chart
+        if (categoryLabels.length > 0) {
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            const categoryChart = new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        data: categoryData,
+                        backgroundColor: [
+                            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',
+                            '#e74a3b', '#858796', '#5a5c69', '#3a3b45'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
             });
+        }
+    });
+</script>
 
-            $('#wpTable').DataTable({
-                pageLength: 5,
-                dom: '<"top"i>rt<"bottom"lp><"clear">',
-                responsive: true
-            });
+<script>
+    // Prepare data for grouped bar chart
+    const trendLabels = [
+        {{#each monthlyTrend.labels}}
+        "{{this}}",
+        {{/each}}
+    ];
 
-            $('#vehTable').DataTable({
-                pageLength: 5,
-                dom: '<"top"i>rt<"bottom"lp><"clear">',
-                responsive: true
-            });
+    const currentYearData = [
+        {{#each monthlyTrend.currentYear}}
+        {{this}},
+        {{/each}}
+    ];
 
-            $('#spTable').DataTable({
-                pageLength: 5,
-                dom: '<"top"i>rt<"bottom"lp><"clear">',
-                responsive: true
-            });
+    const lastYearData = [
+        {{#each monthlyTrend.lastYear}}
+        {{this}},
+        {{/each}}
+    ];
 
-            /*$('.benchmark-table').DataTable({
-                ordering: true,
-                paging: false,
-                info: false
-                //searching: false,
-                //responsive: true,
-            });*/
-
-            // Category Distribution Chart
-            if (categoryLabels.length > 0) {
-                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-                const categoryChart = new Chart(categoryCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: categoryLabels,
-                        datasets: [{
-                            data: categoryData,
-                            backgroundColor: [
-                                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',
-                                '#e74a3b', '#858796', '#5a5c69', '#3a3b45'
-                            ],
+    $(document).ready(function () {
+        // Monthly Trend Chart - Grouped Bars
+        if (trendLabels.length > 0) {
+            const trendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+            const trendChart = new Chart(trendCtx, {
+                type: 'bar',
+                data: {
+                    labels: trendLabels,
+                    datasets: [
+                        {
+                            label: 'Last Financial Year',
+                            data: lastYearData,
+                            backgroundColor: 'rgba(201, 203, 207, 0.7)',
+                            borderColor: 'rgba(201, 203, 207, 1)',
                             borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right'
-                            }
+                        },
+                        {
+                            label: 'Current Financial Year',
+                            data: currentYearData,
+                            backgroundColor: 'rgba(78, 115, 223, 0.7)',
+                            borderColor: 'rgba(78, 115, 223, 1)',
+                            borderWidth: 1
                         }
-                    }
-                });
-            }
-
-            // Monthly Trend Chart
-            if (trendLabels.length > 0) {
-                const trendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
-                const trendChart = new Chart(trendCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: trendLabels,
-                        datasets: [
-                            {
-                                label: 'Last Year',
-                                data: trendLastYearData,
-                                backgroundColor: 'rgba(201, 203, 207, 0.7)',
-                                borderColor: 'rgba(201, 203, 207, 1)',
-                                borderWidth: 1
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                //text: 'Sales Value (₹)'
+                                text: 'Sales Qty'
                             },
-                            {
-                                label: 'Current Year',
-                                data: trendCurrentYearData,
-                                backgroundColor: 'rgba(78, 115, 223, 0.7)',
-                                borderColor: 'rgba(78, 115, 223, 1)',
-                                borderWidth: 1
+                            ticks: {
+                                callback: function(value) {
+                                    //return '₹' + value.toLocaleString('en-IN');
+                                    return value.toLocaleString('en-IN');
+                                }
                             }
-                        ]
+                        }
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        //label += '₹' + context.parsed.y.toLocaleString('en-IN');
+                                        label += context.parsed.y.toLocaleString('en-IN');
+                                    }
+                                    return label;
+                                }
                             }
                         }
                     }
-                });
-            }
+                }
+            });
+        }
+    });
+</script>
 
-        });
-    </script>
-
-    <script>
-        // Print functionality
-        document.getElementById('printButton').addEventListener('click', function () {
-            window.print();
-        });
-    </script>
+<script>
+    // Print functionality
+    document.getElementById('printButton').addEventListener('click', function () {
+        window.print();
+    });
+</script>
