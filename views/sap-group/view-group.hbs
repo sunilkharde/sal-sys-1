@@ -75,7 +75,7 @@
                             <th>Secondary Name</th>
                             <th class="text-end">Sequence</th>
                             <th>Status</th>
-                            <th>Created At</th>
+                            <th>Updated At</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -92,7 +92,7 @@
                             <td class="{{#if (eq status 'A')}}status-active{{else}}status-inactive{{/if}}">
                                 {{#if (eq status 'A')}}Active{{else}}Inactive{{/if}}
                             </td>
-                            <td>{{momentDMYHm c_at}}</td>
+                            <td>{{momentDMYHm u_at}}</td>
                             <td class="action-buttons">
                                 <button class="btn btn-sm btn-outline-primary edit-btn" data-bs-toggle="modal"
                                     data-bs-target="#editGroupModal" data-id="{{group_id}}" data-code="{{group_code}}"

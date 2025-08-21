@@ -8,7 +8,7 @@ class GroupsController {
             const groups = await executeQuery(
                 `SELECT 
                     group_id, group_code, group_name, base_group, group_code2, group_name2,
-                    seq_sr, status, c_at, c_by
+                    seq_sr, status, u_at, u_by
                  FROM groups
                  ORDER BY group_id ASC` //seq_sr
             );

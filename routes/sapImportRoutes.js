@@ -10,8 +10,5 @@ router.post('/import', sapImportController.importSalesData);
 router.get('/import-history', sapImportController.getImportHistory);
 router.get('/import-details/:importBatch/:buId?', sapImportController.showImportDetails);
 
-// Route for SAP Materials Group Import
-// router.get('/view-group', sapImportController.showMaterialsGroup);
-
 
 export default router;
