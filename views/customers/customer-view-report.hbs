@@ -28,12 +28,12 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label for="material_group" class="form-label">Product Category</label>
-                    <select class="form-select" id="material_group" name="material_group">
+                    <label for="base_group" class="form-label">Product Category</label>
+                    <select class="form-select" id="base_group" name="base_group">
                         <option value="">All Categories</option>
-                        {{#each material_groups}}
+                        {{#each base_groups}}
                         <option value="{{this.value}}" {{#isEqual this.value
-                            ../selected_material_group}}selected{{/isEqual}}>
+                            ../selected_base_group}}selected{{/isEqual}}>
                             {{this.label}}
                         </option>
                         {{/each}}
@@ -91,7 +91,7 @@
                     <tbody>
                         {{#each this}}
                         <tr>
-                            <td>{{material_group_description}}</td>
+                            <td>{{base_group_description}}</td>
 
                             <!-- Current Customer Data -->
                             <td class="text-end">{{formatNumber current_customer.lastYearQty}}</td>
@@ -138,8 +138,8 @@
                 <small class="text-muted">
                     ({{momentDMY from_date}} to {{momentDMY to_date}} vs {{momentDMY lastYearFromDate}} to {{momentDMY
                     lastYearToDate}})
-                    {{#if selected_material_group}}
-                    - Filtered by: {{selected_material_group}}
+                    {{#if selected_base_group}}
+                    - Filtered by: {{selected_base_group}}
                     {{/if}}
                 </small>
             </h4>
@@ -160,9 +160,9 @@
                     N/A (no previous year data)
                     {{/if}}
                 </span>
-                {{#if selected_material_group}}
+                {{#if selected_base_group}}
                 <br>
-                <small class="text-muted">Ranking based on selected material group only</small>
+                <small class="text-muted">Ranking based on selected base group only</small>
                 {{/if}}
             </div>
             {{/if}}
@@ -217,8 +217,8 @@
                         <tr>
                             <td colspan="7" class="text-center text-muted">
                                 No customers found with sales in {{currentCustomerRank.district}} district
-                                {{#if selected_material_group}}
-                                for material group: {{selected_material_group}}
+                                {{#if selected_base_group}}
+                                for base group: {{selected_base_group}}
                                 {{/if}}
                             </td>
                         </tr>
@@ -292,7 +292,7 @@
                 </div>
             </div> --}}
 
-            <!-- Material Group Performance -->
+            <!-- base Group Performance -->
             <div class="row mb-4">
                 <div class="col-md-8">
                     <div class="card h-100">
@@ -301,7 +301,7 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-sm table-hover" id="materialGroupTable">
+                                <table class="table table-sm table-hover" id="baseGroupTable">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Category</th>
@@ -314,9 +314,9 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{#each materialGroupPerformance}}
+                                        {{#each baseGroupPerformance}}
                                         <tr>
-                                            <td>{{this.material_group_description}}</td>
+                                            <td>{{this.base_group}}</td>
                                             <td class="text-end">{{formatNumber this.lastYearQty}}</td>
                                             <td class="text-end">{{formatNumber this.currentYearQty}}</td>
                                             <td
@@ -579,7 +579,7 @@
 <script>
     $(document).ready(function () {
         // Initialize DataTables
-        $('#materialGroupTable').DataTable({
+        $('#baseGroupTable').DataTable({
             order: [[1, 'desc']],
             pageLength: 10,
             dom: '<"top"i>rt<"bottom"lp><"clear">',
@@ -618,13 +618,13 @@
 <script>
     // Prepare data for charts
     const categoryLabels = [
-        {{#each materialGroupPerformance}}
-        "{{this.material_group_description}}",
+        {{#each baseGroupPerformance}}
+        "{{this.base_group}}",
         {{/each }}
         ];
 
     const categoryData = [
-        {{#each materialGroupPerformance}}
+        {{#each baseGroupPerformance}}
         {{this.currentYearValue}},
         {{/each}}
         ];

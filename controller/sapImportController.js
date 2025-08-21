@@ -235,8 +235,9 @@ class sapImportController {
                         {
                             group_code: record.priceGroup.trim(),
                             group_name: record.priceGroupDescription,
-                            p_group_code: record.materialGroup,
-                            p_group_name: record.materialGroupDescription
+                            base_group: record.materialGroupDescription,
+                            group_code2: record.materialGroup,
+                            group_name2: record.materialGroupDescription
                         }
                     );
 
@@ -299,15 +300,15 @@ class sapImportController {
 
             await executeQuery(
                 `INSERT INTO groups 
-            (group_id, group_code, group_name, group_short, seq_sr, status, p_group_code, p_group_name, c_at, c_by) 
-            VALUES (?, ?, ?, ?, 1, "A", ?, ?, NOW(), 1)`,
+                (group_id, group_code, group_name, base_group, group_code2, group_name2, seq_sr, status, c_at, c_by) 
+                VALUES (?, ?, ?, ?, 1, "A", ?, ?, NOW(), 1)`,
                 [
                     newGroupId,
                     groupData.group_code,
                     groupData.group_name,
-                    groupData.group_name.substring(0, 20),
-                    groupData.p_group_code,
-                    groupData.p_group_name
+                    groupData.base_group,
+                    groupData.group_code2,
+                    groupData.group_name2,
                 ]
             );
             return newGroupId;
@@ -316,13 +317,13 @@ class sapImportController {
             const existingGroupId = existingGroup[0].group_id;
             await executeQuery(
                 `UPDATE groups 
-            SET group_name = ?, group_short = ?, p_group_code = ?, p_group_name = ?, u_at = NOW(), u_by = 1
-            WHERE group_id = ?`,
+                SET group_name = ?, base_group = ?, group_code2 = ?, group_name = ?, u_at = NOW(), u_by = 1
+                WHERE group_id = ?`,
                 [
                     groupData.group_name,
-                    groupData.group_name.substring(0, 20),
-                    groupData.p_group_code,
-                    groupData.p_group_name,
+                    groupData.base_group,
+                    groupData.group_code2,
+                    groupData.group_name2,
                     existingGroupId
                 ]
             );
@@ -478,6 +479,119 @@ class sapImportController {
             });
         }
     }
+
+    // Route for SAP Materials Group Import
+    // static showMaterialsGroup = async (req, res) => {
+    //     try {
+    //         const groups = await executeQuery(
+    //             `SELECT 
+    //                 group_id, group_code, group_name, base_group, group_code2, group_name2,
+    //                 seq_sr, status, c_at, c_by
+    //              FROM groups
+    //              WHERE status = 'A'
+    //              ORDER BY seq_sr`
+    //         );
+
+    //         const baseGroups = await executeQuery(
+    //             `SELECT DISTINCT base_group FROM groups WHERE status = 'A'`
+    //         );
+            
+    //         res.render('sap-data/view-group', {
+    //             title: 'SAP Materials Group',
+    //             groups, 
+    //             baseGroups,
+    //         });
+    //     } catch (error) {
+    //         console.error('Error showing materials group:', error);
+    //         res.status(500).render('error', {
+    //             message: 'Error loading materials group'
+    //         });
+    //     }
+    // }
+
+    // static addMaterialsGroup = async (req, res) => {
+    //     try {
+    //         const { groupCode, groupName, baseGroup, groupCode2, groupName2 } = req.body;
+
+    //         if (!groupCode || !groupName) {
+    //             return res.status(400).json({ success: false, message: 'Group code and name are required' });
+    //         }
+
+    //         const existingGroup = await this.findGroupByCode(groupCode);
+    //         if (existingGroup) {
+    //             return res.status(400).json({ success: false, message: 'Group code already exists' });
+    //         }
+
+    //         const newGroupId = await this.updateGroupInformation(null, {
+    //             group_code: groupCode,
+    //             group_name: groupName,
+    //             base_group: baseGroup,
+    //             group_code2: groupCode2,
+    //             group_name2: groupName2
+    //         });
+
+    //         res.json({ success: true, groupId: newGroupId });
+    //     } catch (error) {
+    //         console.error('Error adding materials group:', error);
+    //         res.status(500).json({ success: false, message: 'Error adding materials group' });
+    //     }
+    // }
+
+    // static updateMaterialsGroup = async (req, res) => {
+    //     try {
+    //         const { groupId, groupCode, groupName, baseGroup, groupCode2, groupName2 } = req.body;
+
+    //         if (!groupId || !groupCode || !groupName) {
+    //             return res.status(400).json({ success: false, message: 'Missing required fields' });
+    //         }
+
+    //         const existingGroup = await this.findGroupByCode(groupCode);
+    //         if (existingGroup && existingGroup.group_id !== parseInt(groupId)) {
+    //             return res.status(400).json({ success: false, message: 'Group code already exists' });
+    //         }
+
+    //         const updatedGroupId = await this.updateGroupInformation(groupId, {
+    //             group_code: groupCode,
+    //             group_name: groupName,
+    //             base_group: baseGroup,
+    //             group_code2,
+    //             group_name2
+    //         });
+
+    //         res.json({ success: true, groupId: updatedGroupId });
+    //     } catch (error) {
+    //         console.error('Error updating materials group:', error);
+    //         res.status(500).json({ success: false, message: 'Error updating materials group' });
+    //     }
+    // }
+
+    // static deleteMaterialsGroup = async (req, res) => {
+    //     try {
+    //         const { groupId } = req.body;
+
+    //         if (!groupId) {
+    //             return res.status(400).json({ success: false, message: 'Group ID is required' });
+    //         }
+
+    //         // Check if group is used in any products
+    //         const productCount = await executeQuery(
+    //             'SELECT COUNT(*) as count FROM products WHERE group_id = ?',
+    //             [groupId]
+    //         );
+
+    //         if (productCount[0].count > 0) {
+    //             return res.status(400).json({ success: false, message: 'Group cannot be deleted as it is used by products' });
+    //         }
+
+    //         await executeQuery('DELETE FROM groups WHERE group_id = ?', [groupId]);
+
+    //         res.json({ success: true, message: 'Group deleted successfully' });
+    //     } catch (error) {
+    //         console.error('Error deleting materials group:', error);
+    //         res.status(500).json({ success: false, message: 'Error deleting materials group' });
+    //     }
+    // }
+
 }
 
 export default sapImportController;

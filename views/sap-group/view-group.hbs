@@ -1,0 +1,596 @@
+<div class="container">
+    <!-- Toast notifications -->
+    <div class="toast-container">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert"
+            aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="successToastMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert"
+            aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="errorToastMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Material Groups</h3>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
+            <i class="fas fa-plus me-1"></i> Add New Group
+        </button>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <div class="search-container">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search groups...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="A">Active</option>
+                        <option value="I">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="baseGroupFilter">
+                        <option value="">All Base Groups</option>
+                        {{#each baseGroups}}
+                        <option value="{{this.base_group}}">{{this.base_group}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Groups Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Groups List</span>
+            <span class="badge bg-light text-dark" id="groupCount">{{groups.length}} groups found</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0" id="groupsTable">
+                    <thead>
+                        <tr>
+                            <th class="text-end">ID</th>
+                            <th>Group Code</th>
+                            <th>Group Name</th>
+                            <th>Base Group</th>
+                            <th>Secondary Code</th>
+                            <th>Secondary Name</th>
+                            <th class="text-end">Sequence</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each groups}}
+                        <tr>
+                            <td class="text-end">{{group_id}}</td>
+                            <td>{{group_code}}</td>
+                            <td>{{group_name}}</td>
+                            <td>{{base_group}}</td>
+                            <td>{{group_code2}}</td>
+                            <td>{{group_name2}}</td>
+                            <td class="text-end">{{seq_sr}}</td>
+                            <td class="{{#if (eq status 'A')}}status-active{{else}}status-inactive{{/if}}">
+                                {{#if (eq status 'A')}}Active{{else}}Inactive{{/if}}
+                            </td>
+                            <td>{{momentDMYHm c_at}}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary edit-btn" data-bs-toggle="modal"
+                                    data-bs-target="#editGroupModal" data-id="{{group_id}}" data-code="{{group_code}}"
+                                    data-name="{{group_name}}" data-base="{{base_group}}" data-code2="{{group_code2}}"
+                                    data-name2="{{group_name2}}" data-seq="{{seq_sr}}" data-status="{{status}}">
+                                    {{!-- <i class="fas fa-edit"></i> --}}
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-bs-toggle="modal"
+                                    data-bs-target="#deleteGroupModal" data-id="{{group_id}}"
+                                    data-code="{{group_code}}">
+                                    {{!-- <i class="fas fa-trash"></i> --}}
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Group Modal -->
+<div class="modal fade" id="addGroupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addGroupForm">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="groupCode" class="form-label">Group Code *</label>
+                            <input type="text" class="form-control" id="groupCode" name="groupCode" required>
+                            <div class="invalid-feedback" id="groupCodeFeedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="groupName" class="form-label">Group Name *</label>
+                            <input type="text" class="form-control" id="groupName" name="groupName" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="baseGroup" class="form-label">Base Group *</label>
+                            <input type="text" class="form-control" id="baseGroup" name="baseGroup" required>
+                            {{!-- Uncomment the following lines if you want to use a dropdown for base groups --}}
+                            {{!-- <select class="form-select" id="baseGroup" name="baseGroup" required>
+                                <option value="">Select Base Group</option>
+                                {{#each baseGroups}}
+                                <option value="{{this.base_group}}">{{this.base_group}}</option>
+                                {{/each}}
+                            </select> --}}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sequence" class="form-label">Sequence Number *</label>
+                            <input type="number" class="form-control" id="sequence" name="sequence" min="1" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="groupCode2" class="form-label">Secondary Group Code</label>
+                            <input type="text" class="form-control" id="groupCode2" name="groupCode2">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="groupName2" class="form-label">Secondary Group Name</label>
+                            <input type="text" class="form-control" id="groupName2" name="groupName2">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="status" name="status" checked>
+                            <label class="form-check-label" for="status">
+                                Active Group
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Group Modal -->
+<div class="modal fade" id="editGroupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editGroupForm">
+                <input type="hidden" id="editGroupId" name="groupId">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editGroupCode" class="form-label">Group Code *</label>
+                            <input type="text" class="form-control" id="editGroupCode" name="groupCode" required>
+                            <div class="invalid-feedback" id="editGroupCodeFeedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editGroupName" class="form-label">Group Name *</label>
+                            <input type="text" class="form-control" id="editGroupName" name="groupName" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editBaseGroup" class="form-label">Base Group *</label>
+                            <input type="text" class="form-control" id="editBaseGroup" name="baseGroup" required>
+                            {{!-- Uncomment the following lines if you want to use a dropdown for base groups --}}
+                            {{!-- <select class="form-select" id="editBaseGroup" name="baseGroup" required>
+                                <option value="">Select Base Group</option>
+                                {{#each baseGroups}}
+                                <option value="{{this.base_group}}">{{this.base_group}}</option>
+                                {{/each}}
+                            </select> --}}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editSequence" class="form-label">Sequence Number *</label>
+                            <input type="number" class="form-control" id="editSequence" name="sequence" min="1"
+                                required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editGroupCode2" class="form-label">Secondary Group Code</label>
+                            <input type="text" class="form-control" id="editGroupCode2" name="groupCode2">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editGroupName2" class="form-label">Secondary Group Name</label>
+                            <input type="text" class="form-control" id="editGroupName2" name="groupName2">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editStatus" name="status">
+                            <label class="form-check-label" for="editStatus">
+                                Active Group
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteGroupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deleteGroupForm">
+                <input type="hidden" id="deleteGroupId" name="groupId">
+                <div class="modal-body">
+                    <p>Are you sure you want to delete group <strong id="deleteGroupCode"></strong>?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toast initialization
+    const successToast = new bootstrap.Toast(document.getElementById('successToast'));
+    const errorToast = new bootstrap.Toast(document.getElementById('errorToast'));
+
+    function showToast(message, isSuccess = true) {
+        if (isSuccess) {
+            document.getElementById('successToastMessage').textContent = message;
+            successToast.show();
+        } else {
+            document.getElementById('errorToastMessage').textContent = message;
+            errorToast.show();
+        }
+    }
+
+    // Handle edit modal data
+    const editGroupModal = document.getElementById('editGroupModal');
+    editGroupModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const groupId = button.getAttribute('data-id');
+        const groupCode = button.getAttribute('data-code');
+        const groupName = button.getAttribute('data-name');
+        const baseGroup = button.getAttribute('data-base');
+        const groupCode2 = button.getAttribute('data-code2');
+        const groupName2 = button.getAttribute('data-name2');
+        const sequence = button.getAttribute('data-seq');
+        const status = button.getAttribute('data-status');
+
+        document.getElementById('editGroupId').value = groupId;
+        document.getElementById('editGroupCode').value = groupCode;
+        document.getElementById('editGroupName').value = groupName;
+        document.getElementById('editBaseGroup').value = baseGroup;
+        document.getElementById('editGroupCode2').value = groupCode2;
+        document.getElementById('editGroupName2').value = groupName2;
+        document.getElementById('editSequence').value = sequence;
+        document.getElementById('editStatus').checked = status === 'A';
+    });
+
+    // Handle delete modal data
+    const deleteGroupModal = document.getElementById('deleteGroupModal');
+    deleteGroupModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const groupId = button.getAttribute('data-id');
+        const groupCode = button.getAttribute('data-code');
+
+        document.getElementById('deleteGroupId').value = groupId;
+        document.getElementById('deleteGroupCode').textContent = groupCode;
+    });
+
+    // Add group form submission
+    document.getElementById('addGroupForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            groupCode: formData.get('groupCode'),
+            groupName: formData.get('groupName'),
+            baseGroup: formData.get('baseGroup'),
+            groupCode2: formData.get('groupCode2'),
+            groupName2: formData.get('groupName2'),
+            sequence: formData.get('sequence'),
+            status: formData.get('status') ? 'A' : 'I'
+        };
+
+        try {
+            const response = await fetch('/sap-group/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Group added successfully!');
+                // Close modal and reload page
+                bootstrap.Modal.getInstance(document.getElementById('addGroupModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                if (result.message.includes('already exists')) {
+                    document.getElementById('groupCode').classList.add('is-invalid');
+                    document.getElementById('groupCodeFeedback').textContent = result.message;
+                }
+                showToast(result.message, false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error adding group', false);
+        }
+    });
+
+    // Edit group form submission
+    document.getElementById('editGroupForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            groupId: formData.get('groupId'),
+            groupCode: formData.get('groupCode'),
+            groupName: formData.get('groupName'),
+            baseGroup: formData.get('baseGroup'),
+            groupCode2: formData.get('groupCode2'),
+            groupName2: formData.get('groupName2'),
+            sequence: formData.get('sequence'),
+            status: formData.get('status') ? 'A' : 'I'
+        };
+
+        try {
+            const response = await fetch('/sap-group/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Group updated successfully!');
+                // Close modal and reload page
+                bootstrap.Modal.getInstance(document.getElementById('editGroupModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                if (result.message.includes('already exists')) {
+                    document.getElementById('editGroupCode').classList.add('is-invalid');
+                    document.getElementById('editGroupCodeFeedback').textContent = result.message;
+                }
+                showToast(result.message, false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error updating group', false);
+        }
+    });
+
+    // Delete group form submission
+    document.getElementById('deleteGroupForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            groupId: formData.get('groupId')
+        };
+
+        try {
+            const response = await fetch('/sap-group/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Group deleted successfully!');
+                // Close modal and reload page
+                bootstrap.Modal.getInstance(document.getElementById('deleteGroupModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(result.message, false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error deleting group', false);
+        }
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const baseGroupFilter = document.getElementById('baseGroupFilter');
+    const groupsTable = document.getElementById('groupsTable');
+    const groupCount = document.getElementById('groupCount');
+
+    function filterGroups() {
+        const searchText = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const baseGroupValue = baseGroupFilter.value;
+
+        const rows = groupsTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        let visibleCount = 0;
+
+        for (let row of rows) {
+            const groupCode = row.cells[1].textContent.toLowerCase();
+            const groupName = row.cells[2].textContent.toLowerCase();
+            const baseGroup = row.cells[3].textContent;
+            const status = row.cells[6].textContent === 'Active' ? 'A' : 'I';
+
+            const matchesSearch = groupCode.includes(searchText) || groupName.includes(searchText);
+            const matchesStatus = statusValue === '' || status === statusValue;
+            const matchesBaseGroup = baseGroupValue === '' || baseGroup === baseGroupValue;
+
+            if (matchesSearch && matchesStatus && matchesBaseGroup) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+
+        groupCount.textContent = `${visibleCount} groups found`;
+    }
+
+    searchInput.addEventListener('keyup', filterGroups);
+    statusFilter.addEventListener('change', filterGroups);
+    baseGroupFilter.addEventListener('change', filterGroups);
+
+    // Clear validation on modal hide
+    document.getElementById('addGroupModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('groupCode').classList.remove('is-invalid');
+    });
+
+    document.getElementById('editGroupModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('editGroupCode').classList.remove('is-invalid');
+    });
+</script>
+
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-color: #ecf0f1;
+    }
+
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 2px; /*20px;*/
+    }
+
+    .header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 20px; /*20px;*/
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        border: none;
+    }
+
+    .card-header {
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 10px 10px 0 0 !important;
+        font-weight: 600;
+        padding: 15px 20px;
+    }
+
+    .btn-primary {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+        border-color: #2980b9;
+    }
+
+    .btn-danger {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+
+    .status-active {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .status-inactive {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .table th {
+        background-color: var(--light-color);
+    }
+
+    .action-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .search-container {
+        position: relative;
+    }
+
+    .search-container .form-control {
+        padding-right: 40px;
+    }
+
+    .search-container i {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+    }
+
+    .pagination {
+        margin-bottom: 0;
+    }
+</style>
