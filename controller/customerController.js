@@ -782,7 +782,8 @@ class customerController {
             const lastYear = currentYear - 1;
 
             // Initialize arrays with zeros for all months
-            const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+            // const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             months.forEach(month => {
                 monthlyTrend.labels.push(month);
                 monthlyTrend.currentYear.push(0);
@@ -793,13 +794,24 @@ class customerController {
             monthlyTrendRaw.forEach(item => {
                 const monthIndex = months.indexOf(item.month_name);
                 if (monthIndex !== -1) {
-                    if (item.year === currentYear) {
-                        monthlyTrend.currentYear[monthIndex] = item.qty;
-                    } else if (item.year === lastYear) {
+                    if (item.year === lastYear) {
                         monthlyTrend.lastYear[monthIndex] = item.qty;
+                    } else if (item.year === currentYear) {
+                        monthlyTrend.currentYear[monthIndex] = item.qty;
                     }
                 }
             });
+
+            // monthlyTrendRaw.forEach(item => {
+            //     const monthIndex = months.indexOf(item.month_name);
+            //     if (monthIndex !== -1) {
+            //         if (item.year === currentYear) {
+            //             monthlyTrend.currentYear[monthIndex] = item.qty;
+            //         } else if (item.year === lastYear) {
+            //             monthlyTrend.lastYear[monthIndex] = item.qty;
+            //         }
+            //     }
+            // });
 
             // 7. Get customer ranking - optimized for base group filtering
             const sqlCustomerRanking = `
