@@ -114,8 +114,8 @@ class sapImportController {
                     await this.deleteExistingRecords(bu.bu_id, dateFrom, dateTo);
 
                     const salesData = await this.getSalesDataFromSAP(bu.bu_code, { dateFrom, dateTo });
+                    // console.log('Fetched Sale Data', JSON.stringify(salesData));
                     const importedCount = await this.saveSalesRecords(bu.bu_id, salesData, importBatch);
-
                     // Now only using processSalesRecords which handles both groups and products
                     const processedRecordsCount = await this.processSalesRecords(salesData);
 
@@ -213,6 +213,14 @@ class sapImportController {
 
         for (const record of salesData) {
             try {
+
+                // console.log('Raw SAP record:', {
+                //     materialGroup: record.materialGroup,
+                //     materialGroupDescription: record.materialGroupDescription,
+                //     priceGroup: record.priceGroup,
+                //     priceGroupDescription: record.priceGroupDescription
+                // });
+
                 const materialNumber = record.materialNumber.replace(/^0+/, '');
                 const customerNumber = record.customerNumber.replace(/^0+/, '');
 
@@ -233,11 +241,11 @@ class sapImportController {
                     const groupId = await this.updateGroupInformation(
                         product.group_id, // Will be null for new products
                         {
-                            group_code: record.materialGroup.trim(),
-                            group_name: record.materialGroupDescription,
-                            base_group: record.materialGroupDescription,
-                            group_code2:  record.priceGroup.trim(),
-                            group_name2: record.priceGroupDescription
+                            group_code: record.priceGroup.trim(),
+                            group_name: record.priceGroupDescription.trim(),
+                            base_group: record.materialGroupDescription.trim(),
+                            group_code2: record.materialGroup.trim(),
+                            group_name2: record.materialGroupDescription.trim(),
                         }
                     );
 
@@ -298,10 +306,12 @@ class sapImportController {
             const maxGroup = await executeQuery('SELECT MAX(group_id) AS max_id FROM groups');
             const newGroupId = maxGroup[0].max_id ? maxGroup[0].max_id + 1 : 1;
 
+            // console.log('Creating new group with data:', groupData);
+
             await executeQuery(
                 `INSERT INTO groups 
                 (group_id, group_code, group_name, base_group, group_code2, group_name2, seq_sr, status, c_at, c_by) 
-                VALUES (?, ?, ?, ?, 1, "A", ?, ?, NOW(), 1)`,
+                VALUES (?, ?, ?, ?, ?, ?, 1, "A", NOW(), 1)`,
                 [
                     newGroupId,
                     groupData.group_code,
@@ -315,13 +325,11 @@ class sapImportController {
         } else {
             // Update existing group
             const existingGroupId = existingGroup[0].group_id;
-            await executeQuery(
-                `UPDATE groups 
-                SET group_name = ?, base_group = ?, group_code2 = ?, group_name = ?, u_at = NOW(), u_by = 1
-                WHERE group_id = ?`,
+
+            await executeQuery(`UPDATE groups SET group_name = ?, group_code2 = ?, group_name2 = ?, 
+                u_at = NOW(), u_by = 1 WHERE group_id = ?`,
                 [
                     groupData.group_name,
-                    groupData.base_group,
                     groupData.group_code2,
                     groupData.group_name2,
                     existingGroupId
@@ -329,6 +337,7 @@ class sapImportController {
             );
             return existingGroupId;
         }
+
     }
 
     static findProductByExtCode = async (extCode) => {

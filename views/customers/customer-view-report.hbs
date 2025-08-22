@@ -53,83 +53,228 @@
     {{#if hasBenchmarks}}
     <div class="row justify-content-center mt-4">
         <div class="col-lg-11 border p-4 rounded">
-            <h4 class="mb-3">Category-wise Benchmark Comparison</h4>
+            <h4 class="mb-3">Category-wise Benchmark Comparison
+                {{#if selected_base_group}}
+                <span class="badge bg-info ms-2">Filtered: {{selected_base_group}}</span>
+                {{/if}}
+            </h4>
+            
             {{#if benchmarkData}}
-            {{#each benchmarkData.groupedData}}
-            {{!-- <h5 class="mt-3">{{@key}} Products</h5> --}}
-            <h5 class="mt-3"
-                style="font-weight: 700; color: #2c3e50; padding: 10px 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef;">
-                {{@key}} Products
-            </h5>
-            <div class="table-responsive border rounded mb-4">
-                <table class="table table-sm table-bordered benchmark-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th rowspan="2" class="border-top">Category</th>
-                            {{!-- <th colspan="3" class="text-center">{{../benchmarkData.header.currentCustomer.name}}
-                            </th> --}}
-                            <th colspan="3" class="text-center border-top">
-                                {{../benchmarkData.header.currentCustomer.city}}</th>
-                            {{#each ../benchmarkData.header.benchmarks}}
-                            {{!-- <th colspan="3" class="text-center">{{customer_name}} ({{city}})</th> --}}
-                            <th colspan="3" class="text-center border-top">{{city}}</th>
-                            {{/each}}
-                        </tr>
-                        <tr>
-                            <!-- Current Customer headers -->
-                            <th class="text-end">LY Qty</th>
-                            <th class="text-end">CY Qty</th>
-                            <th class="text-end">Growth %</th>
-                            <!-- Benchmark headers -->
-                            {{#each ../benchmarkData.header.benchmarks}}
-                            <th class="text-end">LY Qty</th>
-                            <th class="text-end">CY Qty</th>
-                            <th class="text-end">Growth %</th>
-                            {{/each}}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each this}}
-                        <tr>
-                            <td>{{base_group_description}}</td>
+                {{#if selected_base_group}}
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle"></i> Showing only <strong>{{selected_base_group}}</strong> category. 
+                    <a href="/customer/view-report/{{data.customer_id}}?from_date={{from_date}}&to_date={{to_date}}" 
+                    class="alert-link">Clear filter</a> to see all categories.
+                </div>
+                {{/if}}
+                
+                <!-- Summary Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>Total Base Categories</h6>
+                                <h4>{{count benchmarkData.groupedData}}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>Benchmark Customers</h6>
+                                <h4>{{benchmarkData.header.benchmarks.length}}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>Reporting Period</h6>
+                                <h6>{{momentDMY from_date}} to {{momentDMY to_date}}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {{#each benchmarkData.groupedData}}
+                <div class="category-group mb-4">
+                    <h5 class="category-header"
+                        style="font-weight: 700; color: #2c3e50; padding: 10px 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef;">
+                        {{@key}} Products ({{this.length}} categories)
+                    </h5>
+                    <div class="table-responsive border rounded">
+                        <table class="table table-sm table-bordered benchmark-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th rowspan="2" class="border-top align-middle">Category</th>
+                                    <th colspan="3" class="text-center border-top">
+                                        {{!-- {{../benchmarkData.header.currentCustomer.name}}<br> --}}
+                                        <small class="text-muted">{{../benchmarkData.header.currentCustomer.city}}</small>
+                                    </th>
+                                    {{#each ../benchmarkData.header.benchmarks}}
+                                    <th colspan="3" class="text-center border-top">
+                                        {{!-- {{customer_name}}<br> --}}
+                                        <small class="text-muted">{{city}}</small>
+                                    </th>
+                                    {{/each}}
+                                </tr>
+                                <tr>
+                                    <!-- Current Customer headers -->
+                                    <th class="text-end">LY Qty</th>
+                                    <th class="text-end">CY Qty</th>
+                                    <th class="text-end">Growth %</th>
+                                    <!-- Benchmark headers -->
+                                    {{#each ../benchmarkData.header.benchmarks}}
+                                    <th class="text-end">LY Qty</th>
+                                    <th class="text-end">CY Qty</th>
+                                    <th class="text-end">Growth %</th>
+                                    {{/each}}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#each this}}
+                                <tr class="{{#if (gt current_customer.currentYearQty 0)}}has-data{{else}}no-data{{/if}}">
+                                    <td><strong>{{base_group_description}}</strong></td>
 
-                            <!-- Current Customer Data -->
-                            <td class="text-end">{{formatNumber current_customer.lastYearQty}}</td>
-                            <td class="text-end">{{formatNumber current_customer.currentYearQty}}</td>
-                            <td class="text-end {{growthClass current_customer.growthPercent}}">
-                                {{#if current_customer.growthPercent}}
-                                {{formatNumber current_customer.growthPercent}}%
-                                {{else}}
-                                -
-                                {{/if}}
-                            </td>
+                                    <!-- Current Customer Data -->
+                                    <td class="text-end">{{formatNumber current_customer.lastYearQty}}</td>
+                                    <td class="text-end {{#if (gt current_customer.currentYearQty 0)}}fw-bold{{/if}}">
+                                        {{formatNumber current_customer.currentYearQty}}
+                                    </td>
+                                    <td class="text-end {{growthClass current_customer.growthPercent}}">
+                                        {{#if current_customer.growthPercent}}
+                                        {{formatNumber current_customer.growthPercent}}%
+                                        {{else}}
+                                        -
+                                        {{/if}}
+                                    </td>
 
-                            <!-- Benchmarks Data -->
-                            {{#each benchmarks}}
-                            <td class="text-end">{{formatNumber lastYearQty}}</td>
-                            <td class="text-end">{{formatNumber currentYearQty}}</td>
-                            <td class="text-end {{growthClass growthPercent}}">
-                                {{#if growthPercent}}
-                                {{formatNumber growthPercent}}%
-                                {{else}}
-                                -
-                                {{/if}}
-                            </td>
-                            {{/each}}
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-            </div>
-            {{/each}}
+                                    <!-- Benchmarks Data -->
+                                    {{#each benchmarks}}
+                                    <td class="text-end">{{formatNumber lastYearQty}}</td>
+                                    <td class="text-end {{#if (gt currentYearQty 0)}}fw-bold{{/if}}">
+                                        {{formatNumber currentYearQty}}
+                                    </td>
+                                    <td class="text-end {{growthClass growthPercent}}">
+                                        {{#if growthPercent}}
+                                        {{formatNumber growthPercent}}%
+                                        {{else}}
+                                        -
+                                        {{/if}}
+                                    </td>
+                                    {{/each}}
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {{/each}}
             {{else}}
-            <div class="alert alert-info">
-                No benchmark comparison data available for the selected period.
-            </div>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No benchmark comparison data available for the selected period.
+                    {{#if selected_base_group}}
+                    <br>Try <a href="/customer/view-report/{{data.customer_id}}?from_date={{from_date}}&to_date={{to_date}}" 
+                            class="alert-link">clearing the filter</a> or selecting a different category.
+                    {{/if}}
+                </div>
             {{/if}}
         </div>
     </div>
     {{/if}}
+    
+    <!-- Add Benchmark Comparison Section -->
+    {{!-- {{#if hasBenchmarks}}
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-11 border p-4 rounded">
+            <h4 class="mb-3">Category-wise Benchmark Comparison
+                {{#if selected_base_group}}
+                <span class="badge bg-info ms-2">Filtered: {{selected_base_group}}</span>
+                {{/if}}
+            </h4>
+            
+            {{#if benchmarkData}}
+                {{#if selected_base_group}}
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle"></i> Showing only <strong>{{selected_base_group}}</strong> category. 
+                    <a href="/customer/view-report/{{data.customer_id}}" class="alert-link">Clear filter</a> to see all categories.
+                </div>
+                {{/if}}
+                
+                {{#each benchmarkData.groupedData}}
+                <h5 class="mt-3"
+                    style="font-weight: 700; color: #2c3e50; padding: 10px 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #e9ecef;">
+                    {{@key}} Products
+                </h5>
+                <div class="table-responsive border rounded mb-4">
+                    <table class="table table-sm table-bordered benchmark-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th rowspan="2" class="border-top">Category</th>
+                                <th colspan="3" class="text-center border-top">
+                                    {{../benchmarkData.header.currentCustomer.city}}</th>
+                                {{#each ../benchmarkData.header.benchmarks}}
+                                <th colspan="3" class="text-center border-top">{{city}}</th>
+                                {{/each}}
+                            </tr>
+                            <tr>
+                                <!-- Current Customer headers -->
+                                <th class="text-end">LY Qty</th>
+                                <th class="text-end">CY Qty</th>
+                                <th class="text-end">Growth %</th>
+                                <!-- Benchmark headers -->
+                                {{#each ../benchmarkData.header.benchmarks}}
+                                <th class="text-end">LY Qty</th>
+                                <th class="text-end">CY Qty</th>
+                                <th class="text-end">Growth %</th>
+                                {{/each}}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each this}}
+                            <tr>
+                                <td>{{base_group_description}}</td>
+
+                                <!-- Current Customer Data -->
+                                <td class="text-end">{{formatNumber current_customer.lastYearQty}}</td>
+                                <td class="text-end">{{formatNumber current_customer.currentYearQty}}</td>
+                                <td class="text-end {{growthClass current_customer.growthPercent}}">
+                                    {{#if current_customer.growthPercent}}
+                                    {{formatNumber current_customer.growthPercent}}%
+                                    {{else}}
+                                    -
+                                    {{/if}}
+                                </td>
+
+                                <!-- Benchmarks Data -->
+                                {{#each benchmarks}}
+                                <td class="text-end">{{formatNumber lastYearQty}}</td>
+                                <td class="text-end">{{formatNumber currentYearQty}}</td>
+                                <td class="text-end {{growthClass growthPercent}}">
+                                    {{#if growthPercent}}
+                                    {{formatNumber growthPercent}}%
+                                    {{else}}
+                                    -
+                                    {{/if}}
+                                </td>
+                                {{/each}}
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+                {{/each}}
+            {{else}}
+                <div class="alert alert-info">
+                    No benchmark comparison data available for the selected period.
+                    {{#if selected_base_group}}
+                    <br>Try <a href="/customer/view-report/{{data.customer_id}}" class="alert-link">clearing the filter</a> or selecting a different category.
+                    {{/if}}
+                </div>
+            {{/if}}
+        </div>
+    </div>
+    {{/if}} --}}
 
     <!-- Customer Ranking Section -->
     <div class="row justify-content-center mt-4">

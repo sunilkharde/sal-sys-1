@@ -207,6 +207,16 @@ app.engine('hbs', exphbs.engine({
     // Type checking
     isArray: isArrayHBS,
 
+    // Count helper - NEW
+    count: function (obj) {
+      if (Array.isArray(obj)) {
+        return obj.length;
+      } else if (typeof obj === 'object' && obj !== null) {
+        return Object.keys(obj).length;
+      }
+      return 0;
+    },
+
     // Date formatting
     moment: function (dateString, inputFormat, outputFormat) {
       return moment(dateString, inputFormat).format(outputFormat);
@@ -249,7 +259,7 @@ app.engine('hbs', exphbs.engine({
       if (growthPercent > 0) return 'text-success';
       if (growthPercent < 0) return 'text-danger';
       return '';
-    },    
+    },
 
     // JSON helper
     json: jsonHelper
