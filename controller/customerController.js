@@ -614,9 +614,12 @@ class customerController {
 
     static viewInfoReport = async (req, res) => {
         const { cust_id } = req.params;
-        const { from_date, to_date, base_group } = req.query;
+        let { from_date, to_date, base_group } = req.query;
 
         try {
+
+            // if (!base_group) base_group = 'Gai Chhap Jarda';
+
             // 1. Get complete customer info
             const sqlCustomer = `
                 SELECT a.*, 
@@ -745,9 +748,11 @@ class customerController {
                     parentGroup,
                     currentYearPercent,
                     lastYearPercent,
-                    growthPercent: ((item.currentYearValue - item.lastYearValue) / (item.lastYearValue || 1)) * 100
+                    // growthPercent: ((item.currentYearValue - item.lastYearValue) / (item.lastYearValue || 1)) * 100
+                    growthPercent: ((item.currentYearQty - item.lastYearQty) / (item.lastYearQty || 1)) * 100
                 };
             });
+            console.log('baseGroupPerformance...', baseGroupPerformance);
 
             // 6. Monthly trend - whole financial year (modified for proper chart display)
             const sqlMonthlyTrend = `
@@ -782,8 +787,8 @@ class customerController {
             const lastYear = currentYear - 1;
 
             // Initialize arrays with zeros for all months
-            // const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+            // const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             months.forEach(month => {
                 monthlyTrend.labels.push(month);
                 monthlyTrend.currentYear.push(0);
@@ -813,11 +818,12 @@ class customerController {
             //     }
             // });
 
+
             // 7. Get customer ranking - optimized for base group filtering
             const sqlCustomerRanking = `
                 WITH district_sales AS (
                     SELECT 
-                        c.ext_code_key,
+                        c.ext_code,
                         MAX(c.customer_name) AS customer_name,
                         MAX(c.city) AS city,
                         MAX(c.district) AS district,
@@ -834,16 +840,16 @@ class customerController {
                         (s.billing_date BETWEEN ? AND ?)
                     )
                     ${baseGroupFilter}
-                    GROUP BY c.ext_code_key
+                    GROUP BY c.ext_code
                     HAVING currentYearQty > 0 OR lastYearQty > 0
                 ),
                 category_ranking AS (
                     SELECT 
-                        c.ext_code_key,
+                        c.ext_code,
                         x.base_group,
                         SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
                         ROW_NUMBER() OVER (
-                            PARTITION BY c.ext_code_key 
+                            PARTITION BY c.ext_code 
                             ORDER BY SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) DESC
                         ) as category_rank
                     FROM customers c
@@ -852,11 +858,11 @@ class customerController {
                     WHERE s.billing_date BETWEEN ? AND ?
                     AND c.district = ?
                     ${baseGroupFilter}
-                    GROUP BY c.ext_code_key, x.base_group
+                    GROUP BY c.ext_code, x.base_group
                 ),
                 ranked_customers AS (
                     SELECT 
-                        ds.ext_code_key,
+                        ds.ext_code,
                         ds.customer_name,
                         ds.city,
                         ds.district,
@@ -876,8 +882,8 @@ class customerController {
                             ORDER BY cr.category_rank
                         ) AS top_categories
                     FROM district_sales ds
-                    LEFT JOIN category_ranking cr ON ds.ext_code_key = cr.ext_code_key AND cr.category_rank <= 3
-                    GROUP BY ds.ext_code_key, ds.customer_name, ds.city, ds.district, 
+                    LEFT JOIN category_ranking cr ON ds.ext_code = cr.ext_code AND cr.category_rank <= 3
+                    GROUP BY ds.ext_code, ds.customer_name, ds.city, ds.district, 
                             ds.currentYearSales, ds.currentYearQty, ds.lastYearSales, ds.lastYearQty
                 )
                 SELECT * FROM ranked_customers
@@ -924,11 +930,11 @@ class customerController {
 
             // Find current customer's rank
             const currentCustomerRank = allDistrictCustomers.find(c =>
-                c.ext_code_key === sapCustomerExtKey
+                c.ext_code === customerData[0].ext_code
             );
 
             // If current customer not in top 10, add them to the list
-            if (currentCustomerRank && !topCustomers.some(c => c.ext_code_key === sapCustomerExtKey)) {
+            if (currentCustomerRank && !topCustomers.some(c => c.ext_code === customerData[0].ext_code)) {
                 topCustomers.push(currentCustomerRank);
 
                 // Sort again to maintain ranking order
@@ -957,6 +963,18 @@ class customerController {
                     )`,
                     [cust_id]
                 )).map(b => b.customer_id);
+
+                const benchmarkExtCodeKeys = (await executeQuery(
+                    `SELECT c.ext_code_key 
+                    FROM customers c
+                    WHERE c.ext_code_key IN (
+                        SELECT c2.ext_code_key 
+                        FROM customers c2
+                        INNER JOIN cust_bench cb ON c2.customer_id = cb.cust_bench_id
+                        WHERE cb.customer_id = ?
+                    )`,
+                    [cust_id]
+                )).map(b => b.ext_code_key);                
 
                 // Get ALL base groups for current customer to ensure all categories are shown
                 const allBaseGroupsForCustomer = await executeQuery(`
@@ -995,7 +1013,7 @@ class customerController {
                 JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code_key, 10, '0')
                 JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
                 WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
-                AND c.customer_id = ?
+                AND c.ext_code_key = ?
                 ${baseGroupFilter}
                 GROUP BY x.base_group`,
                     [
@@ -1005,7 +1023,7 @@ class customerController {
                         lastYearFromDate, lastYearToDate,
                         queryFromDate, queryToDate,
                         lastYearFromDate, lastYearToDate,
-                        cust_id
+                        sapCustomerExtKey //cust_id --AND c.customer_id = ?
                     ]
                 );
 
@@ -1031,7 +1049,7 @@ class customerController {
                 JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code_key, 10, '0')
                 JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
                 WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
-                AND c.customer_id IN (?)
+                AND c.ext_code_key IN (?)
                 ${baseGroupFilter}
                 GROUP BY c.ext_code_key
                 ORDER BY currentYearQty DESC`,
@@ -1042,7 +1060,7 @@ class customerController {
                         lastYearFromDate, lastYearToDate,
                         queryFromDate, queryToDate,
                         lastYearFromDate, lastYearToDate,
-                        benchmarkIds
+                        benchmarkExtCodeKeys // benchmarkIds --AND c.customer_id IN (?)
                     ]
                 );
 
@@ -1059,7 +1077,7 @@ class customerController {
                     JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code_key, 10, '0')
                     JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
                     WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
-                    AND c.customer_id IN (?)
+                    AND c.ext_code_key IN (?)
                     ${baseGroupFilter}
                     GROUP BY c.ext_code_key, x.base_group`,
                     [
@@ -1069,7 +1087,7 @@ class customerController {
                         lastYearFromDate, lastYearToDate,
                         queryFromDate, queryToDate,
                         lastYearFromDate, lastYearToDate,
-                        benchmarkIds
+                        benchmarkExtCodeKeys // benchmarkIds --AND c.customer_id IN (?)
                     ]
                 );
 
@@ -1237,7 +1255,7 @@ class customerController {
                 currentFYEnd,
                 lastFYStart,
                 lastFYEnd,
-                finYear: moment(lastFYStart).format('YYYY') + '-' + moment(lastFYEnd).format('YYYY'), // e.g. 2022-2023
+                finYear: moment(currentFYStart).format('YYYY'), // moment(lastFYStart).format('YYYY') + '-' + moment(lastFYEnd).format('YYYY'), // e.g. 2022-2023
                 // SAP customer details
                 selected_base_group: base_group,
                 base_groups: allBaseGroups.map(mg => ({

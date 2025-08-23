@@ -2,6 +2,8 @@ import express from "express";
 const router = express.Router();
 import customerController from "../controller/customerController.js"
 import { upload } from '../controller/customerController.js'; 
+import customerGroupController from "../controller/customerGroup.js";
+
 
 router.get('/se-list', customerController.getSeData);
 router.get('/create', customerController.viewBlank);
@@ -31,6 +33,17 @@ router.post('/benchmark/add', customerController.addBenchmark);
 router.get('/benchmark/delete/:customer_id/:sr_no', customerController.deleteBenchmark);
 router.get('/benchmark/cities', customerController.filterCities);
 router.get('/benchmark/customers', customerController.filterCustomers);    
+
+
+// Customer grouping routes - FIXED
+// Customer grouping routes - FIXED
+router.get('/grouping', customerGroupController.grouping);
+router.post('/create-group', customerGroupController.createGroup);
+router.post('/add-to-group', customerGroupController.addToGroup);
+router.post('/remove-from-group', customerGroupController.removeFromGroup);
+router.post('/make-primary', customerGroupController.makePrimary);
+router.post('/update-group', customerGroupController.updateGroup); // ADD THIS LINE
+router.post('/remove-group', customerGroupController.removeGroup);
 
 
 export default router;
