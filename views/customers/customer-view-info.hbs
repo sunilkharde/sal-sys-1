@@ -52,10 +52,12 @@
                     <td>{{this.ext_code}}</td>
                     <td>
                         <div class="btn-group gap-2" role="group" aria-label="Basic example">
+                            {{#isEqual ../user.user_role "Admin"}}
                             <a href="/customer/view-report/{{this.customer_id}}" class="btn btn-info btn-sm"
                                 title="View Report">
                                 <i class="bi bi-file-earmark-text"></i>
                             </a>
+                            {{/isEqual}}
                             <a href="/customer/update-info/{{this.customer_id}}" class="btn btn-primary btn-sm"
                                 title="Edit">
                                 <i class="bi bi-pencil"></i>
