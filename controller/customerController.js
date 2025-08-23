@@ -752,7 +752,7 @@ class customerController {
                     growthPercent: ((item.currentYearQty - item.lastYearQty) / (item.lastYearQty || 1)) * 100
                 };
             });
-            console.log('baseGroupPerformance...', baseGroupPerformance);
+            // console.log('baseGroupPerformance...', baseGroupPerformance);
 
             // 6. Monthly trend - whole financial year (modified for proper chart display)
             const sqlMonthlyTrend = `
