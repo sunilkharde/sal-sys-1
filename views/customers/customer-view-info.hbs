@@ -52,14 +52,16 @@
                     <td>{{this.ext_code}}</td>
                     <td>
                         <div class="btn-group gap-2" role="group" aria-label="Basic example">
-                            {{#isEqual ../user.user_role "Admin"}}
-                            <a href="/customer/view-report/{{this.customer_id}}" class="btn btn-info btn-sm"
-                                title="View Report">
+                            {{!-- {{#isEqual ../user.user_role "Admin"}}
+                            <a href="/customer/view-report/{{this.customer_id}}" class="btn btn-info btn-sm" title="View Report">
                                 <i class="bi bi-file-earmark-text"></i>
                             </a>
-                            {{/isEqual}}
-                            <a href="/customer/update-info/{{this.customer_id}}" class="btn btn-primary btn-sm"
-                                title="Edit">
+                            {{else}}
+                            <a href="#" class="btn btn-info btn-sm disabled" title="View Report" style="pointer-events: none; opacity: 0.6;">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </a>
+                            {{/isEqual}} --}}
+                            <a href="/customer/update-info/{{this.customer_id}}" class="btn btn-primary btn-sm" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
                         </div>
@@ -97,9 +99,15 @@
                     render: function (data, type, row) {
                         return `
                             <div class="btn-group gap-2" role="group">
-                                <a href="/customer/view-report/${row.customer_id}" class="btn btn-info btn-sm" title="View Report">
-                                    <i class="bi bi-file-earmark-text"></i>
-                                </a>
+                                {{#isEqual user.user_role "Admin"}}
+                                    <a href="/customer/view-report/${row.customer_id}" class="btn btn-info btn-sm" title="View Report">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </a>
+                                {{else}}
+                                    <a href="#" class="btn btn-info btn-sm disabled" title="View Report" style="pointer-events: none; opacity: 0.6;">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </a>
+                                {{/isEqual}}
                                 <a href="/customer/update-info/${row.customer_id}" class="btn btn-primary btn-sm" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>

@@ -618,7 +618,7 @@ class customerController {
 
         try {
 
-            // if (!base_group) base_group = 'Gai Chhap Jarda';
+            if (!base_group) base_group = 'Gai Chhap Jarda';
 
             // 1. Get complete customer info
             const sqlCustomer = `

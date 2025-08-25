@@ -4,50 +4,52 @@
         <a href="/customer/create" class="btn btn-success">Create New</a>
     </div>
 
-    <table class="table" id="customersTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Dealer Name</th>
-                <th>Contact Person</th>
-                <th>City-Pin</th>
-                <th>District</th>
-                <th>SAP Code</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each customers}}
-            <tr>
-                <td>{{this.customer_id}}</td>
-                <td>{{this.customer_name}}</td>
-                <td>{{this.nick_name}}</td>
-                <td>{{this.city_pin}}</td>
-                <td>{{this.district}}</td>
-                <td>{{this.ext_code}}</td>
-                <td>
-                    <!-- <a href="/customer/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">
-                        <i class="bi bi-eye"></i>
-                    </a> -->
-                    <a href="/customer/update/{{this.customer_id}}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    {{#isEqual ../user.user_role "Admin"}}
-                    <a href="/customer/delete/{{this.customer_id}}" class="btn btn-danger btn-sm"
-                        onclick="return confirm('Are you sure?')">
-                        <i class="bi bi-trash"></i>
-                    </a>
-                    {{/isEqual}}
-                </td>
-            </tr>
-            {{/each}}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-striped" id="customersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Dealer Name</th>
+                    <th>Contact Person</th>
+                    <th>City-Pin</th>
+                    <th>District</th>
+                    <th>SAP Code</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each customers}}
+                <tr>
+                    <td>{{this.customer_id}}</td>
+                    <td>{{this.customer_name}}</td>
+                    <td>{{this.nick_name}}</td>
+                    <td>{{this.city_pin}}</td>
+                    <td>{{this.district}}</td>
+                    <td>{{this.ext_code}}</td>
+                    <td>
+                        <div class="btn-group gap-2" role="group" aria-label="Basic example">
+                            <a href="/customer/update/{{this.customer_id}}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {{#isEqual ../user.user_role "Admin"}}
+                            <a href="/customer/delete/{{this.customer_id}}" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {{/isEqual}}
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
 
     <script>
         $(document).ready(function () {
             $('#customersTable').dataTable({
-                pageLength: 10
+                pageLength: 10,
+                Responseive: true
             });
         });
     </script>
