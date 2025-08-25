@@ -618,8 +618,11 @@ class customerController {
 
         try {
 
-            if (!base_group) base_group = 'Gai Chhap Jarda';
-
+            console.log('Input Params...', { cust_id, from_date, to_date, base_group });
+            if (base_group === undefined || base_group === null) { // || base_group === ''
+                base_group = 'Gai Chhap Jarda';
+            }
+            
             // 1. Get complete customer info
             const sqlCustomer = `
                 SELECT a.*, 

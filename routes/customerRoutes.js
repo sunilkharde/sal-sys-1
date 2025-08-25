@@ -36,7 +36,6 @@ router.get('/benchmark/customers', customerController.filterCustomers);
 
 
 // Customer grouping routes - FIXED
-// Customer grouping routes - FIXED
 router.get('/grouping', customerGroupController.grouping);
 router.post('/create-group', customerGroupController.createGroup);
 router.post('/add-to-group', customerGroupController.addToGroup);
