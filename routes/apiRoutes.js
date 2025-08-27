@@ -1,6 +1,7 @@
 import express from "express";
 const router = express.Router();
 import apiController from "../controller/apiController.js"
+import customerController from "../controller/customerController.js"
 
 const { verifyApiToken, employeeLocation } = apiController;
 
@@ -13,6 +14,8 @@ router.get('/employee-location', apiController.employeeLocation);
 router.get('/employee-route', apiController.employeeRoute);
 router.get('/route-master', apiController.routeMaster);
 router.get('/customer-stock', apiController.customerStock);
+
+router.get('/view-report-cust/:cust_id', customerController.viewInfoReportApp); // for flutter app json data
 
 // https://sales.malpani.com/api/customer-sp-mapping
 // https://sales.malpani.com/api/employee-attendance/2023-10

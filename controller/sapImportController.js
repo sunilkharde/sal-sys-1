@@ -160,6 +160,63 @@ class sapImportController {
     static saveSalesRecords = async (buId, salesData, importBatch) => {
         let importedCount = 0;
 
+        // // Get the maximum existing ID to start from
+        // const maxIdResult = await executeQuery('SELECT COALESCE(MAX(id), 0) as maxId FROM sap_sales');
+        // let nextId = maxIdResult[0].maxId + 1;
+        let nextId = 1;
+
+        for (const record of salesData) {
+            try {
+                // Clean material number by removing leading zeros
+                const materialNumber = record.materialNumber.replace(/^0+/, '');
+
+                await executeQuery(
+                    `INSERT INTO sap_sales (
+                    id, bu_id, company_code, billing_date, document_number, customer_number,
+                    sales_employee_name, taluka, district, material_number, material_description,
+                    material_group, material_group_description, price_group, price_group_description,
+                    quantity, item_price, sales_unit, net_weight, gross_weight, sp_name, sp_code,
+                    import_batch
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        nextId++,
+                        buId,
+                        record.companyCode,
+                        moment(record.billingDate, 'YYYYMMDD').format('YYYY-MM-DD'),
+                        record.documentNumber,
+                        record.customerNumber,
+                        record.salesEmployeeName,
+                        record.taluka,
+                        record.district,
+                        materialNumber,
+                        record.materialDescription,
+                        record.priceGroup,
+                        record.priceGroupDescription,
+                        record.materialGroup,
+                        record.materialGroupDescription,
+                        record.quantity,
+                        record.itemPrice,
+                        record.salesUnit,
+                        record.netWeight,
+                        record.grossWeigh,
+                        record.spName,
+                        record.spCode,
+                        importBatch
+                    ]
+                );
+
+                importedCount++;
+            } catch (error) {
+                console.error('Error saving record:', record, error);
+            }
+        }
+
+        return importedCount;
+    }
+
+    static saveSalesRecords_old = async (buId, salesData, importBatch) => {
+        let importedCount = 0;
+
         for (const record of salesData) {
             try {
                 // Clean material number by removing leading zeros

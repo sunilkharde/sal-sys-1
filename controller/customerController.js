@@ -617,12 +617,10 @@ class customerController {
         let { from_date, to_date, base_group } = req.query;
 
         try {
-
-            console.log('Input Params...', { cust_id, from_date, to_date, base_group });
             if (base_group === undefined || base_group === null) { // || base_group === ''
                 base_group = 'Gai Chhap Jarda';
             }
-            
+
             // 1. Get complete customer info
             const sqlCustomer = `
                 SELECT a.*, 
@@ -672,7 +670,7 @@ class customerController {
             const categorizeBaseGroup = (desc) => {
                 if (!desc) return 'Regular';
                 const lowerDesc = desc.toLowerCase();
-                if (lowerDesc.includes('tob') || lowerDesc.includes('gai') || lowerDesc.includes('chhap') || lowerDesc.includes('uut') || lowerDesc.includes('uut')) { 
+                if (lowerDesc.includes('tob') || lowerDesc.includes('gai') || lowerDesc.includes('chhap') || lowerDesc.includes('uut') || lowerDesc.includes('uut')) {
                     return 'Tobacco';
                 }
                 return 'Regular';
@@ -977,7 +975,7 @@ class customerController {
                         WHERE cb.customer_id = ?
                     )`,
                     [cust_id]
-                )).map(b => b.ext_code_key);                
+                )).map(b => b.ext_code_key);
 
                 // Get ALL base groups for current customer to ensure all categories are shown
                 const allBaseGroupsForCustomer = await executeQuery(`
@@ -1275,7 +1273,6 @@ class customerController {
         }
     };
 
-
     /***************** */
     // Customer Information Report
     static customerReport = async (req, res) => {
@@ -1555,6 +1552,666 @@ class customerController {
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: 'Internal Server Error' });
+        }
+    };
+
+
+    /**
+     * For Flutter App - JSON Data
+     * calling from apiRoutes.js
+     */
+    static viewInfoReportApp = async (req, res) => {
+        const { cust_id } = req.params;
+        let { from_date, to_date, base_group } = req.query;
+
+        try {
+            if (base_group === undefined || base_group === null) { // || base_group === ''
+                base_group = 'Gai Chhap Jarda';
+            }
+
+            // 1. Get complete customer info
+            const sqlCustomer = `
+                SELECT a.*, 
+                    CONCAT(b.last_name, ' ', b.first_name) AS mg_name,
+                    CONCAT(c.last_name, ' ', c.first_name) AS se_name,
+                    d.market_area
+                FROM customers a
+                LEFT JOIN employees b ON a.mg_id = b.emp_id
+                LEFT JOIN employees c ON a.se_id = c.emp_id
+                LEFT JOIN market_area d ON a.market_area_id = d.market_area_id
+                WHERE a.customer_id = ?`;
+            const customerData = await executeQuery(sqlCustomer, [cust_id]);
+
+            if (customerData.length === 0) {
+                return res.status(404).send("Customer not found");
+            }
+
+            // 2. Get Work Person, Vehicle, and Salesman Details (unchanged)
+            const wpData = await executeQuery(`SELECT * FROM cust_wp WHERE customer_id = ? ORDER BY sr_no`, [cust_id]);
+            const vehData = await executeQuery(`SELECT * FROM cust_veh WHERE customer_id = ? ORDER BY sr_no`, [cust_id]);
+            const spData = await executeQuery(`SELECT * FROM cust_sp WHERE customer_id = ? ORDER BY sr_no`, [cust_id]);
+
+            // 3. Calculate date ranges
+            const currentDate = moment();
+            const financialYearStart = this.getFinancialYearStart(currentDate);
+            const defaultFromDate = financialYearStart;
+            const queryFromDate = from_date || defaultFromDate.format('YYYY-MM-DD');
+            const queryToDate = to_date || currentDate.format('YYYY-MM-DD');
+
+            // Calculate last year's date range
+            const lastYearFromDate = moment(queryFromDate).subtract(1, 'year').format('YYYY-MM-DD');
+            const lastYearToDate = moment(queryToDate).subtract(1, 'year').format('YYYY-MM-DD');
+
+            // For monthly trend - whole current and last financial year
+            const currentFYStart = financialYearStart.format('YYYY-MM-DD');
+            const currentFYEnd = financialYearStart.clone().add(1, 'year').subtract(1, 'day').format('YYYY-MM-DD');
+            const lastFYStart = financialYearStart.clone().subtract(1, 'year').format('YYYY-MM-DD');
+            const lastFYEnd = financialYearStart.clone().subtract(1, 'day').format('YYYY-MM-DD');
+
+            const sapCustomerNumber = customerData[0].ext_code.padStart(10, '0');
+            const sapCustomerExtKey = customerData[0].ext_code_key;
+
+            // Add base group filter to WHERE clauses
+            const baseGroupFilter = base_group ? `AND x.base_group = '${base_group}'` : '';
+
+            // Helper function to categorize base groups
+            const categorizeBaseGroup = (desc) => {
+                if (!desc) return 'Regular';
+                const lowerDesc = desc.toLowerCase();
+                if (lowerDesc.includes('tob') || lowerDesc.includes('gai') || lowerDesc.includes('chhap') || lowerDesc.includes('uut') || lowerDesc.includes('uut')) {
+                    return 'Tobacco';
+                }
+                return 'Regular';
+            };
+            const categorizeBaseGroup2 = (desc) => {
+                if (!desc) return 'Regular';
+                const lowerDesc = desc.toLowerCase();
+                if (lowerDesc.includes('tob1') || lowerDesc.includes('gai1') || lowerDesc.includes('chhap1')) {
+                    return 'Tobacco';
+                }
+                return 'Regular';
+            };
+
+            // 4. Sales summary - current and last year
+            const sqlSalesSummary = `
+                SELECT 
+                    SUM(CASE WHEN a.billing_date BETWEEN ? AND ? THEN a.quantity ELSE 0 END) AS currentYearQty,
+                    SUM(CASE WHEN a.billing_date BETWEEN ? AND ? THEN a.quantity * item_price ELSE 0 END) AS currentYearValue,
+                    SUM(CASE WHEN a.billing_date BETWEEN ? AND ? THEN a.quantity ELSE 0 END) AS lastYearQty,
+                    SUM(CASE WHEN a.billing_date BETWEEN ? AND ? THEN a.quantity * a.item_price ELSE 0 END) AS lastYearValue,
+                    COUNT(DISTINCT x.base_group) AS categoryCount
+                FROM sap_sales a, groups x
+                WHERE TRIM(IFNULL(a.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                AND a.customer_number = ?
+                AND (a.billing_date BETWEEN ? AND ? OR a.billing_date BETWEEN ? AND ?)
+                ${baseGroupFilter}`;
+
+            const salesSummary = await executeQuery(sqlSalesSummary, [
+                queryFromDate, queryToDate,
+                queryFromDate, queryToDate,
+                lastYearFromDate, lastYearToDate,
+                lastYearFromDate, lastYearToDate,
+                sapCustomerNumber,
+                queryFromDate, queryToDate,
+                lastYearFromDate, lastYearToDate
+            ]);
+
+            // Calculate average monthly
+            const monthsDiff = moment(queryToDate).diff(moment(queryFromDate), 'months') + 1;
+            const avgMonthly = salesSummary[0].currentYearValue / monthsDiff;
+
+            // 5. Base group performance - current and last year
+            const sqlBaseGroup = `
+                SELECT 
+                    x.base_group,
+                    SUM(CASE WHEN a.billing_date BETWEEN ? AND ? THEN a.quantity ELSE 0 END) AS currentYearQty,
+                    SUM(CASE WHEN a.billing_date BETWEEN ? AND ? THEN a.quantity * a.item_price ELSE 0 END) AS currentYearValue,
+                    SUM(CASE WHEN a.billing_date BETWEEN ? AND ? THEN a.quantity ELSE 0 END) AS lastYearQty,
+                    SUM(CASE WHEN a.billing_date BETWEEN ? AND ? THEN a.quantity * a.item_price ELSE 0 END) AS lastYearValue
+                FROM sap_sales as a, groups as x
+                WHERE TRIM(IFNULL(a.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                AND a.customer_number = ?
+                AND (a.billing_date BETWEEN ? AND ? OR a.billing_date BETWEEN ? AND ?)
+                ${baseGroupFilter}
+                GROUP BY x.base_group
+                ORDER BY currentYearQty DESC`;
+
+            const baseGroupData = await executeQuery(sqlBaseGroup, [
+                queryFromDate, queryToDate,
+                queryFromDate, queryToDate,
+                lastYearFromDate, lastYearToDate,
+                lastYearFromDate, lastYearToDate,
+                sapCustomerNumber,
+                queryFromDate, queryToDate,
+                lastYearFromDate, lastYearToDate
+            ]);
+
+            // Add parent group and calculate percentages
+            const baseGroupPerformance = baseGroupData.map(item => {
+                const parentGroup = categorizeBaseGroup(item.base_group);
+                const currentYearPercent = (item.currentYearValue / (salesSummary[0].currentYearValue || 1)) * 100;
+                const lastYearPercent = (item.lastYearValue / (salesSummary[0].lastYearValue || 1)) * 100;
+
+                return {
+                    ...item,
+                    parentGroup,
+                    currentYearPercent,
+                    lastYearPercent,
+                    // growthPercent: ((item.currentYearValue - item.lastYearValue) / (item.lastYearValue || 1)) * 100
+                    growthPercent: ((item.currentYearQty - item.lastYearQty) / (item.lastYearQty || 1)) * 100
+                };
+            });
+            // console.log('baseGroupPerformance...', baseGroupPerformance);
+
+            // 6. Monthly trend - whole financial year (modified for proper chart display)
+            const sqlMonthlyTrend = `
+                SELECT 
+                    DATE_FORMAT(a.billing_date, '%m') AS month_num,
+                    DATE_FORMAT(a.billing_date, '%b') AS month_name,
+                    YEAR(a.billing_date) AS year,
+                    SUM(a.quantity * a.item_price) AS value,
+                    SUM(a.quantity) AS qty
+                FROM sap_sales as a, groups as x
+                WHERE TRIM(IFNULL(a.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                AND a.customer_number = ?
+                AND (
+                    (a.billing_date BETWEEN ? AND ?) OR 
+                    (a.billing_date BETWEEN ? AND ?)
+                )
+                ${baseGroupFilter}
+                GROUP BY YEAR(a.billing_date), DATE_FORMAT(a.billing_date, '%m'), DATE_FORMAT(a.billing_date, '%b')
+                ORDER BY  year, month_num`;
+
+            const monthlyTrendRaw = await executeQuery(sqlMonthlyTrend, [
+                sapCustomerNumber,
+                currentFYStart, currentFYEnd,
+                lastFYStart, lastFYEnd
+            ]);
+
+            // Process the raw data for chart display
+            const monthlyTrend = { labels: [], currentYear: [], lastYear: [] };
+
+            // Get current and last financial years
+            const currentYear = moment().year();
+            const lastYear = currentYear - 1;
+
+            // Initialize arrays with zeros for all months
+            const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+            // const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            months.forEach(month => {
+                monthlyTrend.labels.push(month);
+                monthlyTrend.currentYear.push(0);
+                monthlyTrend.lastYear.push(0);
+            });
+
+            // Fill in the actual data
+            monthlyTrendRaw.forEach(item => {
+                const monthIndex = months.indexOf(item.month_name);
+                if (monthIndex !== -1) {
+                    if (item.year === lastYear) {
+                        monthlyTrend.lastYear[monthIndex] = item.qty;
+                    } else if (item.year === currentYear) {
+                        monthlyTrend.currentYear[monthIndex] = item.qty;
+                    }
+                }
+            });
+
+            // monthlyTrendRaw.forEach(item => {
+            //     const monthIndex = months.indexOf(item.month_name);
+            //     if (monthIndex !== -1) {
+            //         if (item.year === currentYear) {
+            //             monthlyTrend.currentYear[monthIndex] = item.qty;
+            //         } else if (item.year === lastYear) {
+            //             monthlyTrend.lastYear[monthIndex] = item.qty;
+            //         }
+            //     }
+            // });
+
+
+            // 7. Get customer ranking - optimized for base group filtering
+            const sqlCustomerRanking = `
+                WITH district_sales AS (
+                    SELECT 
+                        c.ext_code,
+                        MAX(c.customer_name) AS customer_name,
+                        MAX(c.city) AS city,
+                        MAX(c.district) AS district,
+                        ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS currentYearSales,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
+                        ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS lastYearSales,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS lastYearQty
+                    FROM customers c
+                    JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
+                    JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                    WHERE c.district = ?
+                    AND (
+                        (s.billing_date BETWEEN ? AND ?) OR 
+                        (s.billing_date BETWEEN ? AND ?)
+                    )
+                    ${baseGroupFilter}
+                    GROUP BY c.ext_code
+                    HAVING currentYearQty > 0 OR lastYearQty > 0
+                ),
+                category_ranking AS (
+                    SELECT 
+                        c.ext_code,
+                        x.base_group,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY c.ext_code 
+                            ORDER BY SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) DESC
+                        ) as category_rank
+                    FROM customers c
+                    JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code, 10, '0')
+                    JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                    WHERE s.billing_date BETWEEN ? AND ?
+                    AND c.district = ?
+                    ${baseGroupFilter}
+                    GROUP BY c.ext_code, x.base_group
+                ),
+                ranked_customers AS (
+                    SELECT 
+                        ds.ext_code,
+                        ds.customer_name,
+                        ds.city,
+                        ds.district,
+                        ds.currentYearSales,
+                        ds.currentYearQty,
+                        ds.lastYearSales,
+                        ds.lastYearQty,
+                        RANK() OVER (
+                            ORDER BY ds.currentYearQty DESC, ds.customer_name ASC
+                        ) AS sales_rank,
+                        CASE 
+                            WHEN ds.lastYearQty = 0 THEN NULL 
+                            ELSE ROUND(((ds.currentYearQty - ds.lastYearQty) / ds.lastYearQty * 100), 2) 
+                        END AS growth_percent,
+                        GROUP_CONCAT(
+                            CASE WHEN cr.category_rank <= 3 THEN cr.base_group END 
+                            ORDER BY cr.category_rank
+                        ) AS top_categories
+                    FROM district_sales ds
+                    LEFT JOIN category_ranking cr ON ds.ext_code = cr.ext_code AND cr.category_rank <= 3
+                    GROUP BY ds.ext_code, ds.customer_name, ds.city, ds.district, 
+                            ds.currentYearSales, ds.currentYearQty, ds.lastYearSales, ds.lastYearQty
+                )
+                SELECT * FROM ranked_customers
+                ORDER BY sales_rank ASC, customer_name ASC;
+                `;
+
+            const rankingData = await executeQuery(sqlCustomerRanking, [
+                // Current year sales
+                queryFromDate, queryToDate,
+                queryFromDate, queryToDate,
+
+                // Last year sales  
+                lastYearFromDate, lastYearToDate,
+                lastYearFromDate, lastYearToDate,
+
+                // District filter
+                customerData[0].district,
+
+                // Date ranges for both periods
+                queryFromDate, queryToDate,
+                lastYearFromDate, lastYearToDate,
+
+                // Category ranking - current year only
+                queryFromDate, queryToDate,
+                queryFromDate, queryToDate,
+                queryFromDate, queryToDate,
+                customerData[0].district
+            ]);
+
+            // Process the top categories string into an array
+            rankingData.forEach(customer => {
+                if (customer.top_categories) {
+                    customer.top_categories = customer.top_categories.split(',').filter(Boolean).slice(0, 3);
+                }
+            });
+
+            // Get all customers in the district
+            const allDistrictCustomers = rankingData.filter(customer =>
+                customer.district === customerData[0].district
+            );
+
+            // Get top 10 customers
+            let topCustomers = allDistrictCustomers.slice(0, 10);
+
+            // Find current customer's rank
+            const currentCustomerRank = allDistrictCustomers.find(c =>
+                c.ext_code === customerData[0].ext_code
+            );
+
+            // If current customer not in top 10, add them to the list
+            if (currentCustomerRank && !topCustomers.some(c => c.ext_code === customerData[0].ext_code)) {
+                topCustomers.push(currentCustomerRank);
+
+                // Sort again to maintain ranking order
+                topCustomers.sort((a, b) => a.sales_rank - b.sales_rank);
+            }
+
+
+            // 8. Benchmark comparison - Optimized to show all categories
+            const hasBenchmarks = await executeQuery(
+                "SELECT COUNT(*) as count FROM cust_bench WHERE customer_id = ?",
+                [cust_id]
+            );
+
+            let transformedBenchmarkData = null;
+
+            if (hasBenchmarks[0].count > 0) {
+                // Get all benchmark customer IDs
+                const benchmarkIds = (await executeQuery(
+                    `SELECT c.customer_id 
+                    FROM customers c
+                    WHERE c.ext_code_key IN (
+                        SELECT c2.ext_code_key 
+                        FROM customers c2
+                        INNER JOIN cust_bench cb ON c2.customer_id = cb.cust_bench_id
+                        WHERE cb.customer_id = ?
+                    )`,
+                    [cust_id]
+                )).map(b => b.customer_id);
+
+                const benchmarkExtCodeKeys = (await executeQuery(
+                    `SELECT c.ext_code_key 
+                    FROM customers c
+                    WHERE c.ext_code_key IN (
+                        SELECT c2.ext_code_key 
+                        FROM customers c2
+                        INNER JOIN cust_bench cb ON c2.customer_id = cb.cust_bench_id
+                        WHERE cb.customer_id = ?
+                    )`,
+                    [cust_id]
+                )).map(b => b.ext_code_key);
+
+                // Get ALL base groups for current customer to ensure all categories are shown
+                const allBaseGroupsForCustomer = await executeQuery(`
+                SELECT DISTINCT x.base_group
+                FROM sap_sales s
+                JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                WHERE s.customer_number = ?
+                AND (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
+                ${baseGroupFilter}
+                ORDER BY x.base_group`,
+                    [
+                        sapCustomerNumber,
+                        queryFromDate, queryToDate,
+                        lastYearFromDate, lastYearToDate
+                    ]
+                );
+
+                // Get current customer's sales by ALL categories (even if zero)
+                const currentCustomerAllCategories = allBaseGroupsForCustomer.map(group => ({
+                    base_group: group.base_group,
+                    currentYearQty: 0,
+                    currentYearValue: 0,
+                    lastYearQty: 0,
+                    lastYearValue: 0
+                }));
+
+                // Get actual current customer data and merge
+                const currentCustomerActualData = await executeQuery(`
+                SELECT 
+                    x.base_group,
+                    SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
+                    SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END) AS currentYearValue,
+                    SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS lastYearQty,
+                    SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END) AS lastYearValue
+                FROM customers c
+                JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code_key, 10, '0')
+                JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
+                AND c.ext_code_key = ?
+                ${baseGroupFilter}
+                GROUP BY x.base_group`,
+                    [
+                        queryFromDate, queryToDate,
+                        queryFromDate, queryToDate,
+                        lastYearFromDate, lastYearToDate,
+                        lastYearFromDate, lastYearToDate,
+                        queryFromDate, queryToDate,
+                        lastYearFromDate, lastYearToDate,
+                        sapCustomerExtKey //cust_id --AND c.customer_id = ?
+                    ]
+                );
+
+                // Merge actual data with all categories template
+                currentCustomerActualData.forEach(actual => {
+                    const found = currentCustomerAllCategories.find(cat => cat.base_group === actual.base_group);
+                    if (found) {
+                        Object.assign(found, actual);
+                    }
+                });
+
+                // Get benchmark customers' total data
+                const benchmarkData = await executeQuery(`
+                SELECT 
+                    c.ext_code_key,
+                    MAX(c.customer_name) AS customer_name,
+                    MAX(c.city) AS city,
+                    ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS currentYearSales,
+                    SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
+                    ROUND(SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END), 0) AS lastYearSales,
+                    SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS lastYearQty
+                FROM customers c
+                JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code_key, 10, '0')
+                JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
+                AND c.ext_code_key IN (?)
+                ${baseGroupFilter}
+                GROUP BY c.ext_code_key
+                ORDER BY currentYearQty DESC`,
+                    [
+                        queryFromDate, queryToDate,
+                        queryFromDate, queryToDate,
+                        lastYearFromDate, lastYearToDate,
+                        lastYearFromDate, lastYearToDate,
+                        queryFromDate, queryToDate,
+                        lastYearFromDate, lastYearToDate,
+                        benchmarkExtCodeKeys // benchmarkIds --AND c.customer_id IN (?)
+                    ]
+                );
+
+                // Get benchmark customers' sales by ALL categories
+                const benchmarkAllCategories = await executeQuery(`
+                    SELECT 
+                        c.ext_code_key,
+                        x.base_group,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS currentYearQty,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END) AS currentYearValue,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity ELSE 0 END) AS lastYearQty,
+                        SUM(CASE WHEN s.billing_date BETWEEN ? AND ? THEN s.quantity * s.item_price ELSE 0 END) AS lastYearValue
+                    FROM customers c
+                    JOIN sap_sales s ON s.customer_number = LPAD(c.ext_code_key, 10, '0')
+                    JOIN groups x ON TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+                    WHERE (s.billing_date BETWEEN ? AND ? OR s.billing_date BETWEEN ? AND ?)
+                    AND c.ext_code_key IN (?)
+                    ${baseGroupFilter}
+                    GROUP BY c.ext_code_key, x.base_group`,
+                    [
+                        queryFromDate, queryToDate,
+                        queryFromDate, queryToDate,
+                        lastYearFromDate, lastYearToDate,
+                        lastYearFromDate, lastYearToDate,
+                        queryFromDate, queryToDate,
+                        lastYearFromDate, lastYearToDate,
+                        benchmarkExtCodeKeys // benchmarkIds --AND c.customer_id IN (?)
+                    ]
+                );
+
+                // Prepare comparison data with parent groups for ALL categories
+                const benchmarkComparison = currentCustomerAllCategories.map(category => {
+                    const parentGroup = categorizeBaseGroup(category.base_group);
+
+                    const comparisonRow = {
+                        base_group: category.base_group,
+                        base_group_description: category.base_group || 'Other',
+                        parentGroup,
+                        current_customer: {
+                            currentYearQty: category.currentYearQty,
+                            currentYearValue: category.currentYearValue,
+                            lastYearQty: category.lastYearQty,
+                            lastYearValue: category.lastYearValue,
+                            growthPercent: ((category.currentYearQty - category.lastYearQty) / (category.lastYearQty || 1)) * 100
+                        },
+                        benchmarks: []
+                    };
+
+                    // Find benchmark data for this category from all benchmarks
+                    benchmarkAllCategories.forEach(benchmark => {
+                        if (benchmark.base_group === category.base_group) {
+                            comparisonRow.benchmarks.push({
+                                ext_code_key: benchmark.ext_code_key,
+                                customer_name: '', // Will be filled from benchmarkData
+                                city: '', // Will be filled from benchmarkData
+                                currentYearQty: benchmark.currentYearQty,
+                                currentYearValue: benchmark.currentYearValue,
+                                lastYearQty: benchmark.lastYearQty,
+                                lastYearValue: benchmark.lastYearValue,
+                                growthPercent: ((benchmark.currentYearQty - benchmark.lastYearQty) / (benchmark.lastYearQty || 1)) * 100
+                            });
+                        }
+                    });
+
+                    return comparisonRow;
+                });
+
+                // 9. Transform benchmark data for the table layout
+                if (benchmarkData.length > 0) {
+                    // Create header row with customer names
+                    const headerRow = {
+                        isHeader: true,
+                        category: 'Category',
+                        currentCustomer: {
+                            name: customerData[0].customer_name + ' (Current)',
+                            city: customerData[0].city
+                        },
+                        benchmarks: benchmarkData.map(benchmark => ({
+                            ext_code_key: benchmark.ext_code_key,
+                            customer_name: benchmark.customer_name,
+                            city: benchmark.city
+                        }))
+                    };
+
+                    // Create data rows for each base group
+                    const dataRows = benchmarkComparison.map(category => {
+                        const row = {
+                            base_group: category.base_group,
+                            base_group_description: category.base_group || 'Other',
+                            parentGroup: category.parentGroup,
+                            current_customer: category.current_customer,
+                            benchmarks: []
+                        };
+
+                        // Match benchmarks in the same order as header and fill customer names
+                        headerRow.benchmarks.forEach(headerBenchmark => {
+                            const foundBenchmark = category.benchmarks.find(b =>
+                                b.ext_code_key === headerBenchmark.ext_code_key
+                            );
+
+                            if (foundBenchmark) {
+                                // Fill in customer name and city from header data
+                                foundBenchmark.customer_name = headerBenchmark.customer_name;
+                                foundBenchmark.city = headerBenchmark.city;
+                                row.benchmarks.push(foundBenchmark);
+                            } else {
+                                // Create empty benchmark entry
+                                row.benchmarks.push({
+                                    ext_code_key: headerBenchmark.ext_code_key,
+                                    customer_name: headerBenchmark.customer_name,
+                                    city: headerBenchmark.city,
+                                    currentYearQty: 0,
+                                    currentYearValue: 0,
+                                    lastYearQty: 0,
+                                    lastYearValue: 0,
+                                    growthPercent: 0
+                                });
+                            }
+                        });
+
+                        return row;
+                    });
+
+                    // Group by parent group
+                    const groupedData = {};
+                    dataRows.forEach(row => {
+                        if (!groupedData[row.parentGroup]) {
+                            groupedData[row.parentGroup] = [];
+                        }
+                        groupedData[row.parentGroup].push(row);
+                    });
+
+                    // Create a new object with groups in the desired order
+                    const sortedGroupedData = {};
+                    const groupOrder = ['Tobacco', 'Regular', 'Other'];
+
+                    // Add groups in the specified order
+                    groupOrder.forEach(group => {
+                        if (groupedData[group]) {
+                            sortedGroupedData[group] = groupedData[group];
+                        }
+                    });
+
+                    // Add any other groups that might exist
+                    Object.keys(groupedData).forEach(group => {
+                        if (!sortedGroupedData[group]) {
+                            sortedGroupedData[group] = groupedData[group];
+                        }
+                    });
+
+                    transformedBenchmarkData = {
+                        header: headerRow,
+                        groupedData: sortedGroupedData
+                    };
+                }
+            }
+
+
+            // 10. Get all distinct base groups from sap_sales for the dropdown
+            const sqlAllBaseGroups = `
+            SELECT DISTINCT 
+                x.base_group,
+                x.base_group as base_group_description
+            FROM sap_sales as s, groups as x
+            WHERE TRIM(IFNULL(s.material_group, 'X')) = TRIM(IFNULL(x.group_code, 'X'))
+            AND s.customer_number = ?
+            ORDER BY x.base_group`;
+
+            const allBaseGroups = await executeQuery(sqlAllBaseGroups, [sapCustomerNumber]);
+
+            res.json({
+                success: true,
+                data: customerData[0],
+                salesSummary: {
+                    ...salesSummary[0],
+                    avgMonthly,
+                    growthPercent: ((salesSummary[0].currentYearQty - salesSummary[0].lastYearQty) / (salesSummary[0].lastYearQty || 1)) * 100
+                },
+                baseGroupPerformance,
+                monthlyTrend,
+                wpData,
+                vehData,
+                spData,
+                topCustomers,
+                currentCustomerRank,
+                allDistrictCustomers,
+                filters: {
+                    from_date: queryFromDate,
+                    to_date: queryToDate,
+                    base_group: base_group
+                },
+                base_groups: allBaseGroups.map(mg => ({
+                    value: mg.base_group,
+                    label: mg.base_group_description
+                })),
+                benchmarkData: transformedBenchmarkData,
+                hasBenchmarks: hasBenchmarks[0].count > 0,
+            });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Internal server error");
         }
     };
 
