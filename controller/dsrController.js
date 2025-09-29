@@ -1545,6 +1545,100 @@ class dsrController {
             const photo2 = 'B_' + empID + moment(toDate).format('_YYYY-MM-DD HH.mm.ss');
             const photo3 = 'X_' + empID + moment(toDate).format('_YYYY-MM-DD HH.mm.ss');
 
+            // Create directory path with year+month format
+            const yearMonthDir = moment(toDate).format('YYYYMM');
+            const baseDir = join(process.cwd(), 'public', 'userData', yearMonthDir);
+
+            // Create directory if it doesn't exist
+            if (!fs.existsSync(baseDir)) {
+                fs.mkdirSync(baseDir, { recursive: true });
+            }
+
+            const imagePath1 = join(baseDir, photo1 + '.jpeg');
+            const imagePath2 = join(baseDir, photo2 + '.jpeg');
+            const imagePath3 = join(baseDir, photo3 + '.jpeg');
+
+            let filesSavedCount = 0;
+
+            if (dataURL1) {
+                const base64Data1 = dataURL1.replace(/^data:image\/\w+;base64,/, '');
+                const buffer1 = Buffer.from(base64Data1, 'base64');
+
+                fs.writeFile(imagePath1, buffer1, (err) => {
+                    if (err) {
+                        console.error('Error saving selfie:', err);
+                        return res.status(500).json({ error: 'Error saving selfie' });
+                    } else {
+                        // console.log('Selfie saved successfully');
+                        filesSavedCount++;
+
+                        /*if (filesSavedCount === 2) {
+                            console.log('2 Images saved successfully')
+                            // return res.status(200).json({ message: 'Images saved successfully' });
+                        }*/
+                    }
+                });
+            } else {
+                // console.log('dataURL1 is empty, skipping saving selfie');
+            }
+
+            if (dataURL2) {
+                const base64Data2 = dataURL2.replace(/^data:image\/\w+;base64,/, '');
+                const buffer2 = Buffer.from(base64Data2, 'base64');
+
+                fs.writeFile(imagePath2, buffer2, (err) => {
+                    if (err) {
+                        console.error('Error saving km image:', err);
+                        return res.status(500).json({ error: 'Error saving km image' });
+                    } else {
+                        //console.log('KM image saved successfully');
+                        filesSavedCount++;
+
+                        /*if (filesSavedCount === 2) {
+                            console.log('2 Images saved successfully')
+                            // return res.status(200).json({ message: 'Images saved successfully' });
+                        }*/
+                    }
+                });
+            } else {
+                // console.log('dataURL2 is empty, skipping saving KM image');
+            }
+
+            if (dataURL3) {
+                const base64Data3 = dataURL3.replace(/^data:image\/\w+;base64,/, '');
+                const buffer3 = Buffer.from(base64Data3, 'base64');
+
+                fs.writeFile(imagePath3, buffer3, (err) => {
+                    if (err) {
+                        console.error('Error saving invoice image:', err);
+                        return res.status(500).json({ error: 'Error saving invoice image' });
+                    } else {
+                        // console.log('Invoice image saved successfully');
+                        filesSavedCount++;
+
+                        /*if (filesSavedCount === 3) {
+                            console.log('3 Images saved successfully')
+                            // return res.status(500).json({ message: 'Images saved successfully' });
+                        }*/
+                    }
+                });
+            } else {
+                // console.log('dataURL3 is empty, skipping saving invoice image');
+            }
+
+        } catch (error) {
+            console.error('Error uploading images:', error);
+            return res.status(500).json({ error: 'Error uploading images' });
+        }
+    };
+
+    static uploadSelfie_Old = async (req, res, dataURL1, dataURL2, dataURL3, toDate, empID) => {
+        try {
+            // const { dataURL1, dataURL2 } = req.body;
+            const photo1 = 'A_' + empID + moment(toDate).format('_YYYY-MM-DD HH.mm.ss');
+            const photo2 = 'B_' + empID + moment(toDate).format('_YYYY-MM-DD HH.mm.ss');
+            const photo3 = 'X_' + empID + moment(toDate).format('_YYYY-MM-DD HH.mm.ss');
+
             const imagePath1 = join(process.cwd(), 'public', 'userData', photo1 + '.jpeg');
             const imagePath2 = join(process.cwd(), 'public', 'userData', photo2 + '.jpeg');
             const imagePath3 = join(process.cwd(), 'public', 'userData', photo3 + '.jpeg');
@@ -1842,6 +1936,90 @@ class dsrController {
                 " a.loc_date,a.loc_lat,a.loc_lng,a.loc_name,a.loc_add,DATE_FORMAT(a.loc_date,'%H:%i') as loc_time," +
                 " b.desg_id,c.desg_name,b.hq_id,d.hq_name,b.off_day," +
                 " b.boss_id, CONCAT(e.last_name,' ',e.first_name,' ',e.middle_name) as boss_name," +
+                " CONCAT('/userData/', DATE_FORMAT(a.loc_date,'%Y%m'), '/A_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img1," +
+                " CONCAT('/userData/', DATE_FORMAT(a.loc_date,'%Y%m'), '/B_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img2," +
+                " CONCAT('/userData/', DATE_FORMAT(a.loc_date,'%Y%m'), '/X_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img3" +
+                " FROM dsr_loc as a, employees as b, designations as c, hqs as d, employees as e" +
+                " WHERE a.emp_id=b.emp_id " + sqlEmp + seleEmp +
+                " and a.loc_date Between ? and ? " +
+                " and b.desg_id=c.desg_id and b.hq_id=d.hq_id and b.boss_id=e.emp_id "
+            // console.log('sql', sqlStr3, fromDate, toDate)
+
+            const params3 = [fromDate, toDate];
+            const locData = await executeQuery(sqlStr3, params3);
+            // console.log('Data', locData)
+
+            res.render('dsr/dsr-report-loc3', { layout: 'mobile', locToDate: toDate, emp_list: empList, empData: empData[0], alert, locData }); // googleApiKey: process.env.GOOGLE_MAPS_API_KEY, locations: JSON.stringify(locData) 
+
+        } catch (error) {
+            console.error(error);
+            // Handle the error
+        }
+    }
+
+    static reportLocationRegular_Old = async (req, res) => {
+        const alert = req.query.alert;
+        const { emp_id, loc_date } = req.query;
+        try {
+
+            var fromDate = null;
+            var toDate = null;
+            if (loc_date === null || loc_date === undefined) {
+                fromDate = moment().startOf('day').format('YYYY-MM-DD HH:mm');
+                // toDate = moment().format('YYYY-MM-DD HH:mm');
+                toDate = moment().endOf('day').format('YYYY-MM-DD HH:mm');
+            } else {
+                fromDate = moment(loc_date).startOf('day').format('YYYY-MM-DD HH:mm');
+                toDate = moment(loc_date).format('YYYY-MM-DD HH:mm');
+            }
+
+            //Get current login user details
+            const sqlStr = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
+                " FROM employees as a" +
+                " Where a.status='A' and a.user_id=?"
+            const params = [res.locals.user.user_id];
+            const logUser = await executeQuery(sqlStr, params);
+            // if (logUser.length === 0) {
+            //     res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
+            //     return;
+            // }
+
+            //Get emp list (boss and under emp)
+            var sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+                sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
+            }
+            const empList = await executeQuery(sqlStr1);
+
+            var empID = emp_id === null || emp_id === undefined || emp_id === '' ? 0 : emp_id;
+            //Get emp details with boss details
+            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
+            const params2 = [empID];
+            const empData = await executeQuery(sqlStr2, params2);
+
+            let sqlEmp = ""
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+                sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
+            }
+
+            let seleEmp = "";
+            if (emp_id && emp_id !== null && emp_id !== undefined) {
+                seleEmp = ` and a.emp_id=${emp_id}`;
+            }
+            // console.log('emp id...', emp_id, ' seleEmp... ', seleEmp)
+
+            let sqlStr3 = "SELECT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
+                " a.loc_date,a.loc_lat,a.loc_lng,a.loc_name,a.loc_add,DATE_FORMAT(a.loc_date,'%H:%i') as loc_time," +
+                " b.desg_id,c.desg_name,b.hq_id,d.hq_name,b.off_day," +
+                " b.boss_id, CONCAT(e.last_name,' ',e.first_name,' ',e.middle_name) as boss_name," +
                 " CONCAT('/userData/A_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img1," +
                 " CONCAT('/userData/B_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img2," +
                 " CONCAT('/userData/X_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img3" +
@@ -1925,7 +2103,82 @@ class dsrController {
         }
     };
 
-    static reportLocationEmployee = async (req, res) => {//This function is copy of 'reportLocationRegular'
+    static reportLocationEmployee = async (req, res) => {
+        const alert = req.query.alert;
+        const { emp_id, loc_date } = req.query;
+        try {
+
+            var fromDate = null;
+            var toDate = null;
+            if (loc_date === null || loc_date === undefined) {
+                fromDate = moment().startOf('day').format('YYYY-MM-DD HH:mm');
+                toDate = moment().endOf('day').format('YYYY-MM-DD HH:mm');
+            } else {
+                fromDate = moment(loc_date).startOf('day').format('YYYY-MM-DD HH:mm');
+                toDate = moment(loc_date).format('YYYY-MM-DD HH:mm');
+            }
+
+            //Get current login user details
+            const sqlStr = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name" +
+                " FROM employees as a" +
+                " Where a.status='A' and a.user_id=?"
+            const params = [res.locals.user.user_id];
+            const logUser = await executeQuery(sqlStr, params);
+
+            //Get emp list (boss and under emp)
+            var sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A'"
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+                sqlStr1 = sqlStr1 + ` and (a.emp_id=${logUser[0].emp_id} or a.boss_id=${logUser[0].emp_id})`;
+            }
+            const empList = await executeQuery(sqlStr1);
+
+            var empID = emp_id === null || emp_id === undefined || emp_id === '' ? 0 : emp_id;
+            //Get emp details with boss details
+            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
+                " FROM employees as a, designations as b, hqs as c, employees as d" +
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
+            const params2 = [empID];
+            const empData = await executeQuery(sqlStr2, params2);
+
+            let sqlEmp = ""
+            if (!["Admin", "Read", "Support", "Audit", "Account"].includes(res.locals.user.user_role)) {
+                sqlEmp = ` and (b.emp_id=${logUser[0].emp_id} or b.boss_id=${logUser[0].emp_id})`;
+            }
+
+            let seleEmp = "";
+            if (emp_id && emp_id !== null && emp_id !== undefined) {
+                seleEmp = ` and a.emp_id=${emp_id}`;
+            }
+
+            let sqlStr3 = "SELECT a.emp_id,CONCAT(b.first_name, ' ', b.last_name) as emp_name," +
+                " a.loc_date,a.loc_lat,a.loc_lng,a.loc_name,a.loc_add,DATE_FORMAT(a.loc_date,'%H:%i') as loc_time," +
+                " b.desg_id,c.desg_name,b.hq_id,d.hq_name,b.off_day," +
+                " b.boss_id, CONCAT(e.last_name,' ',e.first_name,' ',e.middle_name) as boss_name," +
+                " CONCAT('/userData/', DATE_FORMAT(a.loc_date,'%Y%m'), '/A_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img1," +
+                " CONCAT('/userData/', DATE_FORMAT(a.loc_date,'%Y%m'), '/B_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img2," +
+                " CONCAT('/userData/', DATE_FORMAT(a.loc_date,'%Y%m'), '/X_',a.emp_id,'_',DATE_FORMAT(a.loc_date,'%Y-%m-%d %H.%i.%s'),'.jpeg') as img3" +
+                " FROM dsr_loc as a, employees as b, designations as c, hqs as d, employees as e" +
+                " WHERE a.emp_id=b.emp_id " + sqlEmp + seleEmp +
+                " and a.loc_date Between ? and ? " +
+                " and b.desg_id=c.desg_id and b.hq_id=d.hq_id and b.boss_id=e.emp_id "
+            const params3 = [fromDate, toDate];
+            const locData = await executeQuery(sqlStr3, params3);
+
+            res.render('dsr/dsr-report-loc-emp', { layout: 'mobile', locToDate: toDate, emp_list: empList, empData: empData[0], alert, locData });
+
+        } catch (error) {
+            console.error(error);
+            // Handle the error
+        }
+    }
+
+    static reportLocationEmployee_Old = async (req, res) => {//This function is copy of 'reportLocationRegular'
         const alert = req.query.alert;
         const { emp_id, loc_date } = req.query;
         try {
@@ -2007,7 +2260,7 @@ class dsrController {
             // Handle the error
         }
     }
-    
+
 
     static reportArea = async (req, res) => {
         const { emp_id, from_date, to_date } = req.query;
