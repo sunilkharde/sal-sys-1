@@ -1,354 +1,380 @@
-{{!-- views/dsrTp/dsrTp-edit.hbs --}}
-
-<div style="padding-right: 5px; padding-left: 5px;">
-    <div class="row justify-content-center">
-        <form id="dsrTpForm" action="/dsrTp/update/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}" method="post">
-
-            <div class="row justify-content-center">
-                <div class="col-sm">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <h1 id="card-h1" class="card-title">Name: {{empData.emp_name}}
-                                    </h1>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm">
-                                    <h1 id="card-h2" class="card-title">Month: {{monData.month_name}}-{{monData.year}}
-                                        {{#if [tpData]}}
-                                        <button type="button" class="btn btn-outline-success btn-sm mx-5"
-                                            onclick="window.location.href='/dsrTp/get-tp/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}'">Copy
-                                            Last Month's TP</button>
-                                        {{else}}
-                                        <button type="button" class="btn btn-outline-success btn-sm mx-5"
-                                            onclick="window.location.href='/dsrTp/update/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}'">Refresh</button>
-                                        {{/if}}
-                                    </h1>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h1 id="card-h3" class="card-title">Designation&nbsp;:&nbsp;{{empData.desg_name}}
-                                    </h1>
-                                </div>
-                                <div class="col-md-6">
-                                    <h1 id="card-h2" class="card-title d-flex justify-content-end ">HQ&nbsp;:&nbsp;
-                                        {{empData.hq_name}}</h1>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="input-group">
-                                        <h1 id="card-h3" class="card-title">Work Area&nbsp;&nbsp;&nbsp;:&nbsp;</h1>
-                                        <input hidden type="text" class="form-control" id="dist_val" name="dist_val"
-                                            value="{{data.dist_val}}">
-                                        <input hidden type="text" class="form-control" id="city_val" name="city_val"
-                                            value="{{data.city_val}}">
-                                        <input readonly type="text" class="form-control" id="dist_city" name="dist_city"
-                                            value="{{data.dist_city}}" placeholder="District City" minlength="1"
-                                            maxlength="50">
-                                        <button class="btn btn-outline-info" type="button" id="btnDist_city"
-                                            data-bs-toggle="modal" data-bs-target="#dist_cityModal">
-                                            <i class="bi bi-list"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
+<div class="container">
+    <form id="dsrTpForm" action="/dsrTp/update/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}"
+        method="post">
+        <!-- Header Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h1 class="card-title mb-0">
+                            <i class="bi bi-person-circle me-2"></i>
+                            {{empData.emp_name}}
+                        </h1>
+                    </div>
+                    <div class="col-auto">
+                        {{!-- <span class="badge bg-light text-success fs-6">Next Month</span> --}}
+                        <span class="badge bg-light {{#if isNextMonth}}text-success{{else}}text-primary{{/if}} fs-6">
+                            {{#if isNextMonth}}Next Month Planning{{else}}Current Month Planning{{/if}}
+                        </span>
                     </div>
                 </div>
             </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h3 class="text-success">
+                            <i class="bi bi-calendar-month me-2"></i>
+                            {{monData.month_name}} {{monData.year}}
+                        </h3>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="fillWeekdays()">
+                            <i class="bi bi-magic me-1"></i>
+                            Auto Fill Weekdays
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <p class="mb-2"><strong>Designation:</strong> {{empData.desg_name}}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="mb-2"><strong>HQ:</strong> {{empData.hq_name}}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="mb-2"><strong>Week Off:</strong> {{empData.off_day}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            <div class="mb-3">
-                {{!-- <label for="drsTpTable" class="form-label"><strong>Tour Details</strong></label> --}}
-                <div style="max-height: 1140px; overflow-y: scroll;">
-                    <table class="table" id="drsTpTable">
-                        <thead class="sticky-header">
-                            <tr>
-                                <th hidden>Date</th>
-                                <th class="col-3">Day</th>
-                                <th class="col-9">TP Route</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orderItemsBody">
-                            {{#each [tpData]}}
-                            <tr>
-                                <td hidden>
-                                    <input type="text" class="form-control" id="dsr_date_{{momentYMD this.dsr_date}}"
-                                        name="dsr_date[]" value="{{momentYMD this.dsr_date}}">
-                                </td>
-                                <td>
-                                    <input readonly type="text" class="form-control text-start"
-                                        id="tp_date_{{momentYMD this.dsr_date}}" name="tp_date[]"
-                                        value="{{this.tp_date}} {{this.tp_day}}" {{#isEqual this.off_day this.tp_day}}
-                                        style="color: red;" {{/isEqual}}>
-                                </td>
-
-                                <td>
-                                    <div class="row mb-2">
-                                        <div hidden  class="col-12">
-                                            <input {{#isEqual this.post_mg 'Y' }} readonly {{/isEqual}} type="text"
-                                                class="form-control" id="from_city_{{momentYMD this.dsr_date}}"
-                                                name="from_city[]" value="{{this.from_city}}">
-                                            <input {{#isEqual this.post_mg 'Y' }} readonly {{/isEqual}} type="text"
-                                                class="form-control" id="to_city_{{momentYMD this.dsr_date}}"
-                                                name="to_city[]" value="{{this.to_city}}">
-                                        </div>
-
-                                        <div class="col-12">
-                                            <input hidden readonly type="text" class="form-control"
-                                                id="tp_id_{{momentYMD this.dsr_date}}" name="tp_id[]"
-                                                value="{{this.tp_id}}">
-                                            <input readonly type="text" class="form-control"
-                                                id="tp_name_{{momentYMD this.dsr_date}}" name="tp_name[]"
-                                                value="{{this.tp_name}}">
-                                        </div>
-
-                                        <div class="col-12">
-                                            <!-- tp_name Dropdown -->
-                                            <select {{#isEqual this.post_mg 'Y' }} readonly {{/isEqual}}
-                                                class="form-select" id="cmb_tp_{{momentYMD this.dsr_date}}"
-                                                name="cmb_tp[]" aria-label=".form-select-sm example"
-                                                onchange="updateRoutes('tp_id_{{momentYMD this.dsr_date}}', 'tp_name_{{momentYMD this.dsr_date}}',
-                                                    'from_city_{{momentYMD this.dsr_date}}', 'to_city_{{momentYMD this.dsr_date}}', this)">
-                                                {{#each tp_list}}
-                                                <option value="{{this.tp_id}}" {{#isEqual ../data.tp_id
-                                                    this.tp_id}}selected{{/isEqual}}>{{this.tp_name}}
-                                                </option>
-                                                {{/each}}
-                                                <option disabled selected value="">(Select Route)</option>
-                                                <option value="">(Clear Route)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </td>
-
-                            </tr>
+        <!-- Location Filter -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-funnel me-2"></i>
+                    Filter Routes by Location
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <label for="locationFilter" class="form-label">Select District - City</label>
+                        <select class="form-select" id="locationFilter">
+                            <option value="">All Locations</option>
+                            {{#each combinedDistCityList}}
+                            <option value="{{this.dist}}|{{this.city}}">{{this.dist_city}}</option>
                             {{/each}}
-                        </tbody>
-                    </table>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100"
+                            onclick="clearLocationFilter()">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Clear Filter
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div id="loadingRoutes" class="d-none">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            <span class="text-muted">Loading routes...</span>
+                        </div>
+                        <span id="filterStatus" class="text-muted small"></span>
+                    </div>
                 </div>
             </div>
-            <br>
+        </div>
 
-            <div class="row">
-                <div class="col-sm">
-                    {{#if [tpData]}}
-                    <button type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
-                    {{/if}}
-                    <button type="button" class="btn btn-secondary mx-5"
-                        onclick="window.location.href='/dsrTp/view-pm'">Cancel</button>
+        <!-- Tour Plan Table -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-map me-2"></i>
+                    Tour Plan Details
+                </h4>
+            </div>
+            <div class="card-body p-0">
+                <div style="max-height: 60vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="sticky-top bg-light">
+                                <tr>
+                                    <th class="col-3">Date</th>
+                                    <th class="col-2">Day</th>
+                                    <th class="col-7">Tour Route</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#each tpData}}
+                                <tr class="{{#isEqual this.off_day this.tp_day}}table-warning{{/isEqual}}">
+                                    <td hidden>
+                                        <input type="hidden" name="dsr_date[]" value="{{momentYMD this.dsr_date}}">
+                                    </td>
+                                    <td class="align-middle">
+                                        <span class="fw-bold">{{this.tp_date}}</span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <span
+                                            class="{{#isEqual this.off_day this.tp_day}}text-danger{{else}}text-muted{{/isEqual}}">
+                                            {{this.tp_day}}
+                                            {{#isEqual this.off_day this.tp_day}}
+                                            <i class="bi bi-umbrella text-danger ms-1"></i>
+                                            {{/isEqual}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="row g-2">
+                                            <div class="col-12" hidden>
+                                                <input type="hidden" name="from_city[]" value="{{this.from_city}}">
+                                                <input type="hidden" name="to_city[]" value="{{this.to_city}}">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="hidden" name="tp_id[]" value="{{this.tp_id}}">
+                                                <input type="text" class="form-control form-control-sm route-display"
+                                                    name="tp_name[]" value="{{this.tp_name}}" placeholder="Select route..."
+                                                    readonly>
+                                            </div>
+                                            <div class="col-12">
+                                                <select class="form-select form-select-sm route-select"
+                                                    data-date="{{momentYMD this.dsr_date}}">
+                                                    <option value="">Select Route</option>
+                                                    <!-- Options will be loaded dynamically -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+        </div>
 
-        </form>
-    </div>
+        <!-- Action Buttons -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-success btn-lg me-3">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Save Tour Plan
+                </button>
+                <a href="/dsrTp/view-pm" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </form>
 </div>
 
 <script>
-    // JavaScript function to update both tpId and tpName fields
-    function updateRoutes(tpId, tpName, fromCity, toCity, dropdownElement) {
-        // Get the selected option from the dropdown
-        const selectedValue = dropdownElement.value; // Value from the selected option
-        const selectedText = dropdownElement.options[dropdownElement.selectedIndex].text; // Text from the selected option
-
-        // Get the input fields by their IDs
-        const tpIdInput = document.getElementById(tpId);
-        const tpNameInput = document.getElementById(tpName);
-        const fromCityInput = document.getElementById(fromCity); // For 'from_city'
-        const toCityInput = document.getElementById(toCity); // For 'to_city'
-
-        // Update the input fields
-        if (tpIdInput) {
-            tpIdInput.value = selectedValue;
+    // Route management with lazy loading
+    class RouteManager {
+        constructor() {
+            this.routesCache = new Map();
+            this.currentFilter = '';
+            this.init();
         }
-        if (tpNameInput) {
-            if (selectedValue === "") {
-                tpNameInput.value = '';
-                fromCityInput.value  = '';
-                toCityInput.value = '';
-            } else {
-                tpNameInput.value = selectedText;
 
-                // Split selectedText at ' --to--' and assign values to fromCity and toCity
-                const cities = selectedText.split('--to--');
-                if (cities.length === 2) {
-                    fromCityInput.value = cities[0].trim(); // Extracting and trimming 'fromCity'
-                    toCityInput.value = cities[1].trim();   // Extracting and trimming 'toCity'
+        init() {
+            // Set up event listeners
+            document.getElementById('locationFilter').addEventListener('change', (e) => {
+                this.loadRoutesByLocation(e.target.value);
+            });
+
+            // Load initial empty state
+            this.updateAllDropdowns([]);
+        }
+
+        async loadRoutesByLocation(locationFilter) {
+            const loadingEl = document.getElementById('loadingRoutes');
+            const statusEl = document.getElementById('filterStatus');
+
+            loadingEl.classList.remove('d-none');
+            statusEl.textContent = 'Loading routes...';
+
+            try {
+                let url = '/dsrTp/get-routes-by-location';
+                const params = new URLSearchParams();
+
+                if (locationFilter) {
+                    const [dist, city] = locationFilter.split('|');
+                    if (dist) params.append('dist', dist);
+                    if (city) params.append('city', city);
                 }
+
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    this.routesCache.set(locationFilter, data.routes);
+                    this.updateAllDropdowns(data.routes);
+
+                    statusEl.textContent = locationFilter ?
+                        `Showing ${data.routes.length} routes` :
+                        'Showing all routes';
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Error loading routes:', error);
+                statusEl.textContent = 'Error loading routes';
+                this.updateAllDropdowns([]);
+            } finally {
+                loadingEl.classList.add('d-none');
+            }
+        }
+
+        updateAllDropdowns(routes) {
+            const selects = document.querySelectorAll('.route-select');
+
+            selects.forEach(select => {
+                const currentValue = select.value;
+                this.updateDropdown(select, routes, currentValue);
+            });
+        }
+
+        updateDropdown(select, routes, currentValue = '') {
+            // Clear existing options except the first one
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+
+            // Add new options
+            routes.forEach(route => {
+                const option = document.createElement('option');
+                option.value = route.tp_id;
+                option.textContent = route.tp_name;
+                option.setAttribute('data-dist', route.dist);
+                option.setAttribute('data-city', route.city);
+
+                if (route.tp_id == currentValue) {
+                    option.selected = true;
+                    this.updateRouteDisplay(select, route.tp_name);
+                }
+
+                select.appendChild(option);
+            });
+
+            // If current value is not in new routes, clear it
+            if (currentValue && !routes.find(r => r.tp_id == currentValue)) {
+                select.value = '';
+                this.updateRouteDisplay(select, '');
+            }
+        }
+
+        updateRouteDisplay(selectElement, routeName) {
+            const row = selectElement.closest('tr');
+            const displayInput = row.querySelector('.route-display');
+            const tpIdInput = row.querySelector('input[name="tp_id[]"]');
+            const fromCityInput = row.querySelector('input[name="from_city[]"]');
+            const toCityInput = row.querySelector('input[name="to_city[]"]');
+
+            if (displayInput) displayInput.value = routeName;
+            if (tpIdInput) tpIdInput.value = selectElement.value;
+
+            // Parse route for from/to cities
+            if (routeName && routeName.includes(' To ')) {
+                const cities = routeName.split(' To ');
+                if (fromCityInput) fromCityInput.value = cities[0].trim();
+                if (toCityInput) toCityInput.value = cities[1].trim();
+            } else {
+                if (fromCityInput) fromCityInput.value = '';
+                if (toCityInput) toCityInput.value = '';
             }
         }
     }
 
+    // Initialize route manager
+    let routeManager;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        routeManager = new RouteManager();
+
+        // Set up change handlers for all route selects
+        document.querySelectorAll('.route-select').forEach(select => {
+            select.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const routeName = selectedOption ? selectedOption.textContent : '';
+                routeManager.updateRouteDisplay(this, routeName);
+            });
+        });
+
+        // Load initial routes (all locations)
+        routeManager.loadRoutesByLocation('');
+    });
+
+    function clearLocationFilter() {
+        document.getElementById('locationFilter').value = '';
+        routeManager.loadRoutesByLocation('');
+    }
+
+    function fillWeekdays() {
+        const rows = document.querySelectorAll('tbody tr');
+        let filledCount = 0;
+
+        rows.forEach(row => {
+            const dayCell = row.querySelector('td:nth-child(2)');
+            const select = row.querySelector('.route-select');
+            const dayText = dayCell.textContent.trim();
+
+            // Skip weekends and week off days
+            if (!['Sat', 'Sun'].includes(dayText) && !row.classList.contains('table-warning')) {
+                if (select && select.value === '' && select.options.length > 1) {
+                    // Select first available route
+                    select.selectedIndex = 1;
+                    select.dispatchEvent(new Event('change'));
+                    filledCount++;
+                }
+            }
+        });
+
+        if (filledCount > 0) {
+            alert(`Successfully filled ${filledCount} weekdays with routes!`);
+        } else {
+            alert('No empty weekdays found to fill.');
+        }
+    }
 </script>
 
 <style>
-    .sticky-header th {
-        position: sticky;
-        top: 0;
-        background-color: #f5f5f5;
-        /* Adjust the background color as needed */
-        z-index: 1;
-        /* Ensure the header stays above the scrolling content */
+    .card {
+        border-radius: 12px;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+
+    .sticky-top {
+        z-index: 10;
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 6px;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .route-display {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
     }
 </style>
-
-<script>
-    function adjustFontSize() {
-        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-
-        var CardH1 = document.getElementById('card-h1');
-        var CardH2 = document.getElementById('card-h2');
-        var CardH3 = document.getElementById('card-h3');
-        /*var CardH4 = document.getElementById('card-h4');*/
-        if (screenWidth < 768) {
-            CardH1.style.fontSize = '60px';
-            CardH2.style.fontSize = '50px';
-            CardH3.style.fontSize = '45px';
-            /*CardH4.style.fontSize = '45px';*/
-        } else if (screenWidth >= 768 && screenWidth < 1024) {
-            CardH1.style.fontSize = '60px';
-            CardH2.style.fontSize = '50px';
-            CardH3.style.fontSize = '45px';
-            /*CardH4.style.fontSize = '45px';*/
-        } else {
-            CardH1.style.fontSize = '45px';
-            CardH2.style.fontSize = '35px';
-            CardH3.style.fontSize = '30px';
-            /*CardH4.style.fontSize = '30px';*/
-        }
-
-        var CardTitles = document.getElementsByClassName('card-title');
-        for (var i = 0; i < CardTitles.length; i++) {
-            var CardTitle = CardTitles[i];
-            if (screenWidth < 768) {
-                CardTitle.style.fontSize = '40px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardTitle.style.fontSize = '40px';
-            } else {
-                CardTitle.style.fontSize = '30px';
-            }
-        }
-
-        var CardTitles = document.getElementsByClassName('card-title mt-3');
-        for (var i = 0; i < CardTitles.length; i++) {
-            var CardTitle = CardTitles[i];
-            if (screenWidth < 768) {
-                CardTitle.style.fontSize = '45px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardTitle.style.fontSize = '45px';
-            } else {
-                CardTitle.style.fontSize = '45px';
-            }
-        }
-
-        var CardTexts = document.getElementsByClassName('card-text');
-        for (var i = 0; i < CardTexts.length; i++) {
-            var CardText = CardTexts[i];
-            if (screenWidth < 768) {
-                CardText.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardText.style.fontSize = '40px';
-            } else {
-                CardText.style.fontSize = '40px';
-            }
-        }
-
-        var frmLabels = document.getElementsByClassName('col-form-label');
-        for (var i = 0; i < frmLabels.length; i++) {
-            var frmLabel = frmLabels[i];
-            if (screenWidth < 768) {
-                frmLabel.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmLabel.style.fontSize = '50px';
-            } else {
-                frmLabel.style.fontSize = '30px';
-            }
-        }
-
-        var frmLabels = document.getElementsByClassName('form-label');
-        for (var i = 0; i < frmLabels.length; i++) {
-            var frmLabel = frmLabels[i];
-            if (screenWidth < 768) {
-                frmLabel.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmLabel.style.fontSize = '50px';
-            } else {
-                frmLabel.style.fontSize = '30px';
-            }
-        }
-
-        var frmControls = document.getElementsByClassName('form-control');
-        for (var i = 0; i < frmControls.length; i++) {
-            var frmControl = frmControls[i];
-            if (screenWidth < 768) {
-                frmControl.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmControl.style.fontSize = '50px';
-            } else {
-                frmControl.style.fontSize = '30px';
-            }
-        }
-
-        var frmControls = document.getElementsByClassName('form-select');
-        for (var i = 0; i < frmControls.length; i++) {
-            var frmControl = frmControls[i];
-            if (screenWidth < 768) {
-                frmControl.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmControl.style.fontSize = '50px';
-            } else {
-                frmControl.style.fontSize = '30px';
-            }
-        }
-
-        var frmBtns = document.getElementsByClassName('btn');
-        for (var i = 0; i < frmBtns.length; i++) {
-            var frmBtn = frmBtns[i];
-            if (screenWidth < 768) {
-                frmBtn.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmBtn.style.fontSize = '50px';
-            } else {
-                frmBtn.style.fontSize = '30px';
-            }
-        }
-
-        var txtItems = document.getElementsByClassName('table');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '41px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '41px';
-            } else {
-                txtItem.style.fontSize = '20px';
-            }
-        }
-
-        var txtItems = document.getElementsByClassName('page-title');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '60px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '60px';
-            } else {
-                txtItem.style.fontSize = '40px';
-            }
-        }
-
-    }
-
-    window.addEventListener('DOMContentLoaded', adjustFontSize);
-    window.addEventListener('resize', adjustFontSize);
-</script>
-
-
-{{> _lov-dist_city}}

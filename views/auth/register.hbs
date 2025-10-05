@@ -1,197 +1,320 @@
-<div class="container">
+<div class="container mt-1">
     <div class="row justify-content-center">
-        <div class="col-lg-6 border p-4">
-            <h2 class="mb-4">MALPANI Portal Registration</h2>
-            <!--
-            {{#if alert}}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{alert}}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-body p-4 p-md-5">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <h2 class="card-title fw-bold text-primary mb-2">MALPANI Portal Registration</h2>
+                        <p class="text-muted">Create your account to get started</p>
+                    </div>
+
+                    <!-- Alert Messages -->
+                    {{#if alert}}
+                    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <div>{{alert}}</div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"
+                            aria-label="Close"></button>
+                    </div>
+                    {{/if}}
+
+                    <!-- Registration Form -->
+                    <form action="/auth/register" method="post" class="needs-validation" novalidate>
+                        <!-- Display Name -->
+                        <div class="mb-4">
+                            <label for="username" class="form-label fw-semibold">Display Name</label>
+                            <input type="text" class="form-control form-control-lg" id="username" name="username"
+                                value="{{data.username}}" required placeholder="Enter your display name"
+                                pattern="[A-Za-z0-9._ ]{1,50}" maxlength="50">
+                            <div class="form-text mt-1">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Display name can contain letters, numbers, underscore (_), dot (.) and spaces (max 50
+                                characters)
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-4">
+                            <label for="email_id" class="form-label fw-semibold">Email Address</label>
+                            <input type="email" class="form-control form-control-lg" id="email_id" name="email_id"
+                                value="{{data.email_id}}" required placeholder="Enter your email" autocomplete="email">
+                        </div>
+
+                        <!-- Mobile -->
+                        <div class="mb-4">
+                            <label for="mobile_no" class="form-label fw-semibold">Mobile Number</label>
+                            <input type="tel" class="form-control form-control-lg" id="mobile_no" name="mobile_no"
+                                inputmode="numeric" pattern="[0-9]{10}" maxlength="10" value="{{data.mobile_no}}"
+                                placeholder="Enter your 10-digit mobile number" required>
+                            <div class="form-text mt-1">
+                                <i class="bi bi-phone me-1"></i>
+                                10-digit mobile number without country code
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold">Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-lg" name="password"
+                                    id="password" value="{{data.password}}" placeholder="Create your password"
+                                    pattern="^(?=.*[a-z]+)(?=.*[A-Z]+)(?=.*\d)(?=.*[@#$%^&+=]).{6,20}$" required
+                                    autocomplete="new-password">
+                                <button class="btn btn-outline-secondary" type="button" id="password-toggle"
+                                    aria-label="Toggle password visibility">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text mt-1">
+                                <i class="bi bi-shield-lock me-1"></i>
+                                Password must be 6-20 characters with uppercase, lowercase, number, and special
+                                character
+                            </div>
+                            <div class="alert alert-warning mt-2 py-2 d-none" id="password-paste-error">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Pasting is not allowed in the password field
+                            </div>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="mb-4">
+                            <label for="confPassword" class="form-label fw-semibold">Confirm Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-lg" id="confPassword"
+                                    name="confPassword" value="{{data.confPassword}}"
+                                    placeholder="Confirm your password"
+                                    pattern="^(?=.*[a-z]+)(?=.*[A-Z]+)(?=.*\d)(?=.*[@#$%^&+=]).{6,20}$" required
+                                    autocomplete="new-password">
+                                <button class="btn btn-outline-secondary" type="button" id="confPassword-toggle"
+                                    aria-label="Toggle password visibility">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="alert alert-warning mt-2 py-2 d-none" id="confPassword-paste-error">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Pasting is not allowed in the password field
+                            </div>
+                        </div>
+
+                        <!-- Admin Only Section -->
+                        {{#isEqual user.user_role "Admin"}}
+                        <div class="mb-4">
+                            <div class="accordion" id="adminAccordion">
+                                <div class="accordion-item border-0">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed bg-light fw-semibold" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#additionalInfo"
+                                            aria-expanded="false" aria-controls="additionalInfo">
+                                            <i class="bi bi-person-gear me-2"></i>
+                                            User Additional Information
+                                        </button>
+                                    </h2>
+                                    <div id="additionalInfo" class="accordion-collapse collapse"
+                                        data-bs-parent="#adminAccordion">
+                                        <div class="accordion-body pt-4">
+                                            <!-- Name Fields -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-md-4">
+                                                    <label for="first_name" class="form-label">First Name</label>
+                                                    <input type="text" class="form-control" id="first_name"
+                                                        name="first_name" value="{{data.first_name}}"
+                                                        placeholder="First name">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label for="middle_name" class="form-label">Middle Name</label>
+                                                    <input type="text" class="form-control" id="middle_name"
+                                                        name="middle_name" value="{{data.middle_name}}"
+                                                        placeholder="Middle name">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label for="last_name" class="form-label">Last Name</label>
+                                                    <input type="text" class="form-control" id="last_name"
+                                                        name="last_name" value="{{data.last_name}}"
+                                                        placeholder="Last name">
+                                                </div>
+                                            </div>
+
+                                            <!-- User Role -->
+                                            <div class="mb-3">
+                                                <label for="user_role" class="form-label">User Role</label>
+                                                <select class="form-select" id="user_role" name="user_role">
+                                                    {{#each role_list}}
+                                                    <option value="{{role_name}}" {{#isEqual ../data.role_name
+                                                        role_name}}selected{{/isEqual}}>
+                                                        {{role_name}}
+                                                    </option>
+                                                    {{/each}}
+                                                </select>
+                                            </div>
+
+                                            <!-- User Status -->
+                                            <div class="mb-3">
+                                                <label for="user_status" class="form-label">User Status</label>
+                                                <select class="form-select" id="user_status" name="user_status">
+                                                    {{#if data.user_status}}
+                                                    <option selected>{{data.user_status}}</option>
+                                                    {{/if}}
+                                                    <option value="A">Active</option>
+                                                    <option value="I">Not Active</option>
+                                                    <option value="H">Hold</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{/isEqual}}
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-semibold py-3">
+                                <i class="bi bi-person-plus-fill me-2"></i>
+                                Create Account
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Login Link -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted mb-0">
+                            Already have an account?
+                            <a href="/auth/login" class="text-decoration-none fw-semibold">Sign In here</a>
+                        </p>
+                    </div>
+                </div>
             </div>
-            {{/if}}
-            -->
-            <form action="/auth/register" method="post">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Display Name</label>
-                    <input type="text" class="form-control" id="username" name="username" value="{{data.username}}"
-                        required placeholder="Enter your Display Name" pattern="[A-Za-z0-9._ ]{1,50}" maxlength="50"
-                        aria-describedby="usernameHelp">
-                    <div id="usernameHelp" class="form-text">Display name can only contain alphabets, numbers,
-                        underscore
-                        (_) and dot (.) and cannot exceed 50 characters.</div>
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email_id" name="email_id" value="{{data.email_id}}"
-                        required placeholder="Enter your email">
-                </div>
-                <div class="mb-3">
-                    <label for="phone" class="form-label">Mobile</label>
-                    <input type="tel" class="form-control" id="mobile_no" name="mobile_no" inputmode="numeric"
-                        pattern="[0-9]{10}" maxlength="10" value="{{data.mobile_no}}" placeholder="Enter your mobile No"
-                        required aria-describedby="mobileHelp">
-                    <div id="mobileHelp" class="form-text">Mobile No can only contain numbers and cannot exceed 10
-                        characters.</div>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <div class="input-group">
-                        <input required type="password" class="form-control" name="password" id="password"
-                            value="{{data.password}}" placeholder="Enter your password"
-                            {{!-- pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$" --}}
-                            pattern="^(?=.*[a-z]+)(?=.*[A-Z]+)(?=.*\d)(?=.*[@#$%^&+=]).{6,20}$"
-                            aria-describedby="passwordHelp" onpaste="return false;">
-                        <button class="btn btn-outline-secondary" type="button" id="password-toggle">
-                            <i class="bi bi-eye"></i></button>
-                    </div>
-                    <div id="passwordeHelp" class="form-text">Password between 6 to 20 characters which contain numbers,
-                        uppercase/lowercase letters and at least one special character.</div>
-                    <div class="form-text" style="color: red;" id="password-paste-error" hidden>
-                        Pasting is not allowed in the password field.
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label for="confirm-password" class="form-label">Confirm Password</label>
-                    <div class="input-group">
-                        <input required type="password" class="form-control" id="confPassword" name="confPassword"
-                            value="{{data.confPassword}}" placeholder="Confirm your password"
-                            {{!-- pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{6,20}$"  --}}
-                            pattern="^(?=.*[a-z]+)(?=.*[A-Z]+)(?=.*\d)(?=.*[@#$%^&+=]).{6,20}$"
-                            onpaste="return false;">
-                        <button class="btn btn-outline-secondary" type="button" id="confPassword-toggle">
-                            <i class="bi bi-eye"></i></button>
-                    </div>
-                    <div class="form-text" style="color: red;" id="confPassword-paste-error" hidden>
-                        Pasting is not allowed in the password field.
-                    </div>
-                </div>
-                </b>
-
-                {{#isEqual user.user_role "Admin"}}
-                <div class="mb-3">
-                    <button class="btn btn-info" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#additionalInfo" aria-expanded="false" aria-controls="additionalInfo">
-                        User Additional Information
-                    </button>
-                    <div class="collapse" id="additionalInfo">
-                        <!-- <div class="card card-body"> -->
-                        <div class="mb-3"></div>
-                        <div class="mb-3">
-                            <label for="first-name" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name"
-                                value="{{data.first_name}}" placeholder="Enter your first name">
-                        </div>
-                        <div class="mb-3">
-                            <label for="middle-name" class="form-label">Middle Name</label>
-                            <input type="text" class="form-control" id="middle_name" name="middle_name"
-                                value="{{data.middle_name}}" placeholder="Enter your middle name">
-                        </div>
-                        <div class="mb-3">
-                            <label for="last-name" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name"
-                                value="{{data.last_name}}" placeholder="Enter your last name">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="user-role" class="form-label">User Role</label>
-                            <select class="form-select" id="user_role" name="user_role"
-                                aria-label=".form-select-sm example">
-                                {{#each role_list}}
-                                <option value="{{role_name}}" {{#isEqual ../data.role_name
-                                    role_name}}selected{{/isEqual}}>
-                                    {{role_name}}</option>
-                                {{/each}}
-                            </select>
-                        </div>
-
-                        <!-- <div class="mb-3">
-                            <label for="user-role" class="form-label">User Role</label>
-                            <select class="form-select" id="user_role" name="user_role"
-                                aria-label=".form-select-sm example">
-                                {{#if data.user_role}}
-                                <option selected> {{data.user_role}} </option>
-                                {{/if}}
-                                <option value="User">User</option>
-                                <option value="Admin">Admin</option>
-                                <option value="Manager">Manager</option>
-                                <option value="Dealer">Dealer</option>
-                            </select>
-                        </div> -->
-
-                        <div class="mb-3">
-                            <label for="user-status" class="form-label">User Status</label>
-                            <select class="form-select" id="user_status" name="user_status"
-                                aria-label=".form-select-sm example">
-                                {{#if data.user_status}}
-                                <option selected> {{data.user_status}} </option>
-                                {{/if}}
-                                <option value="A">Active</option>
-                                <option value="I">Not-Active</option>
-                                <option value="H">Hold</option>
-                            </select>
-                        </div>
-
-                        <!-- </div> -->
-
-                    </div>
-                </div>
-                {{/isEqual}}
-
-                <button type="submit" class="btn btn-primary">Register</button>
-
-            </form>
-
-            <br />
-            <p>If already registered... <a href="/auth/login">Sign In</a></p>
-
         </div>
     </div>
 </div>
 
-
 <script>
-    const passwordToggle = document.getElementById('password-toggle');
-    const passwordField = document.getElementById('password');
-    passwordToggle.addEventListener('click', function () {
-        if (passwordField.type === 'password') {
-            passwordField.type = 'text';
-            passwordToggle.innerHTML = '<i class="bi bi-eye-slash"></i>';
-        } else {
-            passwordField.type = 'password';
-            passwordToggle.innerHTML = '<i class="bi bi-eye"></i>';
+    document.addEventListener('DOMContentLoaded', function () {
+        // Password toggle functionality
+        function setupPasswordToggle(toggleId, fieldId) {
+            const toggle = document.getElementById(toggleId);
+            const field = document.getElementById(fieldId);
+
+            if (toggle && field) {
+                toggle.addEventListener('click', function () {
+                    const type = field.type === 'password' ? 'text' : 'password';
+                    field.type = type;
+
+                    const icon = toggle.querySelector('i');
+                    icon.className = type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+
+                    // Update aria-label
+                    this.setAttribute('aria-label',
+                        type === 'password' ? 'Show password' : 'Hide password');
+                });
+            }
+        }
+
+        // Setup both password toggles
+        setupPasswordToggle('password-toggle', 'password');
+        setupPasswordToggle('confPassword-toggle', 'confPassword');
+
+        // Paste prevention with better UX
+        function setupPastePrevention(inputId, errorId) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+
+            if (input && error) {
+                input.addEventListener('paste', function (e) {
+                    e.preventDefault();
+                    error.classList.remove('d-none');
+
+                    // Auto-hide error after 3 seconds
+                    setTimeout(() => {
+                        error.classList.add('d-none');
+                    }, 3000);
+                });
+
+                // Hide error when user starts typing
+                input.addEventListener('input', function () {
+                    error.classList.add('d-none');
+                });
+            }
+        }
+
+        setupPastePrevention('password', 'password-paste-error');
+        setupPastePrevention('confPassword', 'confPassword-paste-error');
+
+        // Form validation
+        const form = document.querySelector('.needs-validation');
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        }
+
+        // Real-time password confirmation validation
+        const password = document.getElementById('password');
+        const confPassword = document.getElementById('confPassword');
+
+        function validatePasswordMatch() {
+            if (password.value && confPassword.value) {
+                if (password.value !== confPassword.value) {
+                    confPassword.setCustomValidity('Passwords do not match');
+                } else {
+                    confPassword.setCustomValidity('');
+                }
+            }
+        }
+
+        if (password && confPassword) {
+            password.addEventListener('input', validatePasswordMatch);
+            confPassword.addEventListener('input', validatePasswordMatch);
         }
     });
+</script>
 
-    const confPasswordToggle = document.getElementById('confPassword-toggle');
-    const confPasswordField = document.getElementById('confPassword');
-    confPasswordToggle.addEventListener('click', function () {
-        if (confPasswordField.type === 'password') {
-            confPasswordField.type = 'text';
-            confPasswordToggle.innerHTML = '<i class="bi bi-eye-slash"></i>';
-        } else {
-            confPasswordField.type = 'password';
-            confPasswordToggle.innerHTML = '<i class="bi bi-eye"></i>';
+<style>
+    .card {
+        border-radius: 1rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: #e7f1ff;
+        color: #0d6efd;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 2rem 1.5rem !important;
         }
-    });
 
-</script>
-
-<script>
-    // Get the password input fields and paste error message elements
-    const passwordInput = document.getElementById('password');
-    const confPasswordInput = document.getElementById('confPassword');
-    const passwordPasteError = document.getElementById('password-paste-error');
-    const confPasswordPasteError = document.getElementById('confPassword-paste-error');
-
-    // Listen for paste events and prevent pasting in the password fields
-    passwordInput.addEventListener('paste', function (e) {
-        e.preventDefault();
-        passwordPasteError.hidden = false;
-    });
-
-    confPasswordInput.addEventListener('paste', function (e) {
-        e.preventDefault();
-        confPasswordPasteError.hidden = false;
-    });
-
-</script>
+        .form-control-lg {
+            font-size: 16px;
+            /* Prevents zoom on iOS */
+        }
+    }
+</style>

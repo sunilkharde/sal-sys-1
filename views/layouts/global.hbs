@@ -1,47 +1,42 @@
-<!DOCTYPE html>
-<html>
+{{!-- views/layouts/main.hbs --}}
 
+<!DOCTYPE html>
+<html lang="en">
 {{> header}}
 
 <body>
-    <div class="wrapper">
-        <div class="container mt-3">
-            <div class="container mb-3">
-                {{#if errors}}
-                <div class="alert alert-danger alert-dismissible fade show">
-                    {{#each errors}}
-                    <p>{{this.message}}</p>
-                    {{/each}}
-                </div>
-                {{/if}}
-            </div>
+    {{!-- {{> navbar}} --}}
 
+    <main class="wrapper">
+        {{!-- Alerts --}}
+        {{#if alert}}
+        <div class="container mt-3">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{alert}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+        {{/if}}
+
+        {{!-- Error Messages --}}
+        {{#if errors}}
+        <div class="container mt-3">
+            <div class="alert alert-danger alert-dismissible fade show">
+                {{#each errors}}
+                <p class="mb-1">{{this.message}}</p>
+                {{/each}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+        {{/if}}
+
+        {{!-- Main Content --}}
+        <div class="container-fluid py-3">
             {{{body}}}
         </div>
-
-    </div>
+    </main>
 
     {{> footer}}
-
-    <script>
-        function adjustFontSize() {
-            var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-            var frmAlerts = document.getElementsByClassName('alert');
-            for (var i = 0; i < frmAlerts.length; i++) {
-                var frmAlert = frmAlerts[i];
-                if (screenWidth < 768) {
-                    frmAlert.style.fontSize = '50px';
-                } else if (screenWidth >= 768 && screenWidth < 1024) {
-                    frmAlert.style.fontSize = '50px';
-                } else {
-                    frmAlert.style.fontSize = '30px';
-                }
-            }
-        }
-        window.addEventListener('DOMContentLoaded', adjustFontSize);
-        window.addEventListener('resize', adjustFontSize);
-    </script>
-
 </body>
 
 </html>

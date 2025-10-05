@@ -88,48 +88,50 @@
             <br>
 
             {{#if attenData }}
-            <table class="table" id="attenDataTable">
-                <thead>
-                    <tr>
-                        <th hidden>Date1</th>
-                        <th>Date</th>
-                        <th>EmpID</th>
-                        <th>Employee</th>
-                        <th>Comp Code</th>
-                        <th>Emp Code</th>
-                        <th>Atten Flage</th>
-                        <th>HR Flag</th>
-                        <th>Post</th>
-                        <th>In</th>
-                        <th>Out</th>
-                        <th>In City</th>
-                        <th>Out City</th>
-                        <th>In Lat/Lng</th>
-                        <th>Out Lat/Lng</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each attenData}}
-                    <tr>
-                        <td hidden>{{momentYMD this.dsr_date}}</td>
-                        <td>{{momentDMY this.dsr_date}}</td>
-                        <td>{{this.emp_id}}</td>
-                        <td>{{this.emp_name}}</td>
-                        <td>{{this.vc_comp_code}}</td>
-                        <td>{{this.vc_emp_code}}</td>
-                        <td>{{this.atten_flag}}</td>
-                        <td>{{this.hr_flag}}</td>
-                        <td>{{this.post_mg}}</td>
-                        <td>{{this.in_time}}</td>
-                        <td>{{this.out_time}}</td>
-                        <td>{{this.in_city}}</td>
-                        <td>{{this.out_city}}</td>
-                        <td>{{this.in_LatLng}}</td>
-                        <td>{{this.out_LatLng}}</td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
+            <div class="responsive-table">
+                <table class="table" id="attenDataTable">
+                    <thead>
+                        <tr>
+                            <th hidden>Date1</th>
+                            <th>Date</th>
+                            <th>EmpID</th>
+                            <th>Employee</th>
+                            <th>Comp Code</th>
+                            <th>Emp Code</th>
+                            <th>Atten Flage</th>
+                            <th>HR Flag</th>
+                            <th>Post</th>
+                            <th>In</th>
+                            <th>Out</th>
+                            <th>In City</th>
+                            <th>Out City</th>
+                            <th>In Lat/Lng</th>
+                            <th>Out Lat/Lng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each attenData}}
+                        <tr>
+                            <td hidden>{{momentYMD this.dsr_date}}</td>
+                            <td>{{momentDMY this.dsr_date}}</td>
+                            <td>{{this.emp_id}}</td>
+                            <td>{{this.emp_name}}</td>
+                            <td>{{this.vc_comp_code}}</td>
+                            <td>{{this.vc_emp_code}}</td>
+                            <td>{{this.atten_flag}}</td>
+                            <td>{{this.hr_flag}}</td>
+                            <td>{{this.post_mg}}</td>
+                            <td>{{this.in_time}}</td>
+                            <td>{{this.out_time}}</td>
+                            <td>{{this.in_city}}</td>
+                            <td>{{this.out_city}}</td>
+                            <td>{{this.in_LatLng}}</td>
+                            <td>{{this.out_LatLng}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
 
             {{!-- <div class="row mb-2">
                 <div class="col-sm-3">

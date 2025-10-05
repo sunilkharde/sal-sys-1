@@ -28,5 +28,8 @@ router.get('/atten-export-csv', dsrTpController.attenExportCSV);
 
 router.get('/get-fix-route', dsrTpController.getFixRoutes);
 
+// Add these routes to your existing router
+router.get('/get-routes-by-location', dsrTpController.getRoutesByLocation);
+
 
 export default router;

@@ -1,270 +1,546 @@
-<br>
-<div class="row">
-    <div class="row justify-content-center">
-        <div class="col-sm">
-            <div class="card">
-                <div class="card-header">
-                    <h1 id="card-h1" class="card-title">Hi, {{data.first_name}} {{data.last_name}} </h1>
-                    <input hidden type="text" id="emp_id" name="emp_id" value="{{data.emp_id}}">
-                    <input hidden type="text" id="emp_name" name="emp_name"
-                        value="{{data.first_name}} {{data.last_name}}">
+<div class="container-fluid mb-0 px-md-4">
+    <div class="card shadow-sm border-1 rounded-3">
+        <div class="card-header text-center bg-light py-2 rounded-top-3">
+            <h1 class="fw-semibold responsive-title mb-0">Hi, {{data.first_name}} {{data.last_name}}</h1>
+            <input type="hidden" id="emp_id" name="emp_id" value="{{data.emp_id}}">
+            <input type="hidden" id="emp_name" name="emp_name" value="{{data.first_name}} {{data.last_name}}">
+        </div>
+
+        <div class="card-body p-2">
+            <div class="text-center mb-2">
+                <h2 class="responsive-subtitle mb-1">Month: {{data2.month_name}} - {{data2.year}}</h2>
+                <h3 class="responsive-subtitle mb-1">HQ: {{data.hq_name}}</h3>
+                <h3 class="responsive-subtitle mb-0">Designation: {{data.desg_name}}</h3>
+            </div>
+
+            <p class="card-text responsive-text info-text text-center mx-auto mb-3" style="max-width:700px; font-size:0.8rem; line-height: 1.2;">
+                Please mark your current location and include a 'Selfie' (mandatory). Additionally, record the odometer
+                reading if using a vehicle and add your daily expenses for the month.
+            </p>
+
+            {{!-- Notification --}}
+            {{#if (eq showNote 'Y')}}
+            <div class="notification-section mb-3">
+                <p class="notification-text mb-1">
+                    Could you please kindly re-enter your expenses for the dates below? It appears the data wasn't saved
+                    properly. Thank you for your cooperation.
+                </p>
+                <p class="notification-text marathi mb-2">
+                    कृपया खालील तारखांसाठी तुम्ही तुमचा खर्च पुन्हा टाका. खालील थोड्याशा तारखांना माहिती पुन्हा सबमिट
+                    करण्यासाठी तुमच्या सहकार्याची प्रशंसा करतो. धन्यवाद!
+                </p>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle mb-1" id="NoteTable">
+                        <thead class="table-success text-center">
+                            <tr>
+                                <th>Date</th>
+                                <th class="text-end">Diff. Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each dataNote}}
+                            <tr>
+                                <td>{{momentDMY this.dsr_date}}</td>
+                                <td class="text-end">{{this.total_exp}}</td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="card-body">
-                    <h1 id="card-h2" class="card-title">Month :
-                        {{data2.month_name}}-{{data2.year}}</h1>
-                    <h1 id="card-h3" class="card-title">HQ : {{data.hq_name}}</h1>
-                    <h1 id="card-h4" class="card-title">Designation : {{data.desg_name}}</h1>
-                    {{!-- <br> --}}
-                    <p class="card-text" style="font-style: oblique; color:blueviolet ;">Please mark your current
-                        location and include a 'Selfie', which is necessary. Additionally, provide the odometer reading
-                        of your car/bike if you are using one for traveling. You may also record your daily expenses for
-                        the current month.</p>
-                    {{!-- <br> --}}
+            </div>
+            {{/if}}
 
-                    {{!-- Employee Notification --}}
-                    {{#if (eq showNote 'Y' )}}
-                    <P style="font-size: 40px; color: rgb(6, 124, 28);">Could you please kindly re-enter your
-                        expenses for the
-                        following dates? It appears that the data was not properly saved, and we would greatly
-                        appreciate your cooperation in resubmitting the information. Thank you!</p>
-                    <br>
-                    <P style="font-size: 40px; color: rgb(6, 124, 28);">कृपया खालील तारखांसाठी तुम्ही तुमचा खर्च
-                        पुन्हा टाका. असे दिसते की सादर तारखांना तपशील योग्य प्रकारे जतन केला गेला नाही.
-                        खालील थोड्याशा तारखांना माहिती पुन्हा सबमिट करण्यासाठी तुमच्या सहकार्याची प्रशंसा करतो.
-                        धन्यवाद!</P>
-                    <div class="border p-4">
-                        <table class="table" id="NoteTable" style="font-size: 40px; color: rgb(3, 178, 35);">
-                            <thead>
-                                <tr>
-                                    <th hidden>Date</th>
-                                    <th>Date</th>
-                                    <th class="text-end">Diff. Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{#each dataNote}}
-                                <tr>
-                                    <td hidden>{{momentYMD this.dsr_date}}</td>
-                                    <td>{{momentDMY this.dsr_date}}</td>
-                                    <td class="text-end">{{this.total_exp}}</td>
-                                </tr>
-                                {{/each}}
-                            </tbody>
-                        </table>
-                    </div>
-                    <br>
-                    {{/if}}
+            <!-- Camera Section -->
+            <div class="camera-section mb-3">
+                <h4 class="section-title text-center mb-2">Capture Photos</h4>
 
-                    <div hidden class="row">
-                        <div class="col-sm d-flex align-items-end">
-                            <button hidden id="initialize-camera-btn" class="btn btn-outline-primary btn-sm mb-1">
-                                <i id="bi-camera" class="bi bi-camera"></i>
-                                &nbsp;Get Photo...
-                            </button>
-                        </div>
+                <div class="camera-container mx-auto mb-2 position-relative">
+                    <div class="camera-status" id="camera-status">
+                        <span class="camera-indicator"></span>
+                        <span>Camera Active</span>
                     </div>
-
-                    <div class="row justify-content-center">
-                        <div class="col-sm p-2 d-flex justify-content-center align-items-center">
-                            <canvas id="canvas1" style="display:none; border: 2px solid brown;"></canvas>
-                            <canvas id="canvas2" style="display:none; border: 2px solid brown;"></canvas>
-                            <canvas id="canvas3" style="display:none; border: 2px solid brown;"></canvas>
-                            <video autoplay id="camera-preview"
-                                style="display: block; border: 2px solid green;"></video>
-                            {{!-- height:auto; <widt>h: 500px; max-width: 500px; --}}
-                        </div>
+                    <video autoplay id="camera-preview" class="camera-view"></video>
+                    <div class="camera-error d-none" id="camera-error">
+                        <i class="bi bi-camera-video-off"></i>
+                        <p>Camera access failed. Please check permissions.</p>
                     </div>
-
-                    <div class="col-sm" style="margin-left: 40px; margin-right: 20px;margin-bottom: 20px">
-                        <div class="form-check form-check-inline">
-                            <input checked class="form-check-input font-size" type="radio" name="camera-selection"
-                                id="inlineRadio1" value="user">
-                            <label class="form-check-label font-size" for="inlineRadio1">Front Camera</label>
-                        </div>
-                        <div class="form-check form-check-inline" style="margin-left: 30px;">
-                            <input class="form-check-input font-size" type="radio" name="camera-selection"
-                                id="inlineRadio2" value="environment">
-                            <label class="form-check-label font-size" for="inlineRadio2">Back Camera</label>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm d-flex align-items-center mb-2">
-                            <canvas id="canvas1x" class="tm-5" height="80" width="100"
-                                style="border: 2px solid rgb(112, 100, 100);"></canvas>
-                            &nbsp;<button id="capture-btn1" class="btn btn-info btn-sm mb-1" style="display: none;"><i
-                                    class="bi bi-person-circle"></i>&nbsp;Selfie<span
-                                    style="color: red;">*</span>&nbsp;</button>
-                            &nbsp;&nbsp;&nbsp;<canvas id="canvas2x" class="tm-5" height="80" width="100"
-                                style="border: 2px solid rgb(112, 100, 100);"></canvas>
-                            &nbsp;&nbsp;<button id="capture-btn2" class="btn btn-info btn-sm mb-1"
-                                style="display: none;"><i class="bi bi-speedometer"></i>&nbsp;Meter&nbsp;</button>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm d-flex align-items-center mb-3">
-                            <canvas id="canvas3x" class="tm-5" width="100" height="80"
-                                style="border: 2px solid rgb(112, 100, 100);"></canvas>
-                            &nbsp;<button id="capture-btn3" class="btn btn-info btn-sm mb-1" style="display: none;"><i
-                                    class="bi bi-receipt"></i>&nbsp;Invoice Photo&nbsp;</button>
-                        </div>
-                    </div>
-
-                    <div hidden class="row">
-                        <div class="col-sm">
-                            <button id="send-images-btn" class="btn btn-outline-primary btn-sm mb-1"
-                                style="display: none;">Send Images</button>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm d-flex">
-                            <button type="button" id="getLocationButton" class="btn btn-success btn-sm mb-1">
-                                <i id="bi-geo" class="bi bi-geo-alt"></i>&nbsp;Save My Location...&nbsp;&nbsp;&nbsp;
-                                <span style="display: block; font-size: 20px; color:rgb(190, 190, 190);">Don't capture
-                                    locations
-                                    rapidly.</span>
-                            </button>
-                            <input hidden type="datetime-local" class="form-control" id="toDate" name="toDate"
-                                value="{{toDate}}"> {{!-- momentDMYHm --}}
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm">
-                            <a id="placeName" style="font-size: 40px; color: rgb(3, 178, 35);"></a>
-                            &nbsp;&nbsp;<a id="placeLatLng" style="font-size: 30px; color: rgb(3, 178, 35);"></a>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm">
-                            <a id="emp_route" style="font-size: 30px; color:blueviolet ;">{{locNames}}</a>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm">
-                            <div id="map" style="height: 600px;"> </div>
-                        </div>
-                    </div>
-                    <br>
-
-                    <div class="row">
-                        <div class="col-sm">
-                            <a href="/dsr/view" class="btn btn-primary btn-lg mx-1">Continue... </a>
-                            <a href="/" class="btn btn-secondary btn-lg mx-5">Cancel </a>
-                        </div>
-                    </div>
-
+                    <canvas id="canvas1" class="captured-image d-none"></canvas>
+                    <canvas id="canvas2" class="captured-image d-none"></canvas>
+                    <canvas id="canvas3" class="captured-image d-none"></canvas>
                 </div>
+
+                <div class="camera-controls d-flex justify-content-center gap-2 mb-2 flex-wrap">
+                    <div class="form-check form-check-inline">
+                        <input checked class="form-check-input" type="radio" name="camera-selection" id="inlineRadio1"
+                            value="user">
+                        <label class="form-check-label responsive-text" for="inlineRadio1">Front Camera</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="camera-selection" id="inlineRadio2"
+                            value="environment">
+                        <label class="form-check-label responsive-text" for="inlineRadio2">Back Camera</label>
+                    </div>
+                </div>
+
+                <div class="capture-previews d-flex flex-wrap justify-content-center gap-2">
+                    <div class="preview-item">
+                        <div class="preview-container">
+                            <canvas id="canvas1x" class="preview-canvas mb-1"></canvas>
+                            <div class="preview-status" id="preview-status-1">Not Captured</div>
+                        </div>
+                        <button id="capture-btn1" class="btn btn-info btn-sm responsive-btn w-100">
+                            <i class="bi bi-person-circle"></i> Selfie<span class="required">*</span>
+                        </button>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-container">
+                            <canvas id="canvas2x" class="preview-canvas mb-1"></canvas>
+                            <div class="preview-status" id="preview-status-2">Not Captured</div>
+                        </div>
+                        <button id="capture-btn2" class="btn btn-info btn-sm responsive-btn w-100">
+                            <i class="bi bi-speedometer"></i> Meter
+                        </button>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-container">
+                            <canvas id="canvas3x" class="preview-canvas mb-1"></canvas>
+                            <div class="preview-status" id="preview-status-3">Not Captured</div>
+                        </div>
+                        <button id="capture-btn3" class="btn btn-info btn-sm responsive-btn w-100">
+                            <i class="bi bi-receipt"></i> Invoice
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Section -->
+            <div class="location-section mb-3">
+                <h4 class="section-title text-center mb-2">Location Information</h4>
+
+                <div class="text-center mb-2">
+                    <button type="button" id="getLocationButton" class="btn btn-success px-3">
+                        <i class="bi bi-geo-alt"></i> Save My Location
+                    </button>
+                    <p class="location-note mt-1 mb-2 responsive-text">Don't capture locations too rapidly. Wait at
+                        least 10 minutes between captures.</p>
+                    <input type="hidden" id="toDate" name="toDate" value="{{toDate}}">
+                </div>
+
+                <div id="location-info" class="mb-2 text-center">
+                    <div class="location-status" id="location-status">Location not captured yet</div>
+                    <div id="placeName" class="location-text"></div>
+                    <div id="placeLatLng" class="location-coords"></div>
+                    <div id="emp_route" class="route-text">{{locNames}}</div>
+                </div>
+
+                <div class="map-container mx-auto" id="map">
+                    <div class="map-placeholder" id="map-placeholder">
+                        <i class="bi bi-map"></i>
+                        <p>Map will appear here after location capture</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons d-flex flex-wrap justify-content-center gap-2">
+                <a href="/dsr/view" class="btn btn-primary px-3">Continue...</a>
+                <a href="/" class="btn btn-secondary px-3">Cancel</a>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .font-size {
-        font-size: 40px;
+    /* --- Card & General Layout --- */
+    .card {
+        border-radius: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-header {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    .info-text {
+        color: blueviolet;
+        font-style: italic;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    /* --- Typography --- */
+    .responsive-title {
+        font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+        margin-bottom: 0.2rem;
+    }
+
+    .responsive-subtitle {
+        font-size: clamp(1.0rem, 2.5vw, 1.1rem);
+        color: #333;
+        margin-bottom: 0.2rem;
+    }
+
+    .responsive-text {
+        font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+    }
+
+    /* --- Buttons --- */
+    .responsive-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        border-radius: 0.4rem;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        white-space: nowrap;
+    }
+
+    .responsive-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* --- Notification --- */
+    .notification-section {
+        background-color: rgba(6, 124, 28, 0.08);
+        padding: 0.6rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .notification-text {
+        color: rgb(6, 124, 28);
+        font-size: 0.8rem;
+    }
+
+    /* --- Camera --- */
+    .camera-section {
+        margin-bottom: 0.75rem;
+    }
+
+    .camera-container {
+        max-width: 100%;
+        margin: 0 auto 0.4rem auto;
+        position: relative;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        /* Dynamic height based on screen size */
+        height: clamp(250px, 50vh, 400px);
+        aspect-ratio: 1; /* Maintain a 3:2 aspect ratio */
+    }
+
+    .camera-status {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 3px 6px;
+        border-radius: 3px;
+        font-size: 0.7rem;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .camera-indicator {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #28a745;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .camera-error {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        z-index: 5;
+        padding: 0.8rem;
+        text-align: center;
+    }
+
+    .camera-view {
+        width: 100%;
+        height: 100%;
+        border: 1px solid green;
+        border-radius: 0.5rem;
+        display: block;
+        object-fit: cover;
+    }
+
+    .capture-previews {
+        gap: 0.6rem;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: stretch;
+    }
+
+    .preview-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        min-width: 100px;
+        max-width: 120px;
+    }
+
+    .preview-container {
+        position: relative;
+        margin-bottom: 0.4rem;
+        width: 100%;
+    }
+
+    .preview-canvas {
+        border: 1px solid #aaa;
+        border-radius: 0.4rem;
+        width: 100%;
+        /* Increased height for better visibility */
+        height: clamp(70px, 12vw, 90px);
+        background-color: #fafafa;
+        display: block;
+        object-fit: cover;
+    }
+
+    .preview-status {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        font-size: 0.65rem;
+        padding: 1px 3px;
+        text-align: center;
+        border-bottom-left-radius: 0.3rem;
+        border-bottom-right-radius: 0.3rem;
+    }
+
+    /* --- Camera controls --- */
+    .camera-controls .form-check-label {
+        font-size: 0.8rem;
+    }
+
+    /* --- Location --- */
+    .location-section {
+        margin-bottom: 0.75rem;
+    }
+
+    .location-status {
+        color: #6c757d;
+        font-style: italic;
+        margin-bottom: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .location-text,
+    .location-coords {
+        color: rgb(3, 178, 35);
+        font-weight: 600;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .route-text {
+        color: blueviolet;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+
+    .location-note {
+        color: #777;
+        font-style: italic;
+        font-size: 0.75rem;
+    }
+
+    /* --- Map --- */
+    .map-container {
+        width: 100%;
+        max-width: 650px;
+        height: 220px;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid #dee2e6;
+    }
+
+    .map-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8f9fa;
+        color: #6c757d;
+    }
+
+    .map-placeholder i {
+        font-size: 1.5rem;
+        margin-bottom: 0.4rem;
+    }
+
+    /* --- Action Buttons --- */
+    .action-buttons {
+        margin-top: 0.5rem;
+    }
+
+    .required {
+        color: #dc3545;
+    }
+
+    /* --- Mobile-specific optimizations --- */
+    @media (max-width: 768px) {
+        .camera-container {
+            /* Increased height for tablets */
+            height: clamp(280px, 45vh, 350px);
+        }
+
+        .map-container {
+            height: 180px;
+        }
+
+        .preview-canvas {
+            /* Larger preview on tablets */
+            height: clamp(80px, 14vw, 100px);
+        }
+
+        .capture-previews {
+            gap: 0.5rem;
+        }
+
+        .preview-item {
+            min-width: 90px;
+            max-width: 110px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .camera-container {
+            /* Even larger height for phones */
+            height: clamp(300px, 55vh, 400px);
+        }
+
+        .map-container {
+            height: 150px;
+        }
+
+        .preview-canvas {
+            /* Larger preview on phones */
+            height: clamp(90px, 16vw, 110px);
+        }
+
+        .responsive-btn {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.7rem;
+        }
+
+        .container-fluid {
+            padding-left: 0.2rem;
+            padding-right: 0.2rem;
+        }
+
+        .capture-previews {
+            gap: 0.4rem;
+        }
+
+        .preview-item {
+            min-width: 80px;
+            max-width: 95px;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .capture-previews {
+            flex-direction: row;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding-bottom: 0.5rem;
+        }
+
+        .preview-item {
+            flex: 0 0 auto;
+            width: 30%;
+            min-width: 85px;
+        }
+
+        .camera-container {
+            /* Maintain larger camera preview on very small screens */
+            height: clamp(280px, 50vh, 350px);
+        }
+    }
+
+    /* Large screen optimizations */
+    @media (min-width: 1200px) {
+        .camera-container {
+            max-width: 600px;
+            height: 400px;
+        }
+
+        .preview-canvas {
+            height: 90px;
+        }
     }
 </style>
 
-<script>
-    function adjustFontSize() {
-        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-
-        var CardH1 = document.getElementById('card-h1');
-        var CardH2 = document.getElementById('card-h2');
-        var CardH3 = document.getElementById('card-h3');
-        var CardH4 = document.getElementById('card-h4');
-        if (screenWidth < 768) {
-            CardH1.style.fontSize = '60px';
-            CardH2.style.fontSize = '50px';
-            CardH3.style.fontSize = '45px';
-            CardH4.style.fontSize = '45px';
-        } else if (screenWidth >= 768 && screenWidth < 1024) {
-            CardH1.style.fontSize = '60px';
-            CardH2.style.fontSize = '50px';
-            CardH3.style.fontSize = '45px';
-            CardH4.style.fontSize = '45px';
-        } else {
-            CardH1.style.fontSize = '45px';
-            CardH2.style.fontSize = '35px';
-            CardH3.style.fontSize = '30px';
-            CardH4.style.fontSize = '30px';
-        }
-
-        /* var CardTitles = document.getElementsByClassName('card-title');
-        for (var i = 0; i < CardTitles.length; i++) {
-            var CardTitle = CardTitles[i];
-            if (screenWidth < 768) {
-                CardTitle.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardTitle.style.fontSize = '50px';
-            } else {
-                CardTitle.style.fontSize = '30px';
-            }
-        } */
-
-        var CardTexts = document.getElementsByClassName('card-text');
-        for (var i = 0; i < CardTexts.length; i++) {
-            var CardText = CardTexts[i];
-            if (screenWidth < 768) {
-                CardText.style.fontSize = '40px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardText.style.fontSize = '35px';
-            } else {
-                CardText.style.fontSize = '30px';
-            }
-        }
-
-        var frmBtns = document.getElementsByClassName('btn');
-        for (var i = 0; i < frmBtns.length; i++) {
-            var frmBtn = frmBtns[i];
-            if (screenWidth < 768) {
-                frmBtn.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmBtn.style.fontSize = '50px';
-            } else {
-                frmBtn.style.fontSize = '35px';
-            }
-        }
-
-        var txtItems = document.getElementsByClassName('page-title');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '60px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '60px';
-            } else {
-                txtItem.style.fontSize = '42px';
-            }
-        }
-
-    }
-
-    window.addEventListener('DOMContentLoaded', adjustFontSize);
-    window.addEventListener('resize', adjustFontSize);
-</script>
+<!-- Keep your same JS and Google Maps script -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{googleApiKey}}&callback=initMap"></script>
 
 <script>
+    // Camera functionality with enhanced error handling
     const videoElement = document.getElementById('camera-preview');
-
     const canvas1 = document.getElementById('canvas1');
     const canvas2 = document.getElementById('canvas2');
     const canvas3 = document.getElementById('canvas3');
     const canvas1x = document.getElementById('canvas1x');
     const canvas2x = document.getElementById('canvas2x');
     const canvas3x = document.getElementById('canvas3x');
-    //const initializeCameraButton = document.getElementById('initialize-camera-btn');
     const radioButtons = document.querySelectorAll('input[name="camera-selection"]');
     const captureButton1 = document.getElementById('capture-btn1');
     const captureButton2 = document.getElementById('capture-btn2');
     const captureButton3 = document.getElementById('capture-btn3');
-    //const sendImagesButton = document.getElementById('send-images-btn');
+    const cameraStatus = document.getElementById('camera-status');
+    const cameraError = document.getElementById('camera-error');
+    const previewStatus1 = document.getElementById('preview-status-1');
+    const previewStatus2 = document.getElementById('preview-status-2');
+    const previewStatus3 = document.getElementById('preview-status-3');
+
     let stream;
-    let selectedCamera = 'user' //'user'; // Default to front camera  //'environment
+    let selectedCamera = 'user';
     let canvas1Captured = false;
     let canvas2Captured = false;
     let canvas3Captured = false;
@@ -274,29 +550,49 @@
             try {
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
-                    //console.log('Stream stoped....')
                 }
-                //stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: selectedCamera } });
+
+                // Show camera status
+                cameraStatus.style.display = 'flex';
+                cameraError.classList.add('d-none');
+
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: selectedCamera,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+
                 videoElement.srcObject = stream;
                 videoElement.style.display = 'block';
+
+                // Set appropriate size based on camera type
                 if (selectedCamera === 'user') {
-                    videoElement.style.width = '500px';
-                    //videoElement.style.height = '400px';
+                    videoElement.style.maxWidth = '450px';
                 } else {
-                    videoElement.style.width = '800px';
-                    //videoElement.style.height = '600px';
+                    videoElement.style.maxWidth = '700px';
                 }
+
                 captureButton1.style.display = 'inline-block';
                 captureButton2.style.display = 'inline-block';
                 captureButton3.style.display = 'inline-block';
-                //sendImagesButton.style.display = 'inline-block';
-                //console.log('Camera Mode is....', selectedCamera)
+
+                // Hide error if shown
+                cameraError.classList.add('d-none');
             } catch (error) {
                 console.error('Error accessing camera:', error);
+                cameraStatus.style.display = 'none';
+                cameraError.classList.remove('d-none');
+
+                // Disable capture buttons
+                captureButton1.disabled = true;
+                captureButton2.disabled = true;
+                captureButton3.disabled = true;
             }
         }
-        initializeCamera(); // Call initializeCamera() when DOM content is loaded.
+
+        initializeCamera();
 
         radioButtons.forEach(radioButton => {
             radioButton.addEventListener('change', () => {
@@ -304,96 +600,95 @@
                 initializeCamera();
             });
         });
-
     });
 
     captureButton1.addEventListener('click', () => {
+        if (!stream) {
+            alert('Camera is not available. Please check camera permissions.');
+            return;
+        }
+
         canvas1Captured = true;
-        //
         const context1 = canvas1.getContext('2d');
         canvas1.width = videoElement.clientWidth / 6;
         canvas1.height = videoElement.clientHeight / 6;
         context1.drawImage(videoElement, 0, 0, canvas1.width, canvas1.height);
-        //
+
         const context1x = canvas1x.getContext('2d');
-        canvas1x.width = 90; 
-        canvas1x.height = 80; 
+        canvas1x.width = 80;
+        canvas1x.height = 70;
         context1x.drawImage(videoElement, 0, 0, canvas1x.width, canvas1x.height);
+
+        previewStatus1.textContent = 'Captured';
+        previewStatus1.style.backgroundColor = 'rgba(40, 167, 69, 0.8)';
     });
 
     captureButton2.addEventListener('click', () => {
+        if (!stream) {
+            alert('Camera is not available. Please check camera permissions.');
+            return;
+        }
+
         canvas2Captured = true;
-        //
         const context2 = canvas2.getContext('2d');
         canvas2.width = videoElement.clientWidth / 3;
         canvas2.height = videoElement.clientHeight / 3;
         context2.drawImage(videoElement, 0, 0, canvas2.width, canvas2.height);
-        //
+
         const context2x = canvas2x.getContext('2d');
-        canvas2x.width = 90; 
-        canvas2x.height = 80; 
+        canvas2x.width = 80;
+        canvas2x.height = 70;
         context2x.drawImage(videoElement, 0, 0, canvas2x.width, canvas2x.height);
+
+        previewStatus2.textContent = 'Captured';
+        previewStatus2.style.backgroundColor = 'rgba(40, 167, 69, 0.8)';
     });
 
     captureButton3.addEventListener('click', () => {
+        if (!stream) {
+            alert('Camera is not available. Please check camera permissions.');
+            return;
+        }
+
         canvas3Captured = true;
-        //
         const context3 = canvas3.getContext('2d');
         canvas3.width = videoElement.clientWidth;
         canvas3.height = videoElement.clientHeight;
         context3.drawImage(videoElement, 0, 0, canvas3.width, canvas3.height);
-        //
+
         const context3x = canvas3x.getContext('2d');
-        canvas3x.width = 90; 
-        canvas3x.height = 80; 
+        canvas3x.width = 80;
+        canvas3x.height = 70;
         context3x.drawImage(videoElement, 0, 0, canvas3x.width, canvas3x.height);
+
+        previewStatus3.textContent = 'Captured';
+        previewStatus3.style.backgroundColor = 'rgba(40, 167, 69, 0.8)';
     });
 
-    /*
-        sendImagesButton.addEventListener('click', async () => {
-            const dataURL1 = canvas1.toDataURL('image/jpeg', 0.8);
-            const dataURL2 = canvas2.toDataURL('image/jpeg', 0.8);
-            if (canvas1Captured === false) {
-                console.error('No image captured for canvas1');
-                alert('No image captured for canvas1');
-                return;
-            }
-            try {
-                const response = await fetch('/dsr/uploadSelfie', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', },
-                    body: JSON.stringify({ dataURL1: dataURL1, dataURL2: dataURL2 }),
-                });
-    
-                if (response.ok) {
-                    console.log('Images uploaded successfully');
-                } else {
-                    console.error('Failed to upload images');
-                }
-            } catch (error) {
-                console.error('Error uploading images:', error);
-            }
-        });
-    */
-
-</script>
-
-<script>
+    // Location functionality with enhanced error handling
     let locLat = "";
     let locLng = "";
     let locName = "";
     let locAdd = "";
     let saveLocFlag = "";
+    let map;
+    let marker;
 
     function initMap() {
+        const mapPlaceholder = document.getElementById('map-placeholder');
+        const locationStatus = document.getElementById('location-status');
 
-        const map = new google.maps.Map(document.getElementById('map'), {
+        map = new google.maps.Map(document.getElementById('map'), {
             center: { lat: 19.565143, lng: 74.206182 },
             zoom: 12,
         });
 
+        // Hide placeholder when map loads
+        mapPlaceholder.style.display = 'none';
+
         const getLocationButton = document.getElementById('getLocationButton');
         const placeName = document.getElementById('placeName');
+        const placeLatLng = document.getElementById('placeLatLng');
         const empName = document.getElementById('emp_name').value;
 
         getLocationButton.addEventListener('click', () => {
@@ -403,9 +698,6 @@
             const timeDifference = now - toDate;
             const minutesDifference = Math.floor(timeDifference / (1000 * 60));
 
-            //console.log('time..... ', now , '   ', toDate);
-            //console.log('Minuter difference ', minutesDifference);
-
             if (minutesDifference < 10) {
                 const minDiff = 10 - minutesDifference;
                 alert(`Don't capture location rapidly. Please try again after ${minDiff} minutes.`);
@@ -413,12 +705,16 @@
             }
 
             if (canvas1Captured === false) {
-                console.error('No image captured for Selfie. Please capture your selfie.');
                 alert('No image captured for Selfie. Please capture your selfie.');
                 return;
             }
 
             if (navigator.geolocation) {
+                // Show loading state
+                getLocationButton.disabled = true;
+                getLocationButton.innerHTML = '<i class="bi bi-arrow-repeat spinner-border spinner-border-sm"></i> Getting Location...';
+                locationStatus.textContent = 'Getting your location...';
+
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
                         const userLocation = {
@@ -426,34 +722,32 @@
                             lng: position.coords.longitude,
                         };
 
-                        // Place a marker at the user's location on the map
-                        new google.maps.Marker({
+                        // Clear existing marker
+                        if (marker) {
+                            marker.setMap(null);
+                        }
+
+                        // Add new marker
+                        marker = new google.maps.Marker({
                             position: userLocation,
                             map: map,
                             title: empName,
-                            //label: empName,
                             label: {
                                 text: empName,
-                                fontWeight: 'bold', // Make the label text bold
-                                fontSize: '20px',   // Change the font size
+                                fontWeight: 'bold',
+                                fontSize: '12px',
                                 color: 'magenta',
                             }
                         });
 
-                        //console.log('Emp ', empName)
-
-                        // Center the map on the user's location
                         map.setCenter(userLocation);
+                        locLat = userLocation.lat.toFixed(6);
+                        locLng = userLocation.lng.toFixed(6);
 
-                        placeLatLng.textContent = ""//`Lat-Lon: ${userLocation.lat.toFixed(2)}-${userLocation.lng.toFixed(2)}`;
-                        locLat = userLocation.lat.toFixed(6); // Store with 6 decimal places
-                        locLng = userLocation.lng.toFixed(6); // Store with 6 decimal places
+                        placeLatLng.textContent = `Coordinates: ${locLat}, ${locLng}`;
 
-                        // Get place name using reverse geocoding
                         const geocoder = new google.maps.Geocoder();
                         const latlng = new google.maps.LatLng(userLocation.lat, userLocation.lng);
-                        //const latlng = new google.maps.LatLng(19.51718, 74.19813);
-                        //const latlng = new google.maps.LatLng(40.712776, -74.005974);
 
                         try {
                             const response = await geocoder.geocode({ location: latlng });
@@ -469,45 +763,83 @@
                                     }
                                 }
 
-                                //placeName.textContent = `City Name: ${cityName}`;
                                 placeName.textContent = `Location: ${firstResult.formatted_address}`;
                                 locName = cityName;
                                 locAdd = firstResult.formatted_address;
+
+                                locationStatus.textContent = 'Location captured successfully';
+                                locationStatus.style.color = '#198754';
                             } else {
                                 placeName.textContent = 'No results found.';
+                                locationStatus.textContent = 'Location found but address unavailable';
+                                locationStatus.style.color = '#ffc107';
                             }
                         } catch (error) {
                             console.error('Geocoding error:', error);
-                            placeName.textContent = 'Error fetching city name.';
+                            placeName.textContent = 'Error fetching address details.';
+                            locationStatus.textContent = 'Error getting address details';
+                            locationStatus.style.color = '#dc3545';
                         }
 
-                        //showConfirmationDialog();
+                        // Reset button state
+                        getLocationButton.disabled = false;
+                        getLocationButton.innerHTML = '<i class="bi bi-geo-alt"></i> Save My Location';
+
                         const confirmed = confirm('Are you sure you want to save the location data?');
-                        if (confirmed) {
-                            saveLocFlag = 'Y';
-                        }
-                        else { saveLocFlag = 'N'; }
+                        saveLocFlag = confirmed ? 'Y' : 'N';
 
-                        const imgURL1 = canvas1Captured === true ? canvas1.toDataURL('image/jpeg', 0.9) : null;
-                        const imgURL2 = canvas2Captured === true ? canvas2.toDataURL('image/jpeg', 0.9) : null;
-                        const imgURL3 = canvas3Captured === true ? canvas3.toDataURL('image/jpeg', 0.9) : null;
-                        saveLocationData(imgURL1, imgURL2, imgURL3); //saveLocationData();
+                        if (confirmed) {
+                            const imgURL1 = canvas1Captured ? canvas1.toDataURL('image/jpeg', 0.9) : null;
+                            const imgURL2 = canvas2Captured ? canvas2.toDataURL('image/jpeg', 0.9) : null;
+                            const imgURL3 = canvas3Captured ? canvas3.toDataURL('image/jpeg', 0.9) : null;
+                            saveLocationData(imgURL1, imgURL2, imgURL3);
+                        }
                     },
                     (error) => {
                         console.error(error);
-                        alert('Location is not enabled on your mobile device. Please enable location services.');
+                        let errorMessage = 'Location is not enabled on your mobile device. Please enable location services.';
+
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Location access denied. Please enable location permissions in your browser.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location information is unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "Location request timed out. Please try again.";
+                                break;
+                        }
+
+                        alert(errorMessage);
+
+                        // Reset button state
+                        getLocationButton.disabled = false;
+                        getLocationButton.innerHTML = '<i class="bi bi-geo-alt"></i> Save My Location';
+                        locationStatus.textContent = 'Location capture failed';
+                        locationStatus.style.color = '#dc3545';
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
                     }
                 );
             } else {
                 console.error('Geolocation is not supported by this browser.');
+                alert('Geolocation is not supported by your browser.');
             }
         });
-
     }
 
     async function saveLocationData(dataURL1, dataURL2, dataURL3) {
         const empID = document.getElementById('emp_id').value;
+        const locationStatus = document.getElementById('location-status');
+
         try {
+            // Show saving state
+            locationStatus.textContent = 'Saving location data...';
+
             const response = await fetch('/dsr/save-location', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -515,13 +847,12 @@
             });
 
             if (response.ok) {
-                //alert('Location updated successfully');
                 const locNames = await response.json();
                 const locNameList = locNames.locNames ? locNames.locNames : '';
                 document.getElementById("emp_route").textContent = locNameList;
                 document.getElementById("toDate").value = locNames.toDate;
 
-                // Clear the content of context1 and context2
+                // Clear canvases
                 const context1 = canvas1.getContext('2d');
                 const context2 = canvas2.getContext('2d');
                 const context3 = canvas3.getContext('2d');
@@ -536,19 +867,30 @@
                 context2x.clearRect(0, 0, canvas2x.width, canvas2x.height);
                 context3x.clearRect(0, 0, canvas3x.width, canvas3x.height);
 
+                // Reset preview status
+                previewStatus1.textContent = 'Not Captured';
+                previewStatus1.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                previewStatus2.textContent = 'Not Captured';
+                previewStatus2.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                previewStatus3.textContent = 'Not Captured';
+                previewStatus3.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+
                 canvas1Captured = false;
                 canvas2Captured = false;
                 canvas3Captured = false;
 
+                locationStatus.textContent = 'Location data saved successfully';
+                locationStatus.style.color = '#198754';
             } else {
                 alert('Failed to save location data. Please try again after 15 minutes.');
+                locationStatus.textContent = 'Failed to save location data';
+                locationStatus.style.color = '#dc3545';
             }
         } catch (err) {
             console.error(err);
+            alert('Network error occurred. Please check your connection and try again.');
+            locationStatus.textContent = 'Network error occurred';
+            locationStatus.style.color = '#dc3545';
         }
     }
-
-</script>
-
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{googleApiKey}}&callback=initMap">
 </script>

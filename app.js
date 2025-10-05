@@ -317,7 +317,7 @@ app.get('/sv-crm', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.render('home', { title: 'Home', message: 'Welcome, to app!' });
+  res.render('home', { title: 'Home', message: 'Welcome, to app!', layout: 'main' });
 });
 app.get('/about', async (req, res) => {
   res.render('error', { title: 'Error' });
@@ -537,19 +537,19 @@ const times = [[9, 32], [10, 2], [10, 32], [11, 2], [11, 32], [12, 2], [12, 32],
 // });
 
 //**************************************//
-// const server = https.createServer(httpsOptions, app);
-// app.set('port', process.env.PORT || 80);
-// server.listen(app.get('port'), function () {
-//   console.log('Express server listening on port ' + server.address().port);
-// });
+const server = https.createServer(httpsOptions, app);
+app.set('port', process.env.PORT || 80);
+server.listen(app.get('port'), function () {
+  console.log('Express server listening on port ' + server.address().port);
+});
 
 // app.set('port', process.env.PORT || 3000);
 // var server = app.listen(app.get('port'), function () {
 //   console.log('Express server listening on port ' + server.address().port);
 // });
 
-app.set('port', 4000);
-var server = app.listen(app.get('port'), function () {
-  console.log('Express server listening on port ' + server.address().port);
-});
+// app.set('port', 4000);
+// var server = app.listen(app.get('port'), function () {
+//   console.log('Express server listening on port ' + server.address().port);
+// });
 

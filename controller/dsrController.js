@@ -463,31 +463,6 @@ class dsrController {
         }
     }
 
-    static saveLeaveData = async (req, res) => {
-        var { dsr_date, emp_id, leave_flag } = req.body;
-
-        try {
-            let sqlStr1 = "Select a.atten_flag, a.hr_flag" +
-                " FROM dsr_1 as a Where dsr_date=? and emp_id=?"
-            let params1 = [dsr_date, emp_id];
-            let results1 = await executeQuery(sqlStr1, params1);
-            if (results1.length > 0) {
-                if (!(results1[0].atten_flag === 'XX' || results1[0].atten_flag === null || results1[0].atten_flag === undefined || results1[0].atten_flag === '')) {
-                    leave_flag = 'P';
-                }
-            }
-
-            const sqlStr = "Update dsr_1 Set hr_flag=?" +
-                " WHERE dsr_date=? and emp_id=?";
-            await executeQuery(sqlStr, [leave_flag, dsr_date, emp_id]);
-            res.status(200).send('Leave data saved successfully');
-
-        } catch (err) {
-            console.error(err);
-            res.status(500).send('Internal Server Error');
-        }
-    };
-
     static update = async (req, res) => {
         const { dsr_date, emp_id } = req.params;
         const { atten_flag, tp_id, from_city, to_city, stay_city, total_allow, total_lodge, total_exp, sr_no, allow_id, amount, from_km, to_km, type, km_rate } = req.body;
@@ -596,6 +571,8 @@ class dsrController {
             const from_km_val = Array.isArray(from_km) ? from_km : [from_km];
             const to_km_val = Array.isArray(to_km) ? to_km : [to_km];
 
+            // console.log('dsr_date, emp_id...', dsr_date, emp_id)
+
             for (let i = 0; i < allow_id.length; i++) {
                 if (amount_val[i] > 0) {
                     let sr_no_val = (i + 1) * 10;
@@ -617,6 +594,31 @@ class dsrController {
         } catch (err) {
             console.error(err);
             return res.render('dsr/dsr-view', { alert: `Internal server error` });
+        }
+    };
+
+    static saveLeaveData = async (req, res) => {
+        var { dsr_date, emp_id, leave_flag } = req.body;
+
+        try {
+            let sqlStr1 = "Select a.atten_flag, a.hr_flag" +
+                " FROM dsr_1 as a Where dsr_date=? and emp_id=?"
+            let params1 = [dsr_date, emp_id];
+            let results1 = await executeQuery(sqlStr1, params1);
+            if (results1.length > 0) {
+                if (!(results1[0].atten_flag === 'XX' || results1[0].atten_flag === null || results1[0].atten_flag === undefined || results1[0].atten_flag === '')) {
+                    leave_flag = 'P';
+                }
+            }
+
+            const sqlStr = "Update dsr_1 Set hr_flag=?" +
+                " WHERE dsr_date=? and emp_id=?";
+            await executeQuery(sqlStr, [leave_flag, dsr_date, emp_id]);
+            res.status(200).send('Leave data saved successfully');
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
         }
     };
 

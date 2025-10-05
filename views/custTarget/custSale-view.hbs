@@ -65,50 +65,54 @@
         </div> --}}
         {{!-- <br> --}}
 
-        <table class="table dataTable" id="custSaleTable" style="width:100%">
-            <thead>
-                <tr>
-                    <th hidden>Seq</th>
-                    <th hidden>BuId</th>
-                    <th hidden>GroupId</th>
-                    <th hidden>ProductId</th>
-                    <th>BU</th>
-                    <th>Group</th>
-                    <th>Product</th>
-                    <th style="text-align: end;">Sale</th>
-                    <th style="text-align:left;">...</th>
-                </tr>
-            </thead>
-            <tbody id="saleItemsBody">
-                {{#each saleData}}
-                <tr>
-                    <td hidden><input type="text" class="form-control" id="seq_sr" name="seq_sr[]"
-                            value="{{this.seq_sr}}"></td>
-                    <td hidden><input type="text" class="form-control" id="bu_id" name="bu_id[]" value="{{this.bu_id}}">
-                    </td>
-                    <td hidden><input type="text" class="form-control" id="group_id" name="group_id[]"
-                            value="{{this.group_id}}"></td>
-                    <td hidden><input type="text" class="form-control" id="product_id" name="product_id[]"
-                            value="{{this.product_id}}"></td>
-                    <td><input readonly style="width: 100px;background-color: rgb(235, 245, 234);" type="text"
-                            class="form-control" id="bu_name" name="bu_name[]" value="{{this.bu_name}}"></td>
-                    <td><input readonly style="width: 250px;text-wrap:nowrap; background-color: rgb(235, 245, 234);"
-                            type="text" class="form-control" id="group_name" name="group_name[]"
-                            value="{{this.group_name}}"></td>
-                    <td><input readonly style="width: 600px;text-wrap:nowrap; background-color: rgb(235, 245, 234);"
-                            type="text" class="form-control" id="product_name" name="product_name[]"
-                            value="{{this.product_name}}"></td>
-                    <td><input style="width: 150px;" type="number" class="form-control text-end" id="sale_qty"
-                            name="sale_qty[]" value="{{this.sale_qty}}"></td>
-                    <td>
-                        <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
-                            class="btn btn-danger"> <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
+        <hr>
+        <div class="responsive">
+            <table class="table dataTable" id="custSaleTable" style="width:100%">
+                <thead>
+                    <tr>
+                        <th hidden>Seq</th>
+                        <th hidden>BuId</th>
+                        <th hidden>GroupId</th>
+                        <th hidden>ProductId</th>
+                        <th>BU</th>
+                        <th>Group</th>
+                        <th>Product</th>
+                        <th style="text-align: end;">Sale</th>
+                        <th style="text-align:left;">...</th>
+                    </tr>
+                </thead>
+                <tbody id="saleItemsBody">
+                    {{#each saleData}}
+                    <tr>
+                        <td hidden><input type="text" class="form-control" id="seq_sr" name="seq_sr[]"
+                                value="{{this.seq_sr}}"></td>
+                        <td hidden><input type="text" class="form-control" id="bu_id" name="bu_id[]"
+                                value="{{this.bu_id}}">
+                        </td>
+                        <td hidden><input type="text" class="form-control" id="group_id" name="group_id[]"
+                                value="{{this.group_id}}"></td>
+                        <td hidden><input type="text" class="form-control" id="product_id" name="product_id[]"
+                                value="{{this.product_id}}"></td>
+                        <td><input readonly style="width: 100px;background-color: rgb(235, 245, 234);" type="text"
+                                class="form-control" id="bu_name" name="bu_name[]" value="{{this.bu_name}}"></td>
+                        <td><input readonly style="width: 250px;text-wrap:nowrap; background-color: rgb(235, 245, 234);"
+                                type="text" class="form-control" id="group_name" name="group_name[]"
+                                value="{{this.group_name}}"></td>
+                        <td><input readonly style="width: 600px;text-wrap:nowrap; background-color: rgb(235, 245, 234);"
+                                type="text" class="form-control" id="product_name" name="product_name[]"
+                                value="{{this.product_name}}"></td>
+                        <td><input style="width: 150px;" type="number" class="form-control text-end" id="sale_qty"
+                                name="sale_qty[]" value="{{this.sale_qty}}"></td>
+                        <td>
+                            <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
+                                class="btn btn-danger"> <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
 
         <div class="col-md-3 d-flex justify-content-between">
             <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit"

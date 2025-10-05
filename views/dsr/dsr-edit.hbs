@@ -1,223 +1,364 @@
-<div style="padding-right: 5px; padding-left: 5px;">
+<div class="container-fluid py-3">
     <div class="row justify-content-center">
-        <form id="dsrForm" onsubmit="return validateKmRange();"
-            action="/dsr/update/{{momentYMD data.dsr_date}}/{{data.emp_id}}?postFlag={{postFlag}}" method="post">
-            <div class="row mb-3">
-                <label for="dsr_date" class="col-sm-3 col-form-label">Date</span></label>
-                <div class="col-sm-9">
-                    <input hidden type="text" class="form-control" id="postFlag" name="postFlag" value="{{postFlag}}">
-                    <input hidden type="text" class="form-control" id="dsr_date" name="dsr_date"
-                        value="{{momentYMD data.dsr_date}}" placeholder="DSR Date">
-                    <input type="text" class="form-control" id="dsr_date_new" name="dsr_date_new"
-                        value="{{momentDMY data.dsr_date}}" placeholder="DSR Date">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="emp_id" class="col-sm-3 col-form-label">EMP</span></label>
-                <div class="col-sm-9">
-                    <input hidden type="text" class="form-control" id="emp_id" name="emp_id" value="{{data.emp_id}}"
-                        placeholder="EMP-ID">
-                    <input readonly type="text" class="form-control" id="emp_name" name="emp_name"
-                        value="{{data3.first_name}} {{data3.last_name}}" placeholder="EMP-Name">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="hq_name" class="col-sm-3 col-form-label">HQ</span></label>
-                <div class="col-sm-9">
-                    <input readonly type="text" class="form-control" id="hq_name" name="hq_name"
-                        value="{{data3.hq_name}}" placeholder="HQ-Name">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="desg_name" class="col-sm-3 col-form-label">Desg</span></label>
-                <div class="col-sm-9">
-                    <input readonly type="text" class="form-control" id="desg_name" name="desg_name"
-                        value="{{data3.desg_name}}" placeholder="Designation">
-                    <input hidden type="text" class="form-control" id="desg_id" name="desg_id" value="{{data3.desg_id}}"
-                        placeholder="desg_id">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="boss_name" class="col-sm-3 col-form-label">Boss</span></label>
-                <div class="col-sm-9">
-                    <input readonly type="text" class="form-control" id="boss_name" name="boss_name"
-                        value="{{data3.boss_name}}" placeholder="HQ-Name">
-                </div>
-            </div>
+        <div class="col-12 col-lg-10 col-xl-8">
+            <form id="dsrForm" onsubmit="return validateKmRange();"
+                action="/dsr/update/{{momentYMD data.dsr_date}}/{{data.emp_id}}?postFlag={{postFlag}}" method="post">
 
-            <div class="row mb-3">
-                <label for="atten_flag" class="col-sm-3 col-form-label">Status<span style="color: red;">*</span></label>
-                <div class="col-sm-9">
-                    <select class="form-select" id="atten_flag" name="atten_flag" aria-label=".form-select-sm example">
-                        <option value="XX" selected>(Select Status)</option>
-                        {{#each atten_flag_list}}
-                        <option value="{{this.atten_flag}}" {{#if (eq this.atten_flag
-                            ../data.atten_flag)}}selected{{/if}}>
-                            {{atten_desc}}</option>
-                        {{/each}}
-                    </select>
-                </div>
-            </div>
+                <!-- Basic Information Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label for="dsr_date" class="form-label">Date <span class="text-danger">*</span></label>
+                                <input hidden type="text" class="form-control" id="postFlag" name="postFlag"
+                                    value="{{postFlag}}">
+                                <input hidden type="text" class="form-control" id="dsr_date" name="dsr_date"
+                                    value="{{momentYMD data.dsr_date}}" placeholder="DSR Date">
+                                <input type="text" class="form-control" id="dsr_date_new" name="dsr_date_new"
+                                    value="{{momentDMY data.dsr_date}}" placeholder="DSR Date" readonly>
+                            </div>
 
-            <div class="row mb-3">
-                <label for="tp_id_display" class="col-sm-3 col-form-label">Route<span style="color: red;">*</span></label>
-                <div class="col-sm-9">  
-                    <select class="form-select" id="tp_id_display" name="tp_id_display" aria-label=".form-select-sm example"
-                        onchange="updateCities(this)" disabled>
-                        <option value="" selected>(Select Route)</option>
-                        {{#each [empTpRoutes]}}
-                        <option value="{{this.tp_id}}" {{#if (eq this.tp_id ../data.tp_id)}}selected{{/if}}>
-                            {{this.tp_name}}
-                        </option>
-                        {{/each}}
-                    </select>
-                </div>
-                <!-- Hidden input to submit tp_id -->
-                <input type="hidden" name="tp_id" value="{{data.tp_id}}">
-            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="emp_id" class="form-label">Employee <span
+                                        class="text-danger">*</span></label>
+                                <input hidden type="text" class="form-control" id="emp_id" name="emp_id"
+                                    value="{{data.emp_id}}" placeholder="EMP-ID">
+                                <input readonly type="text" class="form-control" id="emp_name" name="emp_name"
+                                    value="{{data3.first_name}} {{data3.last_name}}" placeholder="EMP-Name">
+                            </div>
 
-            <div {{#isEqual data3.desg_id 1 2 3 4 5 }} {{else}} hidden {{/isEqual}} class="row mb-3">
-                <label for="from_city" class="col-sm-3 col-form-label">From<span style="color: red;">*</span></label>
-                <div class="col-sm-9">
-                    <input type="text" class="form-control" id="from_city" name="from_city" value="{{data.from_city}}">
-                </div>
-            </div>
-            <div {{#isEqual data3.desg_id 1 2 3 4 5 }} {{else}} hidden {{/isEqual}} class="row mb-3">
-                <label for="to_city" class="col-sm-3 col-form-label">To<span style="color: red;">*</span></label>
-                <div class="col-sm-9">
-                    <input type="text" class="form-control" id="to_city" name="to_city" value="{{data.to_city}}">
-                </div>
-            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="hq_name" class="form-label">HQ <span class="text-danger">*</span></label>
+                                <input readonly type="text" class="form-control" id="hq_name" name="hq_name"
+                                    value="{{data3.hq_name}}" placeholder="HQ-Name">
+                            </div>
 
-            <div class="row mb-3">
-                <label for="stay_city" class="col-sm-3 col-form-label">Stay</label>
-                <div class="col-sm-9">
-                    <input type="text" class="form-control" id="stay_city" name="stay_city" value="{{data.stay_city}}">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="total_allow" class="col-sm-3 col-form-label">Total DA</label>
-                <div class="col-sm-4">
-                    <input readonly type="number" class="form-control text-end" id="total_allow" name="total_allow"
-                        value="{{data.total_allow}}" min="0" step="1.00">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="total_lodge" class="col-sm-3 col-form-label">Lodging</label>
-                <div class="col-sm-4">
-                    <input {{#isEqual data.emp_id 1 2 }} {{else}}readonly{{/isEqual}} type="number"
-                        class="form-control text-end" id="total_lodge" name="total_lodge" value="{{data.total_lodge}}"
-                        min="0" step="1.00">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="total_exp" class="col-sm-3 col-form-label">Total Exp</label>
-                <div class="col-sm-4">
-                    <input readonly type="number" class="form-control text-end" id="total_exp" name="total_exp"
-                        value="{{data.total_exp}}" min="0" step="1.00">
-                </div>
-            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="desg_name" class="form-label">Designation <span
+                                        class="text-danger">*</span></label>
+                                <input readonly type="text" class="form-control" id="desg_name" name="desg_name"
+                                    value="{{data3.desg_name}}" placeholder="Designation">
+                                <input hidden type="text" class="form-control" id="desg_id" name="desg_id"
+                                    value="{{data3.desg_id}}" placeholder="desg_id">
+                            </div>
 
-            <div class="mb-3">
-                <br>
-                <br>
-                <label for="drs_dtTable" class="form-label"><strong>Expenses Details</strong></label>
-                {{!-- <h1><strong>Expenses Details</strong></h1> --}}
-                <table class="table" id="drs_dtTable">
-                    <thead>
-                        <tr>
-                            <th hidden class="col-1">Sr</th>
-                            <th class="col-5">Item</th>
-                            <th class="col-1">Amount</th>
-                            <th class="col-3 text-end">From Km</th>
-                            <th class="col-3 text-end">To Km</th>
-                            <th class="col-1">&nbsp;&nbsp;...</th>
-                            {{!-- <th class="col-10">Temp</th> --}}
-                        </tr>
-                    </thead>
-                    <tbody id="orderItemsBody">
-                        {{#each [data2]}}
-                        <tr>
-                            <td hidden><input readonly type="text" class="form-control text-end" id="sr_no"
-                                    name="sr_no[]" required value="{{this.sr_no}}">
-                            </td>
-                            <td>
-                                <select class="form-select" id="allow_id" name="allow_id[]">
-                                    <option value="">(Select)</option>
-                                    {{#each ../allow_list}}
-                                    <option value="{{this.allow_id}}" {{#isEqual ../this.allow_id
-                                        this.allow_id}}selected{{/isEqual}}>
-                                        {{this.allow_name}}</option>
+                            <div class="col-12 col-md-6">
+                                <label for="boss_name" class="form-label">Boss <span
+                                        class="text-danger">*</span></label>
+                                <input readonly type="text" class="form-control" id="boss_name" name="boss_name"
+                                    value="{{data3.boss_name}}" placeholder="HQ-Name">
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label for="atten_flag" class="form-label">Status <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" id="atten_flag" name="atten_flag">
+                                    <option value="XX" selected>(Select Status)</option>
+                                    {{#each atten_flag_list}}
+                                    <option value="{{this.atten_flag}}" {{#if (eq this.atten_flag
+                                        ../data.atten_flag)}}selected{{/if}}>
+                                        {{atten_desc}}</option>
                                     {{/each}}
                                 </select>
-                            </td>
-
-                            <td><input {{#isEqual this.type "Fix" "PerKM" }}readonly{{/isEqual}} type="number"
-                                    class="form-control text-end" id="amount" name="amount[]" min="0" step="1"
-                                    value="{{this.amount}}" required>
-                            </td>
-                            <td><input {{#isEqual this.type "Actual" }}readonly{{/isEqual}} type="number"
-                                    class="form-control text-end" id="from_km" name="from_km[]" min="1" step="1"
-                                    value="{{this.from_km}}"></td>
-                            <td><input {{#isEqual this.type "Actual" }}readonly{{/isEqual}} type="number"
-                                    class="form-control text-end" id="to_km" name="to_km[]" min="1" step="1"
-                                    value="{{this.to_km}}"></td>
-                            <td>
-                                <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
-                                    class="btn btn-danger">
-                                    <i class="bi bi-trash text-end"></i>
-                                </button>
-                            </td>
-                            <td>
-                                <div hidden>
-                                    <input type="text" class="form-control" id="type" name="type[]"
-                                        value="{{this.type}}">
-                                    <input type="number" class="form-control text-end" id="km_rate" name="km_rate[]"
-                                        value="{{this.km_rate}}">
-                                </div>
-                            </td>
-
-                        </tr>
-                        {{/each}}
-
-                    </tbody>
-                </table>
-
-                <div class="form-group row">
-                    <div class="col-sm-6">
-                        <button type="button" id="addItemBtn" class="btn btn-success">Add
-                            Item</button>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="form-group row">
-                            <label for="totalAmount" class="col-sm-6 col-form-label text-end">Total:</label>
-                            <div class="col-sm-6">
-                                <input readonly type="text" class="form-control text-end" id="totalAmount"> &nbsp;&nbsp;
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <br>
 
-            <div class="row">
-                <div class="col-sm">
-                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" id="submitBtn"
-                        class="btn btn-primary mx-1">Submit</button>
+                <!-- Route Information Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="card-title mb-0">Route Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="tp_id_display" class="form-label">Route <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" id="tp_id_display" name="tp_id_display"
+                                    onchange="updateCities(this)" disabled>
+                                    <option value="" selected>(Select Route)</option>
+                                    {{#each [empTpRoutes]}}
+                                    <option value="{{this.tp_id}}" {{#if (eq this.tp_id ../data.tp_id)}}selected{{/if}}>
+                                        {{this.tp_name}}
+                                    </option>
+                                    {{/each}}
+                                </select>
+                                <input type="hidden" name="tp_id" value="{{data.tp_id}}">
+                            </div>
 
-                    {{#if (eq postFlag 'Y')}}
-                    <button type="button" class="btn btn-secondary mx-5"
-                        onclick="window.location.href='/dsr/post-edit?selectedEmpID={{data.emp_id}}'">Cancel</button>
-                    {{else}}
-                    <button type="button" class="btn btn-secondary mx-5"
-                        onclick="window.location.href='/dsr/view'">Cancel</button>
-                    {{/if}}
+                            <div {{#isEqual data3.desg_id 1 2 3 4 5 }} {{else}} hidden {{/isEqual}}
+                                class="col-12 col-md-6">
+                                <label for="from_city" class="form-label">From <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="from_city" name="from_city"
+                                    value="{{data.from_city}}">
+                            </div>
+
+                            <div {{#isEqual data3.desg_id 1 2 3 4 5 }} {{else}} hidden {{/isEqual}}
+                                class="col-12 col-md-6">
+                                <label for="to_city" class="form-label">To <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="to_city" name="to_city"
+                                    value="{{data.to_city}}">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="stay_city" class="form-label">Stay City</label>
+                                <input type="text" class="form-control" id="stay_city" name="stay_city"
+                                    value="{{data.stay_city}}">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-        </form>
+                <!-- Expense Summary Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">Expense Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label for="total_allow" class="form-label">Total DA</label>
+                                <input readonly type="number" class="form-control text-end" id="total_allow"
+                                    name="total_allow" value="{{data.total_allow}}" min="0" step="1.00">
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="total_lodge" class="form-label">Lodging</label>
+                                <input {{#isEqual data.emp_id 1 2 }} {{else}}readonly{{/isEqual}} type="number"
+                                    class="form-control text-end" id="total_lodge" name="total_lodge"
+                                    value="{{data.total_lodge}}" min="0" step="1.00">
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="total_exp" class="form-label">Total Expense</label>
+                                <input readonly type="number" class="form-control text-end" id="total_exp"
+                                    name="total_exp" value="{{data.total_exp}}" min="0" step="1.00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expense Details Card - Card View for All Devices -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Expense Details</h5>
+                        <span class="badge bg-light text-dark" id="expenseCount">{{data2.length}} items</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="expenseCards" class="expense-cards-container">
+                            {{#each [data2]}}
+                            <div class="expense-card mb-3 p-3 border rounded position-relative">
+                                <div class="expense-card-header d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-primary me-2 expense-sr">{{this.sr_no}}</span>
+                                        <h6 class="mb-0">Expense Item</h6>
+                                    </div>
+                                    <button type="button" onclick="removeSelectedItem(this)"
+                                        class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="row g-2">
+                                    <input hidden type="text" class="form-control text-end" name="sr_no[]" required
+                                        value="{{this.sr_no}}">
+
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small">Item</label>
+                                        <select class="form-select" name="allow_id[]">
+                                            <option value="">(Select)</option>
+                                            {{#each ../allow_list}}
+                                            <option value="{{this.allow_id}}" {{#isEqual ../this.allow_id
+                                                this.allow_id}}selected{{/isEqual}}>
+                                                {{this.allow_name}}</option>
+                                            {{/each}}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small">Type</label>
+                                        <input type="text" class="form-control" name="type[]" value="{{this.type}}"
+                                            readonly>
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label small">Amount</label>
+                                        <input {{#isEqual this.type "Fix" "PerKM" }}readonly{{/isEqual}} type="number"
+                                            class="form-control text-end" name="amount[]" min="0" step="1"
+                                            value="{{this.amount}}" required>
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label small">From Km</label>
+                                        <input {{#isEqual this.type "Actual" }}readonly{{/isEqual}} type="number"
+                                            class="form-control text-end" name="from_km[]" min="1" step="1"
+                                            value="{{this.from_km}}">
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label small">To Km</label>
+                                        <input {{#isEqual this.type "Actual" }}readonly{{/isEqual}} type="number"
+                                            class="form-control text-end" name="to_km[]" min="1" step="1"
+                                            value="{{this.to_km}}">
+                                    </div>
+
+                                    <div hidden>
+                                        <input type="number" class="form-control text-end" name="km_rate[]"
+                                            value="{{this.km_rate}}">
+                                    </div>
+                                </div>
+                            </div>
+                            {{/each}}
+                        </div>
+
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mt-3">
+                            <button type="button" id="addItemBtn" class="btn btn-success btn-responsive mb-2 mb-md-0">
+                                <i class="bi bi-plus-circle me-1"></i> Add Item
+                            </button>
+
+                            <div class="total-amount-container">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Total:</span>
+                                    <input readonly type="text" class="form-control text-end w-auto" id="totalAmount"
+                                        value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-4">
+                    <div class="d-flex flex-column flex-sm-row gap-2 w-100">
+                        <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" id="submitBtn"
+                            class="btn btn-primary btn-responsive">
+                            <i class="bi bi-check-circle me-1"></i> Submit
+                        </button>
+
+                        {{#if (eq postFlag 'Y')}}
+                        <button type="button" class="btn btn-secondary btn-responsive"
+                            onclick="window.location.href='/dsr/post-edit?selectedEmpID={{data.emp_id}}'">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        {{else}}
+                        <button type="button" class="btn btn-secondary btn-responsive"
+                            onclick="window.location.href='/dsr/view'">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </button>
+                        {{/if}}
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<style>
+    /* Custom responsive styles */
+    .form-label {
+        font-weight: 500;
+    }
+
+    .btn-responsive {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 0.875rem;
+    }
+
+    .total-amount-container {
+        background-color: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 0.75rem;
+    }
+
+    /* Expense card styles */
+    .expense-card {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s ease;
+    }
+
+    .expense-card:hover {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .expense-card-header {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.5rem;
+    }
+
+    .expense-sr {
+        font-size: 0.75rem;
+        min-width: 2rem;
+        text-align: center;
+    }
+
+    .expense-cards-container {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    /* Mobile-specific adjustments */
+    @media (max-width: 768px) {
+        .col-form-label {
+            padding-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .btn-responsive {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .total-amount-container {
+            margin-top: 1rem;
+        }
+
+        /* Stack form elements vertically on mobile */
+        .row.mb-3 {
+            margin-bottom: 1rem !important;
+        }
+
+        .expense-card {
+            padding: 1rem;
+        }
+    }
+
+    /* Desktop optimizations */
+    @media (min-width: 768px) {
+        .expense-cards-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .expense-card {
+            padding: 1.25rem;
+        }
+    }
+
+    /* Print styles */
+    @media print {
+        .btn {
+            display: none !important;
+        }
+    }
+</style>
 
 <script>
     function updateCities(dropdown) {
@@ -231,10 +372,7 @@
             document.getElementById('to_city').value = '';
         }
     }
-</script>
 
-
-<script>
     const dropdownAttenFlag = document.getElementById('atten_flag');
     const desgID = document.getElementById('desg_id').value;
 
@@ -255,256 +393,241 @@
         }
     });
 
-</script>
+    // Function to update card fields
+    function updateCardFields(allowType, allowAmtVal, card, fromKm, toKm, kmRate) {
+        const amountInput = card.querySelector('input[name="amount[]"]');
+        const fromKmInput = card.querySelector('input[name="from_km[]"]');
+        const toKmInput = card.querySelector('input[name="to_km[]"]');
+        const typeInput = card.querySelector('input[name="type[]"]');
+        const kmRateInput = card.querySelector('input[name="km_rate[]"]');
 
-<script>
-    function updateRowFields(allowType, allowAmtVal, row, fromKm, toKm, kmRate) {
+        typeInput.value = allowType;
+        kmRateInput.value = parseFloat(kmRate).toFixed(2);
+
         if (allowType === 'Actual') {
-            row.querySelector("#amount").readOnly = false;
-            row.querySelector("#from_km").readOnly = true;
-            row.querySelector("#to_km").readOnly = true;
-            row.querySelector("#from_km").value = 0;
-            row.querySelector("#to_km").value = 0;
+            amountInput.readOnly = false;
+            fromKmInput.readOnly = true;
+            toKmInput.readOnly = true;
+            fromKmInput.value = 0;
+            toKmInput.value = 0;
+            amountInput.value = parseFloat(allowAmtVal).toFixed(0);
         } else if (allowType === 'Fix') {
-            row.querySelector("#amount").value = parseFloat(allowAmtVal).toFixed(0);
-            row.querySelector("#amount").readOnly = true;
-            row.querySelector("#from_km").readOnly = true;
-            row.querySelector("#to_km").readOnly = true;
-            row.querySelector("#from_km").value = 0;
-            row.querySelector("#to_km").value = 0;
+            amountInput.value = parseFloat(allowAmtVal).toFixed(0);
+            amountInput.readOnly = true;
+            fromKmInput.readOnly = true;
+            toKmInput.readOnly = true;
+            fromKmInput.value = 0;
+            toKmInput.value = 0;
         } else if (allowType === 'PerKM') {
-            if (isNaN(parseFloat(toKm)) || isNaN(parseFloat(fromKm)) || isNaN(parseFloat(kmRate))) {
-                row.querySelector("#amount").value = 0;
+            // Use current values from input fields, not the passed parameters
+            const currentFromKm = parseFloat(fromKmInput.value) || 0;
+            const currentToKm = parseFloat(toKmInput.value) || 0;
+            const currentKmRate = parseFloat(kmRate) || 0;
+
+            amountInput.readOnly = true;
+            fromKmInput.readOnly = false;
+            toKmInput.readOnly = false;
+
+            // Calculate amount based on current input values
+            if (currentToKm > currentFromKm) {
+                amountInput.value = ((currentToKm - currentFromKm) * currentKmRate).toFixed(0);
             } else {
-                row.querySelector("#amount").value = (parseFloat(toKm) - parseFloat(fromKm)) * parseFloat(kmRate);
+                amountInput.value = 0;
             }
-            row.querySelector("#amount").readOnly = true;
-            row.querySelector("#from_km").readOnly = false;
-            row.querySelector("#to_km").readOnly = false;
         }
+
+        calculateTotal();
     }
 
-    const orderItemsBody = document.getElementById("orderItemsBody");
+    function recalculatePerKMCards() {
+        const cards = document.querySelectorAll('#expenseCards .expense-card');
+        cards.forEach(card => {
+            const typeInput = card.querySelector('input[name="type[]"]');
+            const allowType = typeInput.value;
+
+            if (allowType === 'PerKM') {
+                const fromKmInput = card.querySelector('input[name="from_km[]"]');
+                const toKmInput = card.querySelector('input[name="to_km[]"]');
+                const kmRateInput = card.querySelector('input[name="km_rate[]"]');
+                const amountInput = card.querySelector('input[name="amount[]"]');
+
+                const fromKm = parseFloat(fromKmInput.value) || 0;
+                const toKm = parseFloat(toKmInput.value) || 0;
+                const kmRate = parseFloat(kmRateInput.value) || 0;
+
+                if (toKm > fromKm) {
+                    amountInput.value = ((toKm - fromKm) * kmRate).toFixed(0);
+                } else {
+                    amountInput.value = 0;
+                }
+            }
+        });
+        calculateTotal();
+    }
+
+    // Function to calculate total amount
+    function calculateTotal() {
+        const amountInputs = document.querySelectorAll('#expenseCards input[name="amount[]"]');
+        let totalAmount = 0;
+        amountInputs.forEach((input) => {
+            const inputValue = parseFloat(input.value);
+            if (!isNaN(inputValue)) {
+                totalAmount += inputValue;
+            }
+        });
+        document.getElementById("totalAmount").value = totalAmount.toFixed(2);
+        document.getElementById("total_exp").value = totalAmount.toFixed(0);
+
+        // Update expense count
+        document.getElementById("expenseCount").textContent = amountInputs.length + " items";
+    }
+
+    // Function to update serial numbers
+    function updateSerialNumbers() {
+        const cards = document.querySelectorAll('#expenseCards .expense-card');
+        cards.forEach((card, index) => {
+            const srBadge = card.querySelector('.expense-sr');
+            const srInput = card.querySelector('input[name="sr_no[]"]');
+            const newSrNo = (index + 1) * 10;
+            srBadge.textContent = newSrNo;
+            srInput.value = newSrNo;
+        });
+    }
+
+    // Card functionality
+    const expenseCards = document.getElementById("expenseCards");
     const addItemBtn = document.getElementById("addItemBtn");
 
-    // Add an event listener to the button to handle clicks
     addItemBtn.addEventListener("click", function () {
-        // Get the last row in the table body
-        const lastRow = orderItemsBody.lastElementChild;
-        // Clone the last row
-        const newRow = lastRow.cloneNode(true);
-        // Clear the input fields in the new row
-        const inputs = newRow.querySelectorAll("input");
+        const lastCard = expenseCards.lastElementChild;
+        const newCard = lastCard.cloneNode(true);
+        const inputs = newCard.querySelectorAll("input");
+
         inputs.forEach(input => {
-            input.value = "";
+            if (input.name !== "type[]" && input.name !== "km_rate[]") {
+                input.value = "";
+            }
         });
-        // Increment the serial number in the new row
-        const srNoValue = parseInt(lastRow.querySelector("#sr_no").value);
-        const srNoInput = newRow.querySelector("#sr_no");
-        //const srNoValue = parseInt(srNoInput.value);
-        srNoInput.value = srNoValue + 10;
 
-        const allowInput = newRow.querySelector("#allow_id");
-        allowInput.value = "";
+        const select = newCard.querySelector('select');
+        select.value = "";
 
-        // Get the newly added amount field
-        const amtInpute = newRow.querySelector('#amount');
-        amtInpute.readOnly = true; //false;
-        const fromKmInpute = newRow.querySelector('#from_km');
-        fromKmInpute.readOnly = true;
-        const toKmInpute = newRow.querySelector('#to_km');
-        toKmInpute.readOnly = true;
-        const kmRateInpute = newRow.querySelector('#km_rate');
+        // Add animation class before appending
+        newCard.style.opacity = '0';
+        newCard.style.transform = 'translateY(20px)';
 
-        // Append the new row to the table body
-        orderItemsBody.appendChild(newRow);
+        expenseCards.appendChild(newCard);
+        updateSerialNumbers();
+        calculateTotal();
 
+        // Animate and scroll to new card
+        setTimeout(() => {
+            // Trigger animation
+            newCard.style.transition = 'all 0.3s ease';
+            newCard.style.opacity = '1';
+            newCard.style.transform = 'translateY(0)';
+
+            // Scroll to new card
+            newCard.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+
+            // Add highlight effect
+            newCard.style.boxShadow = '0 0 0 2px #28a745';
+            setTimeout(() => {
+                newCard.style.boxShadow = '';
+            }, 1500);
+
+            // Focus on first input for quick editing
+            const firstSelect = newCard.querySelector('select[name="allow_id[]"]');
+            if (firstSelect) {
+                firstSelect.focus();
+            }
+        }, 50);
     });
 
-    // Add a change event listener to the amount and from_km inputs
-    orderItemsBody.addEventListener("change", async (event) => {
+
+    // Event delegation for expense cards
+    expenseCards.addEventListener("change", async (event) => {
         const target = event.target;
 
-        if (target.matches("#allow_id")) {
-            const row = target.closest("tr");
-            const allowID = row.querySelector("#allow_id").value;
-            //const allowType = row.querySelector("#type");
-            const fromKm = parseFloat(row.querySelector("#from_km").value);
-            const toKm = parseFloat(row.querySelector("#to_km").value);
-            //const kmRate = parseFloat(row.querySelector("#km_rate").value);
+        if (target.matches('select[name="allow_id[]"]')) {
+            const card = target.closest('.expense-card');
+            const allowID = target.value;
+            const fromKmInput = card.querySelector('input[name="from_km[]"]');
+            const toKmInput = card.querySelector('input[name="to_km[]"]');
+            const kmRateInput = card.querySelector('input[name="km_rate[]"]');
 
-            //Get type/km_rate from allow pricelist
+            const fromKm = parseFloat(fromKmInput.value) || 0;
+            const toKm = parseFloat(toKmInput.value) || 0;
+
             const selectedAttenFlag = dropdownAttenFlag.value;
             const response = await fetch(`/dsr/dsr-ad?allow_id=${allowID}&desg_id=${desgID}&atten_flag=${selectedAttenFlag}`);
             const data = await response.json();
             const allowTypeVal = data.allowData ? data.allowData.type : 'Fix';
             const allowAmtVal = data.allowData ? data.allowData.amount : 0;
             const allowKmRateVal = data.allowData ? data.allowData.km_rate : 3;
-            row.querySelector("#type").value = allowTypeVal;
-            row.querySelector("#amount").value = parseFloat(allowAmtVal).toFixed(0);
-            row.querySelector("#km_rate").value = parseFloat(allowKmRateVal).toFixed(0);
 
-            updateRowFields(allowTypeVal, allowAmtVal, row, fromKm, toKm, allowKmRateVal);
+            kmRateInput.value = parseFloat(allowKmRateVal).toFixed(2);
+
+            // For PerKM type, initialize with some default values if empty
+            if (allowTypeVal === 'PerKM' && (!fromKmInput.value || !toKmInput.value)) {
+                fromKmInput.value = fromKmInput.value || '0';
+                toKmInput.value = toKmInput.value || '0';
+            }
+
+            updateCardFields(allowTypeVal, allowAmtVal, card, fromKm, toKm, allowKmRateVal);
         }
 
-        if (target.matches("#allow_id, #amount, #from_km, #to_km")) {
+        if (target.matches('input[name="from_km[]"], input[name="to_km[]"]')) {
+            const card = target.closest('.expense-card');
+            const typeInput = card.querySelector('input[name="type[]"]');
 
-            const row = target.closest("tr");
-            const allowTypeVal = row.querySelector("#type").value;
-            const allowAmtVal = parseFloat(row.querySelector("#amount").value);
-            const fromKm = parseFloat(row.querySelector("#from_km").value);
-            const toKm = parseFloat(row.querySelector("#to_km").value);
-            const kmRate = parseFloat(row.querySelector("#km_rate").value);
-
-            updateRowFields(allowTypeVal, allowAmtVal, row, fromKm, toKm, kmRate);
-
-            // Calculate the total Amount
-            const amountInputs = orderItemsBody.querySelectorAll("#amount");
-            let totalAmount = 0;
-            amountInputs.forEach((input) => {
-                const inputValue = parseFloat(input.value);
-                if (!isNaN(inputValue)) {
-                    totalAmount += inputValue;
-                }
-            });
-            document.getElementById("totalAmount").value = totalAmount.toFixed(2);
-            document.getElementById("total_exp").value = totalAmount.toFixed(0);
+            if (typeInput.value === 'PerKM') {
+                recalculatePerKMCards();
+            } else {
+                calculateTotal();
+            }
         }
 
+        if (target.matches('input[name="amount[]"]')) {
+            calculateTotal();
+        }
     });
 
-    // Add a change event listener to calculate total amount when page load
-    document.addEventListener("DOMContentLoaded", () => {
-        const amountInputs = document.querySelectorAll("#drs_dtTable #amount");
-        let totalAmount = 0;
-        amountInputs.forEach((input) => {
-            const inputValue = parseFloat(input.value);
-            if (!isNaN(inputValue)) {
-                totalAmount += inputValue;
+    // Also add input event for real-time updates
+    expenseCards.addEventListener("input", (event) => {
+        const target = event.target;
+
+        if (target.matches('input[name="from_km[]"], input[name="to_km[]"]')) {
+            const card = target.closest('.expense-card');
+            const typeInput = card.querySelector('input[name="type[]"]');
+
+            if (typeInput.value === 'PerKM') {
+                recalculatePerKMCards();
             }
-        });
-        document.getElementById("totalAmount").value = totalAmount.toFixed(2);
-        document.getElementById("total_exp").value = totalAmount.toFixed(0);
+        }
+    });
+
+    // Initialize totals on page load
+    document.addEventListener("DOMContentLoaded", () => {
+        recalculatePerKMCards(); // This will calculate any existing PerKM items
+        updateSerialNumbers();
     });
 
     function removeSelectedItem(element) {
-        // Remove the row from the table
-        const row = element.closest("tr");
-        if (row.rowIndex === 1) {
-            alert("First row can't be delete!");
+        const card = element.closest('.expense-card');
+        const cards = expenseCards.querySelectorAll('.expense-card');
+        if (cards.length === 1) {
+            alert("First item can't be deleted!");
             return;
         }
-        row.remove();
-        // Recalculate the total Amount
-        const amountInputs = orderItemsBody.querySelectorAll("#amount");
-        let totalAmount = 0;
-        amountInputs.forEach((input) => {
-            const inputValue = parseFloat(input.value);
-            if (!isNaN(inputValue)) {
-                totalAmount += inputValue;
-            }
-        });
-        document.getElementById("totalAmount").value = totalAmount.toFixed(2);
-        document.getElementById("total_exp").value = totalAmount.toFixed(0);
+        card.remove();
+        updateSerialNumbers();
+        calculateTotal();
     }
 
-</script>
-
-<script>
-    function adjustFontSize() {
-        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-
-        var frmLabels = document.getElementsByClassName('col-form-label');
-        for (var i = 0; i < frmLabels.length; i++) {
-            var frmLabel = frmLabels[i];
-            if (screenWidth < 768) {
-                frmLabel.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmLabel.style.fontSize = '50px';
-            } else {
-                frmLabel.style.fontSize = '30px';
-            }
-        }
-
-        var frmLabels = document.getElementsByClassName('form-label');
-        for (var i = 0; i < frmLabels.length; i++) {
-            var frmLabel = frmLabels[i];
-            if (screenWidth < 768) {
-                frmLabel.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmLabel.style.fontSize = '50px';
-            } else {
-                frmLabel.style.fontSize = '30px';
-            }
-        }
-
-        var frmControls = document.getElementsByClassName('form-control');
-        for (var i = 0; i < frmControls.length; i++) {
-            var frmControl = frmControls[i];
-            if (screenWidth < 768) {
-                frmControl.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmControl.style.fontSize = '50px';
-            } else {
-                frmControl.style.fontSize = '30px';
-            }
-        }
-
-        var frmControls = document.getElementsByClassName('form-select');
-        for (var i = 0; i < frmControls.length; i++) {
-            var frmControl = frmControls[i];
-            if (screenWidth < 768) {
-                frmControl.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmControl.style.fontSize = '50px';
-            } else {
-                frmControl.style.fontSize = '30px';
-            }
-        }
-
-        var frmBtns = document.getElementsByClassName('btn');
-        for (var i = 0; i < frmBtns.length; i++) {
-            var frmBtn = frmBtns[i];
-            if (screenWidth < 768) {
-                frmBtn.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmBtn.style.fontSize = '50px';
-            } else {
-                frmBtn.style.fontSize = '30px';
-            }
-        }
-
-        var txtItems = document.getElementsByClassName('table');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '41px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '41px';
-            } else {
-                txtItem.style.fontSize = '20px';
-            }
-        }
-
-        var txtItems = document.getElementsByClassName('page-title');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '60px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '60px';
-            } else {
-                txtItem.style.fontSize = '40px';
-            }
-        }
-
-    }
-
-    window.addEventListener('DOMContentLoaded', adjustFontSize);
-    window.addEventListener('resize', adjustFontSize);
-</script>
-
-<script>
     function validateKmRange() {
         const fromKmInputs = document.getElementsByName('from_km[]');
         const toKmInputs = document.getElementsByName('to_km[]');
@@ -514,8 +637,6 @@
             const fromKm = parseFloat(fromKmInputs[i].value);
             const toKm = parseFloat(toKmInputs[i].value);
             const allowType = allowTypes[i].value;
-
-            //console.log('fromKm... ', i, ' Type... ', allowTypes[i].value, ' ... ' , fromKmInputs[i].value, ' ... ', toKmInputs[i].value)
 
             if (allowType === 'PerKM') {
                 if (isNaN(fromKm) || isNaN(toKm) || fromKm >= toKm) {

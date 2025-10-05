@@ -89,66 +89,68 @@
 
     <br>
 
-    <table class="table" id="dsrTable">
-        <thead>
-            <tr>
-                <th hidden>Date1</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>HR Flag</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Stay</th>
-                <th>DA</th>
-                <th>Lodge</th>
-                <th>Exp</th>
-                <th>Post</th>
-                <th class="col-1">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each dsrData}}
-            <tr>
-                <td hidden>{{momentYMD this.dsr_date}}</td>
-                <td>{{momentDMY this.dsr_date}}</td>
-                <td>{{this.atten_flag}}</td>
-                <td>{{this.hr_flag}}</td>
-                <td>{{this.from_city}}</td>
-                <td>{{this.to_city}}</td>
-                <td>{{this.stay_city}}</td>
-                <td class="text-end">{{this.total_allow}}</td>
-                <td class="text-end">{{this.total_lodge}}</td>
-                <td class="text-end">{{this.total_exp}}</td>
-                <td>{{this.post_mg}}</td>
-                <td>
-                    {{!-- <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}"
-                        class="btn btn-primary btn-sm">
-                        <i class="bi bi-eye"></i>
-                    </a> --}}
+    <div class="table-responsive">
+        <table class="table" id="dsrTable">
+            <thead>
+                <tr>
+                    <th hidden>Date1</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>HR Flag</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Stay</th>
+                    <th>DA</th>
+                    <th>Lodge</th>
+                    <th>Exp</th>
+                    <th>Post</th>
+                    <th class="col-1">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each dsrData}}
+                <tr>
+                    <td hidden>{{momentYMD this.dsr_date}}</td>
+                    <td>{{momentDMY this.dsr_date}}</td>
+                    <td>{{this.atten_flag}}</td>
+                    <td>{{this.hr_flag}}</td>
+                    <td>{{this.from_city}}</td>
+                    <td>{{this.to_city}}</td>
+                    <td>{{this.stay_city}}</td>
+                    <td class="text-end">{{this.total_allow}}</td>
+                    <td class="text-end">{{this.total_lodge}}</td>
+                    <td class="text-end">{{this.total_exp}}</td>
+                    <td>{{this.post_mg}}</td>
+                    <td>
+                        {{!-- <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}"
+                            class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a> --}}
 
-                    {{!-- {{#if this.ftp_date}}
-                    <a href="#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    {{else}} --}}
-                    <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}?postFlag=Y"
-                        class="btn btn-primary btn-sm"
-                        onclick="return confirm('This will modify your previously saved data. Are you sure?')">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    {{!-- {{/if}} --}}
+                        {{!-- {{#if this.ftp_date}}
+                        <a href="#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {{else}} --}}
+                        <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}?postFlag=Y"
+                            class="btn btn-primary btn-sm"
+                            onclick="return confirm('This will modify your previously saved data. Are you sure?')">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {{!-- {{/if}} --}}
 
-                    {{!-- {{#isEqual ../user.user_role "Admin"}}
-                    <a href="/po/delete/{{momentYMD this.dsr_date}}/{{this.emp_id}}" class="btn btn-danger btn-sm"
-                        onclick="return confirm('Are you sure?')">
-                        <i class="bi bi-trash"></i>
-                    </a>
-                    {{/isEqual}} --}}
-                </td>
-            </tr>
-            {{/each}}
-        </tbody>
-    </table>
+                        {{!-- {{#isEqual ../user.user_role "Admin"}}
+                        <a href="/po/delete/{{momentYMD this.dsr_date}}/{{this.emp_id}}" class="btn btn-danger btn-sm"
+                            onclick="return confirm('Are you sure?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {{/isEqual}} --}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
 
     <script>
         $(document).ready(function () {

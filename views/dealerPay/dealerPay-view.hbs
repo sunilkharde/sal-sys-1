@@ -28,65 +28,67 @@
         </div>
         {{!-- <br> --}}
 
-        <table class="table" id="dealerPayTable">
-            <thead>
-                <tr>
-                    <th hidden>Entry Date1</th>
-                    <th>Entry Date</th>
-                    <th>Entry No</th>
-                    <th>Dealer Name</th>
-                    <th>Business Unit</th>
-                    <th>Pay Mode</th>
-                    <th>Pay Ref Date</th>
-                    <th>Pay Ref No</th>
-                    <th style="text-align: end;">Amount</th>
-                    {{!-- <th hidden>Narration</th> --}}
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each dealerPayments}}
-                <tr>
-                    <td hidden>{{momentYMD this.doc_date}}</td>
-                    <td class="col-1">{{momentDMY this.doc_date}}</td>
-                    <td class="col-1">{{this.doc_no_new}}</td>
-                    <td class="col-3">{{this.customer_name}}</td>
-                    <td class="col-2">{{this.bu_code}}</td>
-                    <td class="col-1">{{this.pay_mode}}</td>
-                    <td class="col-1">{{momentDMY this.ref_date}}</td>
-                    <td class="col-1">{{this.ref_no}}</td>
-                    <td class="col-1" style="text-align: end;">{{this.amount}}</td>
-                    {{!-- <td hidden class="col-0">{{this.ref_desc}}</td> --}}
-                    <td class="col-1">
-                        <!-- <a href="/dealerPay/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">
-                        <i class="bi bi-eye"></i>
-                        </a> -->
-                        {{#isEqual ../user.user_role "Admin" "Dealer"}}
-                        <a href="/dealerPay/update/{{momentYMD this.doc_date}}/{{this.doc_no}}"
-                            class="btn btn-primary btn-sm"> <i class="bi bi-pencil"></i>
-                        </a>
-                        {{else}}
-                        <a href="/#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        {{/isEqual}}
+        <div class="table-responsive">
+            <table class="table" id="dealerPayTable">
+                <thead>
+                    <tr>
+                        <th hidden>Entry Date1</th>
+                        <th>Entry Date</th>
+                        <th>Entry No</th>
+                        <th>Dealer Name</th>
+                        <th>Business Unit</th>
+                        <th>Pay Mode</th>
+                        <th>Pay Ref Date</th>
+                        <th>Pay Ref No</th>
+                        <th style="text-align: end;">Amount</th>
+                        {{!-- <th hidden>Narration</th> --}}
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each dealerPayments}}
+                    <tr>
+                        <td hidden>{{momentYMD this.doc_date}}</td>
+                        <td class="col-1">{{momentDMY this.doc_date}}</td>
+                        <td class="col-1">{{this.doc_no_new}}</td>
+                        <td class="col-3">{{this.customer_name}}</td>
+                        <td class="col-2">{{this.bu_code}}</td>
+                        <td class="col-1">{{this.pay_mode}}</td>
+                        <td class="col-1">{{momentDMY this.ref_date}}</td>
+                        <td class="col-1">{{this.ref_no}}</td>
+                        <td class="col-1" style="text-align: end;">{{this.amount}}</td>
+                        {{!-- <td hidden class="col-0">{{this.ref_desc}}</td> --}}
+                        <td class="col-1">
+                            <!-- <a href="/dealerPay/viewByID/{{this.customer_id}}" class="btn btn-secondary btn-sm">
+                            <i class="bi bi-eye"></i>
+                            </a> -->
+                            {{#isEqual ../user.user_role "Admin" "Dealer"}}
+                            <a href="/dealerPay/update/{{momentYMD this.doc_date}}/{{this.doc_no}}"
+                                class="btn btn-primary btn-sm"> <i class="bi bi-pencil"></i>
+                            </a>
+                            {{else}}
+                            <a href="/#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {{/isEqual}}
 
-                        {{#isEqual ../user.user_role "Admin"}}
-                        <a href="/dealerPay/delete/{{momentYMD this.doc_date}}/{{this.doc_no}}"
-                            class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                        {{else}}
-                        <a href="/#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
-                            <i class="bi bi-trash"></i>
-                        </a>
+                            {{#isEqual ../user.user_role "Admin"}}
+                            <a href="/dealerPay/delete/{{momentYMD this.doc_date}}/{{this.doc_no}}"
+                                class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {{else}}
+                            <a href="/#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
+                                <i class="bi bi-trash"></i>
+                            </a>
 
-                        {{/isEqual}}
-                    </td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
+                            {{/isEqual}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
 
     </form>
 

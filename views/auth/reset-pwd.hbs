@@ -1,67 +1,295 @@
-<div class="container">
+<div class="container mt-1">
     <div class="row justify-content-center">
-        <div class="col-lg-5">
-            <h2>Reset Password</h2>
-
-            {{!-- {{#if alert}}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{alert}}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {{/if}} --}}
-
-            {{!-- <p> User Role {{user.user_role}}</p> --}}
-
-            <form id="formSendOTP" action="/auth/send-otp" method="POST">
-                <div class="mb-3">
-                    <p> Hi,&nbsp;{{userData.username}}</p>
-                    <input hidden retype="text" class="form-control" id="username" name="username"
-                        value="{{userData.username}}">
-
-                    <label for="mobile_no">Mobile No</label>
-                    <input readonly retype="text" class="form-control" id="mobile_no" name="mobile_no"
-                        inputmode="numeric" style="width: 200px" value="{{userData.mobile_no}}" pattern="[0-9]{1,10}"
-                        aria-describedby="mobileNoHelp">
-                    {{!-- <div id="mobileNoHelp" class="form-text">Please enter a valid mobile number with a maximum of
-                        10
-                        digits.</div> --}}
-
-                    <label for="email_id">Email</label>
-                    <input readonly type="email" class="form-control" id="email_id" name="email_id" style="width: 400px"
-                        value="{{userData.email_id}}" aria-describedby="emailIDHelp">
-                    {{!-- <div id="emailIDHelp" class="form-text">Please enter a valid email</div> --}}
-
-                </div>
-
-                <button type="submit" class="btn btn-success">{{#if otpData.otp}}Resend OTP{{else}}Send
-                    OTP{{/if}}</button>
-                <div>
-                    <p>One-Time Password will be sent to your registered mobile number and email.</p>
-                </div>
-
-            </form>
-
-            <br>
-            <br>
-
-            <form id="formResetPwd" action="/auth/reset-pwd" method="POST">
-                <div {{#if otpData.otp}}{{else}} hidden {{/if}}class="mb-3">
-
-                    <label for="otp">Validate OTP</label>
-                    <input hidden retype="text" class="form-control" id="otp" name="otp" inputmode="numeric"
-                        style="width: 200px" value="{{otpData.otp}}">
-                    <input required retype="text" class="form-control" id="input_otp" name="input_otp"
-                        inputmode="numeric" style="width: 200px" value="" pattern="[0-9]{1,6}"
-                        aria-describedby="inputOtpHelp">
-                    <div id="inputOtpHelp" class="form-text">Please enter the 6-digit OTP received on your registered
-                        mobile number.
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-body p-4 p-md-5">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <div class="bg-light rounded-circle d-inline-flex p-3 mb-3">
+                            <i class="bi bi-shield-lock text-primary fs-2"></i>
+                        </div>
+                        <h2 class="card-title fw-bold text-primary mb-2">Reset Your Password</h2>
+                        <p class="text-muted">Secure verification process</p>
                     </div>
 
-                    <button type="submit" class="btn btn-success">Validate</button>
+                    <!-- User Information -->
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                    <i class="bi bi-person text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold">Hello, {{userData.username}}!</h6>
+                                    <small class="text-muted">We'll verify your identity before resetting your
+                                        password</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Send OTP Form -->
+                    <form id="formSendOTP" action="/auth/send-otp" method="POST" class="mb-4">
+                        <div class="mb-4">
+                            <h5 class="fw-semibold mb-3 text-primary">
+                                <i class="bi bi-phone me-2"></i>Contact Verification
+                            </h5>
+
+                            <!-- Hidden fields -->
+                            <input type="hidden" id="username" name="username" value="{{userData.username}}">
+
+                            <!-- Mobile Number -->
+                            <div class="mb-3">
+                                <label for="mobile_no" class="form-label fw-semibold">
+                                    <i class="bi bi-telephone me-2"></i>Mobile Number
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-check-circle text-success"></i>
+                                    </span>
+                                    <input type="text" class="form-control form-control-lg bg-light" id="mobile_no"
+                                        name="mobile_no" value="{{userData.mobile_no}}" readonly
+                                        style="font-family: 'Courier New', monospace;">
+                                </div>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Your registered mobile number
+                                </div>
+                            </div>
+
+                            <!-- Email Address -->
+                            <div class="mb-4">
+                                <label for="email_id" class="form-label fw-semibold">
+                                    <i class="bi bi-envelope me-2"></i>Email Address
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-check-circle text-success"></i>
+                                    </span>
+                                    <input type="email" class="form-control form-control-lg bg-light" id="email_id"
+                                        name="email_id" value="{{userData.email_id}}" readonly
+                                        style="font-family: 'Courier New', monospace;">
+                                </div>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Your registered email address
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OTP Send Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-semibold py-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-send" viewBox="0 0 16 16">
+                                    <path
+                                        d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z" />
+                                </svg>
+                                <i class="bi bi-send{{#if otpData.otp}}-check{{/if}} me-2"></i>
+                                {{#if otpData.otp}}Resend OTP{{else}}Send OTP{{/if}}
+                            </button>
+                        </div>
+
+                        <!-- OTP Information -->
+                        <div class="alert alert-info mt-3 mb-0">
+                            <div class="d-flex">
+                                <i class="bi bi-info-circle me-2 mt-1"></i>
+                                <div>
+                                    <small>
+                                        <strong>One-Time Password (OTP)</strong> will be sent to your registered
+                                        mobile number and email address for verification.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- OTP Validation Form -->
+                    <form id="formResetPwd" action="/auth/reset-pwd" method="POST" {{#if
+                        otpData.otp}}{{else}}hidden{{/if}}>
+                        <div class="border-top pt-4 mt-4">
+                            <h5 class="fw-semibold mb-3 text-success">
+                                <i class="bi bi-shield-check me-2"></i>Verify OTP
+                            </h5>
+
+                            <!-- Hidden OTP field -->
+                            <input type="hidden" id="otp" name="otp" value="{{otpData.otp}}">
+
+                            <!-- OTP Input -->
+                            <div class="mb-4">
+                                <label for="input_otp" class="form-label fw-semibold">
+                                    <i class="bi bi-key me-2"></i>Enter 6-Digit OTP
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-chat-square-text"></i>
+                                    </span>
+                                    <input type="text" class="form-control text-center" id="input_otp" name="input_otp"
+                                        inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="••••••"
+                                        required
+                                        style="font-family: 'Courier New', monospace; font-size: 1.5rem; letter-spacing: 0.5em;">
+                                </div>
+                                <div class="form-text text-center">
+                                    <i class="bi bi-clock me-1"></i>
+                                    Enter the 6-digit verification code sent to your mobile and email
+                                </div>
+                            </div>
+
+                            <!-- Validation Button -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg fw-semibold py-3">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Verify & Continue
+                                </button>
+                            </div>
+
+                            <!-- OTP Instructions -->
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <div class="d-flex">
+                                    <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
+                                    <div>
+                                        <small>
+                                            <strong>Important:</strong> OTP is valid for a limited time only.
+                                            If you didn't receive the OTP, click "Resend OTP" above.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Progress Indicator -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center small text-muted mb-2">
+                            <span>Step 1: Send OTP</span>
+                            <span>Step 2: Verify OTP</span>
+                            <span>Step 3: New Password</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar {{#if otpData.otp}}w-66{{else}}w-33{{/if}}" role="progressbar"
+                                aria-valuenow="{{#if otpData.otp}}66{{else}}33{{/if}}" aria-valuemin="0"
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-            </form>
-
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Auto-focus OTP input when form becomes visible
+        const otpForm = document.getElementById('formResetPwd');
+        const otpInput = document.getElementById('input_otp');
+
+        if (otpForm && otpInput && !otpForm.hidden) {
+            otpInput.focus();
+        }
+
+        // Auto-advance OTP input (for better UX if implementing 6 individual fields)
+        otpInput?.addEventListener('input', function (e) {
+            if (this.value.length === this.maxLength) {
+                // Optional: auto-submit when 6 digits are entered
+                // document.getElementById('formResetPwd').submit();
+            }
+        });
+
+        // Format OTP input for better readability
+        otpInput?.addEventListener('keypress', function (e) {
+            const charCode = e.which ? e.which : e.keyCode;
+            if (charCode < 48 || charCode > 57) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Show/hide OTP form based on OTP availability
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'hidden') {
+                    if (!otpForm.hidden && otpInput) {
+                        otpInput.focus();
+                    }
+                }
+            });
+        });
+
+        if (otpForm) {
+            observer.observe(otpForm, { attributes: true });
+        }
+    });
+</script>
+
+<style>
+    .card {
+        border-radius: 1rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    .form-control:read-only {
+        background-color: #f8f9fa;
+        border-color: #e9ecef;
+        color: #495057;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+        border: none;
+        transition: all 0.3s ease;
+        padding: 0.65rem 1.2rem !important;
+        /* reduced padding */
+        font-size: 1rem;
+        /* slightly smaller text */
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover,
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    }
+
+    .bg-light.rounded-circle {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+    }
+
+    .progress-bar {
+        background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%);
+        transition: width 0.5s ease-in-out;
+    }
+
+    /* OTP input styling */
+    #input_otp::placeholder {
+        letter-spacing: 0.3em;
+        color: #6c757d;
+        opacity: 0.7;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 2rem 1.5rem !important;
+        }
+
+        .form-control-lg {
+            font-size: 16px;
+        }
+
+        #input_otp {
+            font-size: 1.25rem !important;
+            letter-spacing: 0.3em !important;
+        }
+    }
+</style>

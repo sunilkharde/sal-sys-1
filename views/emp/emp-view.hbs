@@ -1,57 +1,283 @@
-<div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h4 style=" margin-bottom: 20px;">List of Employees</h4>
-        <a href="/emp/create" class="btn btn-success">Create New</a>
+<style>
+    .emp-view-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+
+    .emp-view-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eaeaea;
+    }
+
+    .emp-view-title {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .btn-success {
+        background: #10b981;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-success:hover {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .emp-table-container {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .emp-data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .emp-data-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #374151;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .emp-data-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: #4b5563;
+    }
+
+    .emp-data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .emp-data-table tr:hover {
+        background: #f9fafb;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .bg-secondary {
+        background: #6b7280 !important;
+    }
+
+    .bg-info {
+        background: #06b6d4 !important;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        border: 1px solid #e5e7eb;
+        background: white;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    /* DataTable Customization */
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        padding: 1rem;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 0.5rem;
+        margin-left: 0.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_length select {
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 0.5rem;
+        margin: 0 0.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        border: 1px solid #d1d5db !important;
+        border-radius: 4px !important;
+        margin: 0 0.25rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .emp-view-container {
+            padding: 1rem;
+        }
+
+        .emp-view-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .emp-data-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .emp-data-table {
+            min-width: 800px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+        }
+    }
+</style>
+
+<div class="emp-view-container">
+    <div class="emp-view-header">
+        <h1 class="emp-view-title">Employee Management</h1>
+        <a href="/emp/create" class="btn btn-success">
+            <i class="bi bi-plus-circle me-2"></i>Add Employee
+        </a>
     </div>
 
-    <table class="table" id="empTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Employee Name</th>
-                <th>Desg</th>
-                <th>HQ</th>
-                <th>Company</th>
-                <th>Off Day</th>
-                <th>Boss</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each employees}}
-            <tr>
-                <td>{{this.emp_id}}</td>
-                <td>{{this.emp_name}}</td>
-                <td>{{this.desg_name}}</td>
-                <td>{{this.hq_name}}</td>
-                <td>{{this.bu_name}}</td>
-                <td>{{this.off_day}}</td>
-                <td>{{this.boss_name}}</td>
-                <td>
-                    <!-- <a href="/emp/viewByID/{{this.emp_id}}" class="btn btn-secondary btn-sm">
-                        <i class="bi bi-eye"></i>
-                    </a> -->
-                    <a href="/emp/update/{{this.emp_id}}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    {{#isEqual ../user.user_role "Admin"}}
-                    <a href="/emp/delete/{{this.emp_id}}" class="btn btn-danger btn-sm"
-                        onclick="return confirm('Are you sure?')">
-                        <i class="bi bi-trash"></i>
-                    </a>
-                    {{/isEqual}}
-                </td>
-            </tr>
-            {{/each}}
-        </tbody>
-    </table>
-
-    <script>
-        $(document).ready(function () {
-            $('#empTable').dataTable({
-                pageLength: 10
-            });
-        });
-    </script>
-
+    <div class="emp-table-container">
+        <div class="emp-data-table-wrapper">
+            <div class="table-responsive">
+                <table class="table emp-data-table" id="empTable">
+                    <thead>
+                        <tr>
+                            <th width="80">ID</th>
+                            <th>Employee Name</th>
+                            <th>Designation</th>
+                            <th>Headquarters</th>
+                            <th>Business Unit</th>
+                            <th width="100">Off Day</th>
+                            <th>Manager</th>
+                            <th width="120" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each employees}}
+                        <tr>
+                            <td class="fw-bold text-primary text-center">{{this.emp_id}}</td>
+                            <td class="fw-medium">{{this.emp_name}}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{this.desg_name}}</span>
+                            </td>
+                            <td>{{this.hq_name}}</td>
+                            <td>
+                                <div class="text-sm text-muted">{{this.bu_code}}</div>
+                                <div class="fw-medium">{{this.bu_name}}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">{{this.off_day}}</span>
+                            </td>
+                            <td class="text-sm">{{this.boss_name}}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="/emp/update/{{this.emp_id}}" class="btn btn-primary btn-sm action-btn"
+                                        data-bs-toggle="tooltip" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {{#isEqual ../user.user_role "Admin"}}
+                                    <a href="/emp/delete/{{this.emp_id}}" class="btn btn-danger btn-sm action-btn"
+                                        onclick="return confirm('Delete {{this.emp_name}}?')" data-bs-toggle="tooltip"
+                                        title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {{/isEqual}}
+                                </div>
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+        $('#empTable').DataTable({
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            responsive: true,
+            autoWidth: false,
+            /*language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search employees...",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ employees",
+                infoEmpty: "No employees found",
+                infoFiltered: "(filtered from _MAX_ total employees)"
+            },*/
+            /*dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+            initComplete: function () {
+                $('.dataTables_filter input').addClass('form-control');
+                $('.dataTables_length select').addClass('form-select');
+            }*/
+        });
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>

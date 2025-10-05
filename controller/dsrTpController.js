@@ -107,145 +107,6 @@ class dsrTpController {
         }
     }
 
-    static create = async (req, res) => {
-        //const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, ftp_date, status, 'sr_no[]': sr_no, 'bu_ids[]': bu_ids, 'bu_names[]': bu_names, 'allow_id[]': allow_id, 'product_name[]': product_name, 'qty[]': qty, 'rate[]': rate, 'amount[]': amount } = req.body;
-        const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, ftp_date, status, sr_no, bu_ids, bu_names, allow_id, product_name, qty, rate, amount } = req.body;
-        const data = req.body  //dsr_date, emp_id, po_no_new, 
-        const [customer_list, bu_list] = await this.getData(req, res.locals.user);
-
-        var errors = [];
-        if (!customer_id) {
-            errors.push({ message: 'Customer name is required' });
-        }
-        if (!bu_id_hdn) {
-            errors.push({ message: 'Select business unit' });
-        }
-        if (!exp_date) {
-            errors.push({ message: 'Select expected date' });
-        }
-        // if (isNaN(rate) || rate <= 0) {
-        //     errors.push({ message: 'Price must be a number' });
-        // }
-        //const conn = await pool.getConnection();
-        const row = await executeQuery("SELECT DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d') as dsr_date;")
-        //conn.release
-        var sysDate = row[0].dsr_date;
-        if (exp_date < sysDate) {
-            errors.push({ message: 'Expected date should greater than today' });
-        }
-        //
-        if (errors.length) {
-            res.render('dsr/dsr-create', { errors, data, customer_list, bu_list });
-            return;
-        }
-
-        try {
-            // Get CURRENT_DATE
-            //const conn1 = await pool.getConnection();
-            const row = await executeQuery("SELECT DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d') as dsr_date;")
-            // conn1.release
-            const curDate = row[0].dsr_date;
-            // Genrate max Customer id
-            // const conn2 = await pool.getConnection();
-            const rows1 = await executeQuery(`SELECT Max(emp_id) AS maxNumber FROM po_hd Where dsr_date='${curDate}'`);
-            // conn2.release
-            var nextPoNo = rows1[0].maxNumber + 1;
-            var poNoNew = 'NJ' + curDate.replace(/-/g, '') + nextPoNo.toString().padStart(3, '0');
-
-            // Insert new record into database
-            // const conn3 = await pool.getConnection();
-            // await conn3.beginTransaction();
-            var status_new = status !== null && status !== undefined ? status : 'A';
-            var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-            const sqlStr = "INSERT INTO po_hd (dsr_date,emp_id,po_no_new,customer_id,exp_date,bu_id,posted,ftp_date,status,c_at,c_by)" +
-                " VALUES (?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
-            const params = [curDate, nextPoNo, poNoNew, customer_id, exp_date, bu_id_hdn, 'Y', ftp_date, status_new, c_by];
-            await executeQuery(sqlStr, params);
-            // await conn3.commit();
-            // conn3.release
-
-            const allow_id_val = Array.isArray(allow_id) ? allow_id : [allow_id];
-            const qty_val = Array.isArray(qty) ? qty : [qty];
-            const rate_val = Array.isArray(rate) ? rate : [rate];
-            const amount_val = Array.isArray(amount) ? amount : [amount];
-            for (let i = 0; i < allow_id_val.length; i++) {
-                let sr_no_val = (i + 1) * 10;
-                const sqlStr2 = "INSERT INTO po_dt (dsr_date, emp_id, sr_no, bu_id, allow_id, qty, rate, amount)" +
-                    " VALUES (?,?,?,?,?,?,?,?)"
-                const paramsDt = [curDate, nextPoNo, sr_no_val, bu_id_hdn, allow_id_val[i], qty_val[i], rate_val[i], amount_val[i]];
-                await executeQuery(sqlStr2, paramsDt); //const [result2] =
-            }
-
-            // await conn4.commit();
-            // conn4.release
-
-            //return res.render('dsr/dsr-view', { alert: `Save Customer successfully` });
-            res.redirect('/dsr/view');
-            //res.redirect('/');
-
-        } catch (err) {
-            console.error(err);
-            return res.render('dsr/dsr-view', { alert: `Internal server error` });
-        } finally {
-            //conn.release();
-        }
-    };
-
-    /***** */
-    static viewPM = async (req, res) => {
-        try {
-            const sqlStr = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
-                " STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y') as month_date" +
-                " FROM month_open Where status='O'"
-            const monData = await executeQuery(sqlStr);
-            if (monData.length === 0) {
-                res.status(404).send("<h1>Month is not open.</h1>");
-                return;
-            }
-            const from_date = moment(monData[0].month_date);
-            const to_date = from_date.clone().endOf('month');
-
-            //Get login user details
-            const sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
-                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
-                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
-                " FROM employees as a, designations as b, hqs as c, employees as d" +
-                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.user_id=?"
-            const params = [res.locals.user.user_id];
-            const mgData = await executeQuery(sqlStr1, params);
-            let mgID = 0;
-            if (mgData.length > 0) {
-                mgID = mgData[0].emp_id;
-                //     res.status(404).send("<h1>This user has no mapping with an employee.</h1>");
-                //     return;
-            }
-
-            //Get manager team list
-            var sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
-                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
-                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name, IFNULL(COUNT(e.tp_route), 0) as tp_count" +
-                " FROM employees as a LEFT JOIN designations as b ON (a.desg_id=b.desg_id)" +
-                " LEFT JOIN hqs as c ON (a.hq_id=c.hq_id)" +
-                " LEFT JOIN employees as d ON (a.boss_id=d.emp_id)" +
-                " LEFT JOIN dsr_1 as e ON (a.emp_id=e.emp_id and e.dsr_date Between ? and ?)" +
-                " Where a.status='A'"
-            const sqlGroupBy = " Group By a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name)," +
-                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day,a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name)"
-            if (!["Admin", "Read", "Support"].includes(res.locals.user.user_role)) {
-                sqlStr2 = sqlStr2 + ` and (a.boss_id=${mgID})`;
-            }
-            // console.log('MySQL Query : ' + sqlStr2 + sqlGroupBy)
-            const params2 = [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD')];
-            const empList = await executeQuery(sqlStr2 + sqlGroupBy, params2);
-
-            res.render('dsrTp/dsrTp-view-pm', { layout: 'mobile', monData: monData[0], mgData: mgData[0], empList, teamSize: empList.length });
-
-        } catch (error) {
-            console.error(error);
-            // Handle the error
-        }
-    }
-
     static viewAll = async (req, res) => {
         const alert = req.query.alert;
         try {
@@ -333,97 +194,366 @@ class dsrTpController {
         }
     }
 
-    /***** */
-    static edit = async (req, res) => {
-        const { emp_id } = req.params;
-        let sqlTp = "";
+    static create = async (req, res) => {
+        //const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, ftp_date, status, 'sr_no[]': sr_no, 'bu_ids[]': bu_ids, 'bu_names[]': bu_names, 'allow_id[]': allow_id, 'product_name[]': product_name, 'qty[]': qty, 'rate[]': rate, 'amount[]': amount } = req.body;
+        const { customer_id, customer_name, exp_date, bu_id_hdn, bu_name, posted, ftp_date, status, sr_no, bu_ids, bu_names, allow_id, product_name, qty, rate, amount } = req.body;
+        const data = req.body  //dsr_date, emp_id, po_no_new, 
+        const [customer_list, bu_list] = await this.getData(req, res.locals.user);
+
+        var errors = [];
+        if (!customer_id) {
+            errors.push({ message: 'Customer name is required' });
+        }
+        if (!bu_id_hdn) {
+            errors.push({ message: 'Select business unit' });
+        }
+        if (!exp_date) {
+            errors.push({ message: 'Select expected date' });
+        }
+        // if (isNaN(rate) || rate <= 0) {
+        //     errors.push({ message: 'Price must be a number' });
+        // }
+        //const conn = await pool.getConnection();
+        const row = await executeQuery("SELECT DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d') as dsr_date;")
+        //conn.release
+        var sysDate = row[0].dsr_date;
+        if (exp_date < sysDate) {
+            errors.push({ message: 'Expected date should greater than today' });
+        }
+        //
+        if (errors.length) {
+            res.render('dsr/dsr-create', { errors, data, customer_list, bu_list });
+            return;
+        }
+
         try {
-            const sqlStr0 = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
+            // Get CURRENT_DATE
+            //const conn1 = await pool.getConnection();
+            const row = await executeQuery("SELECT DATE_FORMAT(CURRENT_DATE(),'%Y-%m-%d') as dsr_date;")
+            // conn1.release
+            const curDate = row[0].dsr_date;
+            // Genrate max Customer id
+            // const conn2 = await pool.getConnection();
+            const rows1 = await executeQuery(`SELECT Max(emp_id) AS maxNumber FROM po_hd Where dsr_date='${curDate}'`);
+            // conn2.release
+            var nextPoNo = rows1[0].maxNumber + 1;
+            var poNoNew = 'NJ' + curDate.replace(/-/g, '') + nextPoNo.toString().padStart(3, '0');
+
+            // Insert new record into database
+            // const conn3 = await pool.getConnection();
+            // await conn3.beginTransaction();
+            var status_new = status !== null && status !== undefined ? status : 'A';
+            var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
+            const sqlStr = "INSERT INTO po_hd (dsr_date,emp_id,po_no_new,customer_id,exp_date,bu_id,posted,ftp_date,status,c_at,c_by)" +
+                " VALUES (?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP( ),?)"
+            const params = [curDate, nextPoNo, poNoNew, customer_id, exp_date, bu_id_hdn, 'Y', ftp_date, status_new, c_by];
+            await executeQuery(sqlStr, params);
+            // await conn3.commit();
+            // conn3.release
+
+            const allow_id_val = Array.isArray(allow_id) ? allow_id : [allow_id];
+            const qty_val = Array.isArray(qty) ? qty : [qty];
+            const rate_val = Array.isArray(rate) ? rate : [rate];
+            const amount_val = Array.isArray(amount) ? amount : [amount];
+            for (let i = 0; i < allow_id_val.length; i++) {
+                let sr_no_val = (i + 1) * 10;
+                const sqlStr2 = "INSERT INTO po_dt (dsr_date, emp_id, sr_no, bu_id, allow_id, qty, rate, amount)" +
+                    " VALUES (?,?,?,?,?,?,?,?)"
+                const paramsDt = [curDate, nextPoNo, sr_no_val, bu_id_hdn, allow_id_val[i], qty_val[i], rate_val[i], amount_val[i]];
+                await executeQuery(sqlStr2, paramsDt); //const [result2] =
+            }
+
+            // await conn4.commit();
+            // conn4.release
+
+            //return res.render('dsr/dsr-view', { alert: `Save Customer successfully` });
+            res.redirect('/dsr/view');
+            //res.redirect('/');
+
+        } catch (err) {
+            console.error(err);
+            return res.render('dsr/dsr-view', { alert: `Internal server error` });
+        } finally {
+            //conn.release();
+        }
+    };
+
+
+    /***** DSR Start for Open/Post Month */
+    static viewPM = async (req, res) => {
+        try {
+            const { next_month } = req.query; // Flag to indicate next month view
+
+            const sqlStr = "Select year, month, DATE_FORMAT(STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y'),'%M') as month_name," +
                 " STR_TO_DATE(CONCAT('1/',month,'/',year),'%d/%m/%Y') as month_date" +
                 " FROM month_open Where status='O'"
-            const monData = await executeQuery(sqlStr0);
+            const monData = await executeQuery(sqlStr);
             if (monData.length === 0) {
-                res.status(404).send("<h1>Month is not open</h1>");
+                res.status(404).send("<h1>Month is not open.</h1>");
                 return;
             }
-            const from_date = moment(monData[0].month_date);
-            const to_date = from_date.clone().endOf('month');
 
-            const sqlStr1 = "Select * From dsr_1 Where emp_id=? and dsr_date=?"
-            const params1 = [emp_id, monData[0].month_date];
-            const dsrData = await executeQuery(sqlStr1, params1);
+            // Adjust month for next month planning
+            let displayMonData = { ...monData[0] };
+            let isNextMonth = false;
 
-            if (dsrData.length === 0) {
-                const numDays = to_date.diff(from_date, 'days');
-                var c_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-
-                for (let i = 0; i <= numDays; i++) {
-                    const sqlStr = "INSERT INTO dsr_1 (emp_id,dsr_date,c_at,c_by)" +
-                        " VALUES (?,?,CURRENT_TIMESTAMP( ),?)"
-                    const paramsDt = [emp_id, from_date.format('YYYY-MM-DD'), c_by];
-                    await executeQuery(sqlStr, paramsDt);
-
-                    from_date.add(1, 'day');
-                }
-
-                sqlTp = "Select a.emp_id, a.dsr_date, a.post_mg, c.hq_name as from_city, a.to_city," +
-                    " DATE_FORMAT(a.dsr_date,'%a') as tp_day, DATE_FORMAT(a.dsr_date,'%d') as tp_date," +
-                    " b.off_day, c.hq_name" +
-                    " FROM dsr_1 as a, employees as b, hqs as c" +
-                    " Where a.emp_id=b.emp_id and b.hq_id=c.hq_id and a.dsr_date Between ? and ? and a.emp_id=?" +
-                    " Order By a.dsr_date";
-            } else {
-                // sqlTp = "Select a.emp_id, a.dsr_date, a.post_mg, IF(a.tp_route Is Null, c.hq_name, a.from_city) as from_city, a.to_city," +
-                //     " DATE_FORMAT(a.dsr_date,'%a') as tp_day, DATE_FORMAT(a.dsr_date,'%d') as tp_date," +
-                //     " b.off_day, c.hq_name" +
-                //     " FROM dsr_1 as a, employees as b, hqs as c" +
-                //     " Where a.emp_id=b.emp_id and b.hq_id=c.hq_id and a.dsr_date Between ? and ? and a.emp_id=?" +
-                //     " Order By a.dsr_date";
-                sqlTp = "SELECT a.emp_id, a.dsr_date, a.post_mg, " +
-                    "IF(d.from IS NULL, IF(a.tp_route IS NULL, c.hq_name, a.from_city), d.from) AS from_city, " +
-                    "IF(d.to IS NULL, a.to_city, d.to) AS to_city, " +
-                    "DATE_FORMAT(a.dsr_date, '%a') AS tp_day, DATE_FORMAT(a.dsr_date, '%d') AS tp_date, " +
-                    "b.off_day, c.hq_name, a.tp_1 as tp_id, CONCAT(d.from, ' To ', d.to) as tp_name " +
-                    "FROM dsr_1 AS a " +
-                    "JOIN employees AS b ON a.emp_id = b.emp_id " +
-                    "JOIN hqs AS c ON b.hq_id = c.hq_id " +
-                    "LEFT JOIN tp_routes AS d ON a.tp_1 = d.tp_id " +
-                    "WHERE a.dsr_date BETWEEN ? AND ? AND a.emp_id = ? " +
-                    "ORDER BY a.dsr_date";
+            if (next_month === 'true') {
+                const from_date = moment(monData[0].month_date).add(1, 'month');
+                displayMonData = {
+                    ...monData[0],
+                    month_date: from_date.toDate(),
+                    month_name: from_date.format('MMMM'),
+                    month: from_date.format('M'),
+                    year: from_date.format('YYYY')
+                };
+                isNextMonth = true;
             }
 
-            //Get employee details
-            const sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+            const from_date = moment(displayMonData.month_date);
+            const to_date = from_date.clone().endOf('month');
+
+            // Get login user details
+            const sqlStr1 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
                 " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
                 " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name" +
                 " FROM employees as a, designations as b, hqs as c, employees as d" +
-                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.emp_id=?"
-            const params2 = [emp_id];
-            const empData = await executeQuery(sqlStr2, params2);
+                " Where a.desg_id=b.desg_id and a.hq_id=c.hq_id and a.boss_id=d.emp_id and a.status='A' and a.user_id=?"
+            const params = [res.locals.user.user_id];
+            const mgData = await executeQuery(sqlStr1, params);
+            let mgID = 0;
+            if (mgData.length > 0) {
+                mgID = mgData[0].emp_id;
+            }
 
-            const paramsTp = [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id];
-            const tpData = await executeQuery(sqlTp, paramsTp);
+            // Get manager team list
+            var sqlStr2 = "Select a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day," +
+                " a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name, IFNULL(COUNT(e.tp_route), 0) as tp_count" +
+                " FROM employees as a LEFT JOIN designations as b ON (a.desg_id=b.desg_id)" +
+                " LEFT JOIN hqs as c ON (a.hq_id=c.hq_id)" +
+                " LEFT JOIN employees as d ON (a.boss_id=d.emp_id)" +
+                " LEFT JOIN dsr_1 as e ON (a.emp_id=e.emp_id and e.dsr_date Between ? and ?)" +
+                " Where a.status='A'"
+            const sqlGroupBy = " Group By a.emp_id, CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name)," +
+                " a.desg_id,b.desg_name,a.hq_id,c.hq_name,a.off_day,a.boss_id, CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name)"
+            if (!["Admin", "Read", "Support"].includes(res.locals.user.user_role)) {
+                sqlStr2 = sqlStr2 + ` and (a.boss_id=${mgID})`;
+            }
 
-            //Get Dist City List
-            const distCityListSql = "Select DISTINCT a.dist, a.city from tp_routes as a Order By 1,2"
-            const distCityList = await executeQuery(distCityListSql);
+            const params2 = [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD')];
+            const empList = await executeQuery(sqlStr2 + sqlGroupBy, params2);
 
-            // console.log('distCityList....', distCityList)
-
-            res.render('dsrTp/dsrTp-edit', { layout: 'mobile', monData: monData[0], empData: empData[0], tpData, distCityList });
+            res.render('dsrTp/dsrTp-view-pm', {
+                layout: 'mobile',
+                monData: displayMonData,
+                mgData: mgData[0],
+                empList,
+                teamSize: empList.length,
+                isNextMonth
+            });
 
         } catch (error) {
             console.error(error);
-            // Handle the error
+            res.status(500).send('Internal Server Error');
         }
     }
+
+    static edit = async (req, res) => {
+        const { emp_id, year, month } = req.params;
+        const { next_month } = req.query;
+
+        try {
+            // Fix: Zero-pad the month to ensure proper format
+            const paddedMonth = month.toString().padStart(2, '0');
+            const month_date = moment(`${year}-${paddedMonth}-01`).format('YYYY-MM-DD');
+            const month_name = moment(month_date).format('MMMM');
+
+            const monData = {
+                year: parseInt(year),
+                month: parseInt(month),
+                month_name: month_name,
+                month_date: month_date
+            };
+
+            // Rest of your code remains the same...
+            const from_date = moment(monData.month_date);
+            const to_date = from_date.clone().endOf('month');
+            const isNextMonth = next_month === 'true';
+
+            // Check if records exist
+            const checkSql = "SELECT COUNT(*) as count FROM dsr_1 WHERE emp_id=? AND dsr_date BETWEEN ? AND ?";
+            const checkParams = [emp_id, from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD')];
+            const countResult = await executeQuery(checkSql, checkParams);
+
+            // Create records only if they don't exist (for next month planning)
+            if (countResult[0].count === 0 && isNextMonth) {
+                const numDays = to_date.diff(from_date, 'days');
+                const c_by = res.locals.user?.user_id || 0;
+
+                const insertValues = [];
+                const currentDate = from_date.clone();
+
+                for (let i = 0; i <= numDays; i++) {
+                    insertValues.push([emp_id, currentDate.format('YYYY-MM-DD'), c_by]);
+                    currentDate.add(1, 'day');
+                }
+
+                if (insertValues.length > 0) {
+                    const placeholders = insertValues.map(() => '(?, ?, CURRENT_TIMESTAMP(), ?)').join(',');
+                    const bulkInsertSql = `INSERT INTO dsr_1 (emp_id, dsr_date, c_at, c_by) VALUES ${placeholders}`;
+                    const flattenedValues = insertValues.flat();
+                    await executeQuery(bulkInsertSql, flattenedValues);
+                }
+            }
+
+            // Get TP data with optimized query
+            const sqlTp = `SELECT 
+            a.emp_id, a.dsr_date, a.post_mg,
+            COALESCE(d.from, IF(a.tp_route IS NULL, c.hq_name, a.from_city)) AS from_city,
+            COALESCE(d.to, a.to_city) AS to_city,
+            DATE_FORMAT(a.dsr_date, '%a') AS tp_day,
+            DATE_FORMAT(a.dsr_date, '%d') AS tp_date,
+            b.off_day, c.hq_name, 
+            a.tp_1 as tp_id,
+            CONCAT(COALESCE(d.from, ''), ' To ', COALESCE(d.to, '')) as tp_name
+            FROM dsr_1 AS a 
+            JOIN employees AS b ON a.emp_id = b.emp_id 
+            JOIN hqs AS c ON b.hq_id = c.hq_id 
+            LEFT JOIN tp_routes AS d ON a.tp_1 = d.tp_id 
+            WHERE a.dsr_date BETWEEN ? AND ? AND a.emp_id = ? 
+            ORDER BY a.dsr_date`;
+
+            // Get employee details
+            const sqlStr2 = `SELECT 
+            a.emp_id, 
+            CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name,
+            a.desg_id, b.desg_name, a.hq_id, c.hq_name, a.off_day,
+            a.boss_id, 
+            CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name
+            FROM employees as a 
+            JOIN designations as b ON a.desg_id=b.desg_id 
+            JOIN hqs as c ON a.hq_id=c.hq_id 
+            JOIN employees as d ON a.boss_id=d.emp_id 
+            WHERE a.status='A' AND a.emp_id=?`;
+
+            // Get location data for filter
+            const distCityListSql = `SELECT DISTINCT dist, city, 
+            CONCAT(dist, ' - ', city) as dist_city 
+            FROM tp_routes 
+            WHERE tp_status = 'A' 
+            ORDER BY dist, city`;
+
+            // Execute all queries in parallel
+            const [tpData, empData, distCityList] = await Promise.all([
+                executeQuery(sqlTp, [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id]),
+                executeQuery(sqlStr2, [emp_id]),
+                executeQuery(distCityListSql)
+            ]);
+
+            const initialLocations = distCityList.slice(0, 50);
+
+            res.render('dsrTp/dsrTp-edit', {
+                layout: 'mobile',
+                monData: monData,
+                empData: empData[0],
+                tpData,
+                combinedDistCityList: initialLocations,
+                tp_list: [],
+                isNextMonth
+            });
+
+        } catch (error) {
+            console.error('Error in edit:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static update = async (req, res) => {
+        const { emp_id, year, month } = req.params;
+        const { next_month } = req.query;
+        const { dsr_date, from_city, to_city, tp_id } = req.body;
+
+        try {
+            var u_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
+
+            const dsr_date_val = Array.isArray(dsr_date) ? dsr_date : [dsr_date];
+            const from_city_val = Array.isArray(from_city) ? from_city : [from_city];
+            const to_city_val = Array.isArray(to_city) ? to_city : [to_city];
+            const tp_id_val = Array.isArray(tp_id) ? tp_id : [tp_id];
+
+            for (let i = 0; i < dsr_date_val.length; i++) {
+                const from_city_title = from_city_val[i] ? titleCase(from_city_val[i]) : null;
+                const to_city_title = to_city_val[i] ? titleCase(to_city_val[i]) : null;
+
+                const sqlStrDt = "UPDATE dsr_1 Set tp_route=?, from_city=?, to_city=?, tp_1=?, tp_2=?, u_at=CURRENT_TIMESTAMP,u_by=? Where dsr_date=? and emp_id=?"
+                const paramsDt = [to_city_title, from_city_title, to_city_title, tp_id_val[i], tp_id_val[i], u_by, dsr_date_val[i], emp_id];
+                await executeQuery(sqlStrDt, paramsDt);
+            }
+
+            // Redirect based on context
+            const redirectPath = next_month === 'true' ? '/dsrTp/view-pm?next_month=true&alert=Update+Records+successfully'
+                : '/dsrTp/view-pm?alert=Update+Records+successfully';
+            res.redirect(redirectPath);
+
+        } catch (err) {
+            console.error(err);
+            return res.render('dsr/dsr-view', { alert: `Internal server error` });
+        }
+    };
+
+    /***** DSR End for Open/Post Month*/
+
+
+    /***** TP Routes Start */
+    static getRoutesByLocation = async (req, res) => {
+        try {
+            const { dist, city, page = 1, limit = 100 } = req.query;
+            const offset = (page - 1) * limit;
+
+            let sql = `SELECT tp_id, CONCAT(\`from\`, ' To ', \`to\`) as tp_name, dist, city 
+                   FROM tp_routes 
+                   WHERE tp_status = 'A'`;
+
+            let params = [];
+
+            if (dist && city) {
+                sql += ` AND dist = ? AND city = ?`;
+                params = [dist, city];
+            } else if (dist) {
+                sql += ` AND dist = ?`;
+                params = [dist];
+            } else if (city) {
+                sql += ` AND city = ?`;
+                params = [city];
+            }
+
+            sql += ` ORDER BY \`from\`, \`to\` LIMIT ? OFFSET ?`;
+            params.push(parseInt(limit), parseInt(offset));
+
+            const routes = await executeQuery(sql, params);
+
+            res.json({
+                success: true,
+                routes,
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    hasMore: routes.length === parseInt(limit)
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching routes:', error);
+            res.status(500).json({ success: false, error: 'Failed to fetch routes' });
+        }
+    };
+
     static getFixRoutes = async (req, res) => {
         const { dist, city } = req.query;
         try {
             // console.log('Fetching TP routes for:', dist, city);
             const sqlStr1 = `SELECT a.tp_id, CONCAT(a.from,' --to-- ', a.to) as tp_name
                 FROM tp_routes as a WHERE a.dist=? AND a.city=?`
-                // Union Select '' as tp_id, '(Select)' as tp_name from dual`
+            // Union Select '' as tp_id, '(Select)' as tp_name from dual`
             const params = [dist, city];
             const tp_list = await executeQuery(sqlStr1, params);
             // console.log('TP routes fetched:', tp_list);
@@ -434,7 +564,6 @@ class dsrTpController {
         }
     }
 
-    /***** */
     static getTP = async (req, res) => {
         const { emp_id, year, month } = req.params;
         try {
@@ -482,7 +611,7 @@ class dsrTpController {
             const paramsTp = [from_date_lm.format('YYYY-MM-DD'), to_date_lm.format('YYYY-MM-DD'),
             from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id];
             const tpData = await executeQuery(sqlTp, paramsTp);
-            
+
             res.render('dsrTp/dsrTp-edit', { layout: 'mobile', monData: monData[0], empData: empData[0], tpData });
 
         } catch (error) {
@@ -515,49 +644,8 @@ class dsrTpController {
             res.status(500).send('Internal Server Error');
         }
     };
+    /***** TP Routes End */
 
-    /***** */
-    static update = async (req, res) => {
-        const { emp_id } = req.params;
-        const { dsr_date, from_city, to_city, tp_id } = req.body;
-        // const data = req.body
-
-        // var errors = [];
-        // if (!atten_flag || atten_flag === 'XX') {
-        //     errors.push({ message: 'Attendance (Status) flag is required' });
-        // }
-        // if (errors.length) {
-        //     res.render('dsr/dsr-edit', { layout: 'mobile', errors, data, data2: results2, data3: results3[0], atten_flag_list, allow_list, postFlag });
-        //     return;
-        // }
-
-        try {
-            var u_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
-
-            const dsr_date_val = Array.isArray(dsr_date) ? dsr_date : [dsr_date];
-            const from_city_val = Array.isArray(from_city) ? from_city : [from_city];
-            const to_city_val = Array.isArray(to_city) ? to_city : [to_city];
-            const tp_id_val = Array.isArray(tp_id) ? tp_id : [tp_id];
-
-            for (let i = 0; i < dsr_date.length; i++) {
-                // if (amount_val[i] > 0) {
-                const from_city_title = from_city_val[i] ? titleCase(from_city_val[i]) : null;
-                const to_city_title = to_city_val[i] ? titleCase(to_city_val[i]) : null;
-
-                const sqlStrDt = "UPDATE dsr_1 Set tp_route=?, from_city=?, to_city=?, tp_1=?, tp_2=?, u_at=CURRENT_TIMESTAMP,u_by=? Where dsr_date=? and emp_id=?"
-                const paramsDt = [to_city_title, from_city_title, to_city_title, tp_id_val[i], tp_id_val[i], u_by, dsr_date_val[i], emp_id];
-                await executeQuery(sqlStrDt, paramsDt);
-                // }
-            }
-
-            res.redirect('/dsrTp/view-pm?alert=Update+Records+successfully');
-            // res.redirect(`/dsr/post-edit?selectedEmpID=${emp_id}`);
-
-        } catch (err) {
-            console.error(err);
-            return res.render('dsr/dsr-view', { alert: `Internal server error` });
-        }
-    };
 
     static postPM = async (req, res) => {
         try {

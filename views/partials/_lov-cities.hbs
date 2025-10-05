@@ -12,33 +12,35 @@
                 </div>
                 <div class="modal-body">
 
-                    <table class="table" id="cityTable">
-                        <thead>
-                            <tr>
-                                <th>City</th>
-                                <th>Pin Code</th>
-                                <th>District</th>
-                                <th>State</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#each cities_list}}
-                            <tr>
-                                <td>{{this.city}}</td>
-                                <td>{{this.pin_code}}</td>
-                                <td>{{this.district}}</td>
-                                <td>{{this.state}}</td>
-                                <td style="text-align: center;">
-                                    <button type="button" class="btn btn-info btn-sm"
-                                        onclick="handleSelectButtonCity(this)">
-                                        <i class="bi bi-check2-square"></i>&nbsp;Select
-                                    </button>
-                                </td>
-                            </tr>
-                            {{/each}}
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table" id="cityTable">
+                            <thead>
+                                <tr>
+                                    <th>City</th>
+                                    <th>Pin Code</th>
+                                    <th>District</th>
+                                    <th>State</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#each cities_list}}
+                                <tr>
+                                    <td>{{this.city}}</td>
+                                    <td>{{this.pin_code}}</td>
+                                    <td>{{this.district}}</td>
+                                    <td>{{this.state}}</td>
+                                    <td style="text-align: center;">
+                                        <button type="button" class="btn btn-info btn-sm"
+                                            onclick="handleSelectButtonCity(this)">
+                                            <i class="bi bi-check2-square"></i>&nbsp;Select
+                                        </button>
+                                    </td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
 
                 </div>
                 {{!-- <div class="modal-footer">

@@ -81,143 +81,149 @@
             <br>
 
             {{#if dsrData }}
-            <table class="table" id="dsrDataTable">
-                <thead>
-                    <tr>
-                        <th hidden>Date1</th>
-                        <th style="width:10%;">Date</th>
-                        <th style="width:10%;">Status</th>
-                        <th style="width:10%;">HR Flag</th>
-                        <th style="width:13.33%;">From City</th>
-                        <th style="width:13.33%;">To City</th>
-                        <th style="width:13.33%;">Stay</th>
-                        <th style="width:10%; text-align: end;">Lodging</th>
-                        <th style="width:10%; text-align: end;">DA</th>
-                        <th style="width:10%; text-align: end;">Fare</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each dsrData}}
-                    <tr>
-                        <td hidden>{{momentYMD this.dsr_date}}</td>
-                        <td>{{momentDMY this.dsr_date}}</td>
-                        <td>{{this.atten_flag}}</td>
-                        <td>{{this.hr_flag}}</td>
-                        <td>{{this.from_city}}</td>
-                        <td>{{this.to_city}}</td>
-                        <td>{{this.stay_city}}</td>
-                        <td style="text-align: end;">
-                            <span id="RTotalLodge">{{this.total_lodge}}</span>
-                        </td>
-                        <td style="text-align: end;">
-                            <span id="RTotalAllow">{{this.total_allow}}</span>
-                        </td>
-                        <td style="text-align: end;">
-                            <span id="RTotalExp">{{this.total_exp}}</span>
-                        </td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table" id="dsrDataTable">
+                    <thead>
+                        <tr>
+                            <th hidden>Date1</th>
+                            <th style="width:10%;">Date</th>
+                            <th style="width:10%;">Status</th>
+                            <th style="width:10%;">HR Flag</th>
+                            <th style="width:13.33%;">From City</th>
+                            <th style="width:13.33%;">To City</th>
+                            <th style="width:13.33%;">Stay</th>
+                            <th style="width:10%; text-align: end;">Lodging</th>
+                            <th style="width:10%; text-align: end;">DA</th>
+                            <th style="width:10%; text-align: end;">Fare</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each dsrData}}
+                        <tr>
+                            <td hidden>{{momentYMD this.dsr_date}}</td>
+                            <td>{{momentDMY this.dsr_date}}</td>
+                            <td>{{this.atten_flag}}</td>
+                            <td>{{this.hr_flag}}</td>
+                            <td>{{this.from_city}}</td>
+                            <td>{{this.to_city}}</td>
+                            <td>{{this.stay_city}}</td>
+                            <td style="text-align: end;">
+                                <span id="RTotalLodge">{{this.total_lodge}}</span>
+                            </td>
+                            <td style="text-align: end;">
+                                <span id="RTotalAllow">{{this.total_allow}}</span>
+                            </td>
+                            <td style="text-align: end;">
+                                <span id="RTotalExp">{{this.total_exp}}</span>
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
 
             <div class="row mb-2">
                 <div class="col-sm-3">
-                    <table class="table" id="dsrAttenTable">
-                        <thead>
-                            <tr>
-                                <th>Status</th>
-                                <th style="text-align: end;">Days</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#each dsrAtten}}
-                            <tr>
-                                <td class="col-1">{{this.atten_flag}}</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="atten_days">
-                                        {{this.atten_cnt}}
-                                    </span>
-                                </td>
-                            </tr>
-                            {{/each}}
-                            <tr>
-                                <td class="col-1"><strong>Total Days</strong></td>
-                                <td class="col-1" style="text-align: end;"><strong><span id="totalDays"></strong></span>
-                                </td>
-                            </tr>
+                    <div class="table-responsive">
+                        <table class="table" id="dsrAttenTable">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th style="text-align: end;">Days</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#each dsrAtten}}
+                                <tr>
+                                    <td class="col-1">{{this.atten_flag}}</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="atten_days">
+                                            {{this.atten_cnt}}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {{/each}}
+                                <tr>
+                                    <td class="col-1"><strong>Total Days</strong></td>
+                                    <td class="col-1" style="text-align: end;"><strong><span id="totalDays"></strong></span>
+                                    </td>
+                                </tr>
 
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="col-sm-1"> </div>
                 <div class="col-sm-3">
-                    <table class="table" id="dsrSumTable">
-                        <thead>
-                            <tr>
-                                <th>Particulars</th>
-                                <th style="text-align: end;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="col-1">Total DA</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="GTotalAllow"></span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="col-1">Total Lodging</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="GTotalLodge"></span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="col-1">Total Fare</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="GTotalExp"></span>
-                                </td>
-                            </tr>
+                    <div class="table-responsive">
+                        <table class="table" id="dsrSumTable">
+                            <thead>
+                                <tr>
+                                    <th>Particulars</th>
+                                    <th style="text-align: end;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="col-1">Total DA</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="GTotalAllow"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-1">Total Lodging</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="GTotalLodge"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-1">Total Fare</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="GTotalExp"></span>
+                                    </td>
+                                </tr>
 
-                            <tr>
-                                <td class="col-1">Stationary</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="stationaryVal">{{dsrSum.stationary_val}}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="col-1">Postage</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="postageVal">{{dsrSum.postage_val}}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="col-1">Internet</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="internetVal">{{dsrSum.internet_val}}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="col-1">Other</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="otherVal">{{dsrSum.other_val}}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="col-1"><strong>Total Amount</strong></td>
-                                <td class="col-2" style="text-align: end;">
-                                    <strong> <span style="font: bold;" id="GTotal"></span> </strong>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td class="col-1">Stationary</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="stationaryVal">{{dsrSum.stationary_val}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-1">Postage</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="postageVal">{{dsrSum.postage_val}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-1">Internet</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="internetVal">{{dsrSum.internet_val}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-1">Other</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="otherVal">{{dsrSum.other_val}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-1"><strong>Total Amount</strong></td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <strong> <span style="font: bold;" id="GTotal"></span> </strong>
+                                    </td>
+                                </tr>
 
-                            <tr>
-                                <td class="col-1">Remarks</td>
-                                <td class="col-2" style="text-align: end;">
-                                    <span id="remarksVal">{{dsrSum.remarks}}</span>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td class="col-1">Remarks</td>
+                                    <td class="col-2" style="text-align: end;">
+                                        <span id="remarksVal">{{dsrSum.remarks}}</span>
+                                    </td>
+                                </tr>
 
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             {{else}}

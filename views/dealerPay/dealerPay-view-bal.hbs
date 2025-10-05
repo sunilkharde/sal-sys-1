@@ -4,43 +4,45 @@
         {{!-- <a href="/dealerPay/create" class="btn btn-success">Create New</a> --}}
     </div>
 
-    <table class="table" id="dealerBalTable">
-        <thead>
-            <tr>
-                <th>CUSTOMER_CODE</th>
-                <th>COMPANY</th>
-                <th>CREDIT_LIMIT</th>
-                <th>OUTSTANDING</th>
-                <th>OPEN_ORDER</th>
-                <th>BALANCE_AVAILABLE</th>
-                {{!-- <th>Action</th> --}}
-            </tr>
-        </thead>
-        <tbody>
-            {{#each dealerBalance}}
-            <tr>
-                <td>{{this.CUSTOMER_CODE}}</td>
-                <td>{{this.COMPANY}}</td>
-                <td class="text-end">{{this.CREDIT_LIMIT}}</td>
-                <td class="text-end">{{this.OUTSTANDING}}</td>
-                <td class="text-end">{{this.OPEN_ORDER}}</td>
-                <td class="text-end">{{this.BALANCE_AVAILABLE}}</td>
-                {{!-- <td>
-                    <a href="/dealerPay/update/{{momentYMD this.doc_date}}/{{this.doc_no}}"
-                        class="btn btn-primary btn-sm">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    {{#isEqual ../user.user_role "Admin"}}
-                    <a href="/dealerPay/delete/{{momentYMD this.doc_date}}/{{this.doc_no}}"
-                        class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
-                        <i class="bi bi-trash"></i>
-                    </a>
-                    {{/isEqual}} 
-                </td> --}}
-            </tr>
-            {{/each}}
-        </tbody>
-    </table>
+    <div class="responsive">
+        <table class="table" id="dealerBalTable">
+            <thead>
+                <tr>
+                    <th>CUSTOMER_CODE</th>
+                    <th>COMPANY</th>
+                    <th>CREDIT_LIMIT</th>
+                    <th>OUTSTANDING</th>
+                    <th>OPEN_ORDER</th>
+                    <th>BALANCE_AVAILABLE</th>
+                    {{!-- <th>Action</th> --}}
+                </tr>
+            </thead>
+            <tbody>
+                {{#each dealerBalance}}
+                <tr>
+                    <td>{{this.CUSTOMER_CODE}}</td>
+                    <td>{{this.COMPANY}}</td>
+                    <td class="text-end">{{this.CREDIT_LIMIT}}</td>
+                    <td class="text-end">{{this.OUTSTANDING}}</td>
+                    <td class="text-end">{{this.OPEN_ORDER}}</td>
+                    <td class="text-end">{{this.BALANCE_AVAILABLE}}</td>
+                    {{!-- <td>
+                        <a href="/dealerPay/update/{{momentYMD this.doc_date}}/{{this.doc_no}}"
+                            class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {{#isEqual ../user.user_role "Admin"}}
+                        <a href="/dealerPay/delete/{{momentYMD this.doc_date}}/{{this.doc_no}}"
+                            class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {{/isEqual}} 
+                    </td> --}}
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
 
     {{!-- <div class="mt-3">
         <button id="export-excel" class="btn btn-success"

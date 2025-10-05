@@ -62,40 +62,42 @@
 
                 <div class="mb-3 border p-4">
                     <label for="orderItems" class="form-label"><strong>Order Items</strong></label>
-                    <table class="table" id="po_dtTable">
-                        <thead>
-                            <tr>
-                                <th class="col-1">Sr</th>
-                                <th class="col-8">Product</th>
-                                <th>Qty</th>
-                                <th hidden>Rate</th>
-                                <th hidden>Amount</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orderItemsBody">
-                            <tr>
-                                <td><input readonly type="text" class="form-control text-end" id="sr_no" name="sr_no[]"
-                                        required value="10"></td>
-                                <td><select class="form-select" id="product_id" name="product_id[]"> {{!-- disabled --}}
-                                        {{!-- <option value="">(Select a value)</option> --}}
-                                </td>
-                                <td><input type="number" class="form-control text-end" id="qty" name="qty[]" min="1"
-                                        step="1" value="1" required>
-                                </td>
-                                <td hidden><input type="number" class="form-control text-end" id="rate" name="rate[]"
-                                        min="0" step="1" value="1" required></td>
-                                <td hidden><input readonly type="number" class="form-control text-end" id="amount"
-                                        name="amount[]" min="0" step="1" required></td>
-                                <td>
-                                    <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
-                                        class="btn btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table" id="po_dtTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-1">Sr</th>
+                                    <th class="col-8">Product</th>
+                                    <th>Qty</th>
+                                    <th hidden>Rate</th>
+                                    <th hidden>Amount</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderItemsBody">
+                                <tr>
+                                    <td><input readonly type="text" class="form-control text-end" id="sr_no" name="sr_no[]"
+                                            required value="10"></td>
+                                    <td><select class="form-select" id="product_id" name="product_id[]"> {{!-- disabled --}}
+                                            {{!-- <option value="">(Select a value)</option> --}}
+                                    </td>
+                                    <td><input type="number" class="form-control text-end" id="qty" name="qty[]" min="1"
+                                            step="1" value="1" required>
+                                    </td>
+                                    <td hidden><input type="number" class="form-control text-end" id="rate" name="rate[]"
+                                            min="0" step="1" value="1" required></td>
+                                    <td hidden><input readonly type="number" class="form-control text-end" id="amount"
+                                            name="amount[]" min="0" step="1" required></td>
+                                    <td>
+                                        <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
+                                            class="btn btn-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <div class="form-group row">
                         <div class="col-sm-8">

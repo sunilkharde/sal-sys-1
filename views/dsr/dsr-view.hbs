@@ -1,311 +1,532 @@
-{{!-- <div class="container"> --}}
-    <div style="padding-right: 5px; padding-left: 5px;">
-        <div class="col-lg-12">
-            {{!-- <h4 class="mb-3">Sales DSR Entry</h4> --}}
-            {{!-- <h5 class="mb-3">Hi, {{data2.first_name}} {{data2.last_name}} </h5> --}}
-            <div class="row">
-                <input hidden type="text" class="form-control" id="emp_id" name="emp_id" value="{{data2.emp_id}}"
-                    style="font-size: 45px;">
-                <input hidden type="text" class="form-control" id="open_year" name="open_year" value="{{openMon.year}}">
-                <input hidden type="text" class="form-control" id="open_month" name="open_month"
-                    value="{{openMon.month}}">
-                {{#each data}}
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col-md-9">
-                                <h4 id="card-h1" class="card-title mt-3">Date: {{momentDMY this.dsr_date}},
-                                    {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}
-                                    <span style="color: red;">{{momentDDDD this.dsr_date}}</span>
-                                    {{else}} {{momentDDDD this.dsr_date}} {{/isEqual}}
-                                </h4>
-                            </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Hidden inputs for data -->
+            <input type="hidden" id="emp_id" name="emp_id" value="{{data2.emp_id}}">
+            <input type="hidden" id="open_year" name="open_year" value="{{openMon.year}}">
+            <input type="hidden" id="open_month" name="open_month" value="{{openMon.month}}">
 
-                            <div class="col-md-3 d-flex justify-content-end">
-                                {{#isEqual this.post_mg 'Y' }}
-                                <a href="#" class="btn btn-secondary btn-sm">
-                                    ... <i id="bi-pencil" class="bi bi-pencil"></i>
-                                </a>
+            <!-- DSR Entries -->
+            {{#each data}}
+            <div class="card dsr-card fade-in">
+                <div class="card-header dsr-card-header">
+                    <div class="dsr-header-container">
+                        <div class="dsr-date-section">
+                            <h5 class="card-title">
+                                {{momentDMY this.dsr_date}},
+                                {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}
+                                <span class="off-day">{{momentDDDD this.dsr_date}}</span>
                                 {{else}}
-                                <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}"
-                                    class="btn btn-primary btn-sm"> {{!-- onclick="return
-                                    confirm('Are you sure?')" --}}
-                                    ... <i id="bi-pencil" class="bi bi-pencil"></i>
-                                </a>
+                                {{momentDDDD this.dsr_date}}
                                 {{/isEqual}}
-                            </div>
+                            </h5>
                         </div>
-                    </div>
-
-                    {{!-- <div class="card-header">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check form-check-inline">
-                                    <input disabled class="form-check-input" type="radio"
-                                        name="RG_{{momentYMD this.dsr_date}}" id="RG_{{momentYMD this.dsr_date}}_P"
-                                        value="P" {{#isEqual this.hr_flag "P" }}checked{{/isEqual}}>
-                                    <label class="form-check-label" for="inlineRadio1">Present</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input disabled class="form-check-input" type="radio"
-                                        name="RG_{{momentYMD this.dsr_date}}" id="RG_{{momentYMD this.dsr_date}}_A"
-                                        value="A" {{#isEqual this.hr_flag "A" }}checked{{/isEqual}}>
-                                    <label class="form-check-label" for="inlineRadio2">Absent</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="RG_{{momentYMD this.dsr_date}}"
-                                        id="RG_{{momentYMD this.dsr_date}}_L" value="L" {{#isEqual this.hr_flag "L"
-                                        }}checked{{/isEqual}}>
-                                    <label class="form-check-label" for="inlineRadio2">Leave</label>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div> --}}
-
-                    <div class="card-body">
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check form-switch">
-                                    <input {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}disabled{{/isEqual}}
-                                        {{#isEqual this.post_mg "Y" }} disabled{{/isEqual}} class="form-check-input"
-                                        type="checkbox" id="chk_leave_{{momentYMD this.dsr_date}}" {{#isEqual
-                                        this.hr_flag "L" }}checked{{/isEqual}}>
-                                    <label class="form-check-label" for="chk_leave_{{momentYMD this.dsr_date}}">
-                                        {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}
-                                        <span style="color: red;">Week Off</span>
-                                        {{else}}Leave{{/isEqual}}</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6 d-flex justify-content-end">
-                                <div class="form-check form-switch">
-                                    <input disabled class="form-check-input" type="checkbox"
-                                        id="chk_post_mg_{{momentYMD this.dsr_date}}" {{#isEqual this.post_mg "Y"
-                                        }}checked{{/isEqual}}>
-                                    <label class="form-check-label"
-                                        for="chk_post_mg_{{momentYMD this.dsr_date}}">Approved</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h5 class="card-title">Status: {{#if this.atten_flag}}
-                            {{this.atten_flag}} {{else}} <span style="color: gray;">Not Selected</span> {{/if}}
-                            From: {{#if this.from_city}} {{this.from_city}} {{else}} <span style="color: gray;">Not
-                                Enter</span> {{/if}}
-                            To: {{#if this.to_city}} {{this.to_city}} {{else}} <span style="color: gray;">Not
-                                Enter</span> {{/if}}
-                        </h5>
-                        <h5 class="card-title">
-                            DA: {{this.total_allow}}
-                            Expenses: {{add this.total_exp this.total_lodge}}
-                        </h5>
-                        {{!-- <h5 class="card-title">
-                            Approved: {{#if this.post_mg}} {{this.post_mg}} {{else}} <span
-                                style="color: red;">Pending</span> {{/if}}
-                        </h5> --}}
-                    </div>
-                    <br>
-
-                </div>
-                {{/each}}
-
-                <div>
-                    <br>
-                    <br>
-                </div>
-
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-lg-6 border p-4">
-                            <h4 class="mb-4 page-title">Monthly Expenses</h4>
-                            <div class="row mb-3">
-                                <label for="Stationary" class="col-sm-6 col-form-label">Stationary</label>
-                                <div class="col-sm-6">
-                                    <input readonly type="number" class="form-control text-end" id="Stationary" name="Stationary"
-                                        value="{{monAllow.stationaryRate}}">
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <label for="Postage" class="col-sm-6 col-form-label">Postage</label>
-                                <div class="col-sm-6">
-                                    <input readonly type="number" class="form-control text-end" id="Postage" name="Postage"
-                                        value="{{monAllow.postageRate}}">
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <label for="Internet" class="col-sm-6 col-form-label">Internet</label>
-                                <div class="col-sm-6">
-                                    <input readonly type="number" class="form-control text-end" id="Internet" name="Internet"
-                                        value="{{monAllow.internetRate}}">
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <label for="Other" class="col-sm-6 col-form-label">Other</label>
-                                <div class="col-sm-6">
-                                    <input type="number" class="form-control text-end" id="Other" name="Other"
-                                        value="{{monAllow.otherRate}}">
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <label for="Remarks" class="col-sm-6 col-form-label">Remarks</label>
-                                <div class="col-sm-6">
-                                    {{!-- <input type="text" maxlength="50" class="form-control" id="Remarks" name="Remarks" value="{{monAllow.monRemarks}}"> --}}
-                                    <textarea maxlength="50" class="form-control" id="Remarks" name="Remarks">{{monAllow.monRemarks}}</textarea>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-sm-3">
-                                    <button type="button" id="btnMonAllow" class="btn btn-success" {{#if (eq
-                                        monAllow.monPost 'Y' )}} disabled {{/if}} {{#if (eq daysDiff '0' )}} {{else}}
-                                        disabled {{/if}}>Update</button>
-                                </div>
-                                <div class="col-sm-9 row align-items-end">
-                                    <span style="color: red;">
-                                        {{#if (eq daysDiff '0' )}} {{else}}
-                                        <h5 style="font-size: 30px;" >This button will activate after {{daysDiff}} days...</h5>
-                                        {{/if}}
-                                        {{#if (eq monAllow.monPost 'Y' )}}<h5 style="font-size: 30px;">Posted entry can't change</h5>{{/if}}
-                                    </span>
-                                </div>
-                            </div>
-
+                        <div class="dsr-edit-section">
+                            {{#isEqual this.post_mg 'Y' }}
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            {{else}}
+                            <a href="/dsr/update/{{momentYMD this.dsr_date}}/{{this.emp_id}}"
+                                class="btn btn-primary btn-sm">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            {{/isEqual}}
                         </div>
                     </div>
                 </div>
 
+                <div class="card-body dsr-card-body">
+                    <!-- Leave and Posting Status in single line -->
+                    <div class="dsr-status-container">
+                        <div class="dsr-status-item dsr-status-left">
+                            <div class="form-check form-switch">
+                                <input {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}disabled{{/isEqual}}
+                                    {{#isEqual this.post_mg "Y" }} disabled{{/isEqual}} class="form-check-input"
+                                    type="checkbox" id="chk_leave_{{momentYMD this.dsr_date}}" {{#isEqual
+                                    this.hr_flag "L" }}checked{{/isEqual}}>
+                                <label class="form-check-label" for="chk_leave_{{momentYMD this.dsr_date}}">
+                                    {{#isEqual ../data2.off_day (momentDDD this.dsr_date)}}
+                                    <span class="off-day">Week Off</span>
+                                    {{else}}Leave{{/isEqual}}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="dsr-status-item dsr-status-right">
+                            <div class="form-check form-switch">
+                                <input disabled class="form-check-input" type="checkbox"
+                                    id="chk_post_mg_{{momentYMD this.dsr_date}}" {{#isEqual this.post_mg "Y"
+                                    }}checked{{/isEqual}}>
+                                <label class="form-check-label" for="chk_post_mg_{{momentYMD this.dsr_date}}">
+                                    {{#isEqual this.post_mg "Y" }}
+                                    <span class="status-badge status-approved">Approved</span>
+                                    {{else}}
+                                    <span class="status-badge status-pending">Pending</span>
+                                    {{/isEqual}}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="expense-summary">
+                        <div class="expense-grid">
+                            <div class="expense-item">
+                                <span class="expense-label">Status:</span>
+                                <span class="expense-value">
+                                    {{#if this.atten_flag}}
+                                    {{this.atten_flag}}
+                                    {{else}}
+                                    <span class="not-entered">Not Selected</span>
+                                    {{/if}}
+                                </span>
+                            </div>
+                            <div class="expense-item">
+                                <span class="expense-label">From:</span>
+                                <span class="expense-value">
+                                    {{#if this.from_city}}
+                                    {{this.from_city}}
+                                    {{else}}
+                                    <span class="not-entered">Not Entered</span>
+                                    {{/if}}
+                                </span>
+                            </div>
+                            <div class="expense-item">
+                                <span class="expense-label">To:</span>
+                                <span class="expense-value">
+                                    {{#if this.to_city}}
+                                    {{this.to_city}}
+                                    {{else}}
+                                    <span class="not-entered">Not Entered</span>
+                                    {{/if}}
+                                </span>
+                            </div>
+                            <div class="expense-item">
+                                <span class="expense-label">DA:</span>
+                                <span class="expense-value">{{this.total_allow}}</span>
+                            </div>
+                            <div class="expense-item">
+                                <span class="expense-label">Expenses:</span>
+                                <span class="expense-value">{{add this.total_exp this.total_lodge}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            {{/each}}
+
+            <!-- Monthly Expenses Section -->
+            <div class="container mt-4">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 col-md-10 col-12">
+                        <div class="card monthly-expenses">
+                            <div class="card-header">
+                                <h4 class="mb-0">Monthly Expenses</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <label for="Stationary" class="col-sm-6 col-form-label">Stationary</label>
+                                    <div class="col-sm-6">
+                                        <input readonly type="number" class="form-control text-end" id="Stationary"
+                                            name="Stationary" value="{{monAllow.stationaryRate}}">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="Postage" class="col-sm-6 col-form-label">Postage</label>
+                                    <div class="col-sm-6">
+                                        <input readonly type="number" class="form-control text-end" id="Postage"
+                                            name="Postage" value="{{monAllow.postageRate}}">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="Internet" class="col-sm-6 col-form-label">Internet</label>
+                                    <div class="col-sm-6">
+                                        <input readonly type="number" class="form-control text-end" id="Internet"
+                                            name="Internet" value="{{monAllow.internetRate}}">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="Other" class="col-sm-6 col-form-label">Other</label>
+                                    <div class="col-sm-6">
+                                        <input type="number" class="form-control text-end" id="Other" name="Other"
+                                            value="{{monAllow.otherRate}}">
+                                    </div>
+                                </div>
+                                <div class="row mb-4">
+                                    <label for="Remarks" class="col-sm-6 col-form-label">Remarks</label>
+                                    <div class="col-sm-6">
+                                        <textarea maxlength="50" class="form-control" id="Remarks"
+                                            name="Remarks">{{monAllow.monRemarks}}</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-4 mb-2 mb-sm-0">
+                                        <div class="d-flex flex-column flex-sm-row gap-2">
+                                            <button type="button" id="btnMonAllow" class="btn btn-success w-100" {{#if
+                                                (eq monAllow.monPost 'Y' )}} disabled {{/if}} {{#if (eq daysDiff '0' )}}
+                                                {{else}} disabled {{/if}}>
+                                                Update
+                                            </button>
+                                            <a href="/dsr/view-pm" class="btn btn-secondary px-3">Back</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-8 d-flex align-items-center">
+                                        {{#if (eq daysDiff '0')}}
+                                        {{else}}
+                                        <span class="text-muted">
+                                            This button will activate after {{daysDiff}} days...
+                                        </span>
+                                        {{/if}}
+                                        {{#if (eq monAllow.monPost 'Y')}}
+                                        <span class="text-danger">
+                                            Posted entry can't be changed
+                                        </span>
+                                        {{/if}}
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spacing for mobile -->
+            <div class="mb-5 d-block d-sm-none"></div>
+            <div class="mb-3 d-none d-sm-block"></div>
         </div>
     </div>
-    {{!--
-</div> --}}
+</div>
 
-<script>
-    function adjustFontSize() {
-        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-
-        var SwitchBtns = document.getElementsByClassName('form-check form-switch');
-        for (var i = 0; i < SwitchBtns.length; i++) {
-            var SwitchBtn = SwitchBtns[i];
-            if (screenWidth < 768) {
-                SwitchBtn.style.fontSize = '45px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                SwitchBtn.style.fontSize = '45px';
-            } else {
-                SwitchBtn.style.fontSize = '35px';
-            }
-        }
-
-        var CardTitles = document.getElementsByClassName('card-title');
-        for (var i = 0; i < CardTitles.length; i++) {
-            var CardTitle = CardTitles[i];
-            if (screenWidth < 768) {
-                CardTitle.style.fontSize = '40px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardTitle.style.fontSize = '40px';
-            } else {
-                CardTitle.style.fontSize = '30px';
-            }
-        }
-
-        var CardTitles = document.getElementsByClassName('card-title mt-3');
-        for (var i = 0; i < CardTitles.length; i++) {
-            var CardTitle = CardTitles[i];
-            if (screenWidth < 768) {
-                CardTitle.style.fontSize = '45px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardTitle.style.fontSize = '45px';
-            } else {
-                CardTitle.style.fontSize = '45px';
-            }
-        }
-
-        /*var CardTexts = document.getElementsByClassName('card-text');
-        for (var i = 0; i < CardTexts.length; i++) {
-            var CardText = CardTexts[i];
-            if (screenWidth < 768) {
-                CardText.style.fontSize = '40px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                CardText.style.fontSize = '35px';
-            } else {
-                CardText.style.fontSize = '30px';
-            }
-        }*/
-
-        var frmBtns = document.getElementsByClassName('btn');
-        for (var i = 0; i < frmBtns.length; i++) {
-            var frmBtn = frmBtns[i];
-            if (screenWidth < 768) {
-                frmBtn.style.fontSize = '55px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmBtn.style.fontSize = '55px';
-            } else {
-                frmBtn.style.fontSize = '35px';
-            }
-        }
-
-        var txtItems = document.getElementsByClassName('page-title');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '50px';
-            } else {
-                txtItem.style.fontSize = '45px';
-            }
-        }
-
-        var frmLabels = document.getElementsByClassName('col-form-label');
-        for (var i = 0; i < frmLabels.length; i++) {
-            var frmLabel = frmLabels[i];
-            if (screenWidth < 768) {
-                frmLabel.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmLabel.style.fontSize = '50px';
-            } else {
-                frmLabel.style.fontSize = '30px';
-            }
-        }
-
-        var frmLabels = document.getElementsByClassName('form-label');
-        for (var i = 0; i < frmLabels.length; i++) {
-            var frmLabel = frmLabels[i];
-            if (screenWidth < 768) {
-                frmLabel.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmLabel.style.fontSize = '50px';
-            } else {
-                frmLabel.style.fontSize = '30px';
-            }
-        }
-
-        var frmControls = document.getElementsByClassName('form-control');
-        for (var i = 0; i < frmControls.length; i++) {
-            var frmControl = frmControls[i];
-            if (screenWidth < 768) {
-                frmControl.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmControl.style.fontSize = '50px';
-            } else {
-                frmControl.style.fontSize = '30px';
-            }
-        }
-
+<style>
+    :root {
+        --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        --border-radius: 6px;
+        --transition-speed: 0.2s;
+        --primary-color: #007bff;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --light-gray: #f8f9fa;
+        --medium-gray: #e9ecef;
+        --text-muted: #6c757d;
     }
 
-    window.addEventListener('DOMContentLoaded', adjustFontSize);
-    window.addEventListener('resize', adjustFontSize);
-</script>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.4;
+    }
+
+    .container-fluid {
+        padding-right: 3px;
+        padding-left: 3px;
+    }
+
+    .dsr-card {
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        margin-bottom: 0.75rem;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        transition: transform var(--transition-speed);
+    }
+
+    .dsr-card:hover {
+        transform: translateY(-1px);
+    }
+
+    .dsr-card-header {
+        background-color: rgba(0, 123, 255, 0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 0.75rem 1rem;
+    }
+
+    /* Date and Edit Button Layout - Always in single row */
+    .dsr-header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: nowrap;
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .dsr-date-section {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .dsr-edit-section {
+        flex-shrink: 0;
+    }
+
+    .card-title {
+        font-weight: 600;
+        margin: 0;
+        font-size: 1.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dsr-card-body {
+        padding: 0.5rem;
+    }
+
+    /* Leave and Posting Status - Always in single row */
+    .dsr-status-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .dsr-status-left {
+        justify-content: flex-start;
+    }
+
+    .dsr-status-right {
+        justify-content: flex-end;
+    }
+
+    .dsr-status-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .btn {
+        border-radius: 4px;
+        font-weight: 500;
+        transition: all var(--transition-speed);
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        white-space: nowrap;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.95rem;
+    }
+
+    .form-check-input {
+        margin-top: 0.15rem;
+    }
+
+    .form-switch .form-check-input {
+        width: 2.2em;
+        height: 1.1em;
+    }
+
+    .form-check-label {
+        font-size: 1.5rem;
+        white-space: nowrap;
+        margin-left: 0.5rem;
+    }
+
+    .text-end {
+        text-align: right !important;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 3px;
+        font-size: 1.0rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .status-approved {
+        background-color: #d1edff;
+        color: #0c5460;
+    }
+
+    .off-day {
+        color: var(--danger-color);
+        font-weight: 600;
+    }
+
+    .expense-summary {
+        background-color: var(--light-gray);
+        border-radius: var(--border-radius);
+        padding: 0.75rem;
+    }
+
+    .expense-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .expense-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .expense-label {
+        font-weight: 500;
+        color: var(--text-muted);
+        font-size: 1.0rem;
+        white-space: nowrap;
+    }
+
+    .expense-value {
+        font-weight: 600;
+        font-size: 1.0rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .not-entered {
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    /* Animation for status changes */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 767.98px) {
+        .container-fluid {
+            padding-right: 8px;
+            padding-left: 8px;
+        }
+
+        .dsr-card-header {
+            padding: 0.75rem;
+        }
+
+        .dsr-card-body {
+            padding: 0.9rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+        }
+
+        .expense-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .monthly-expenses .form-label {
+            font-size: 1.0rem;
+        }
+
+        .monthly-expenses .form-control {
+            font-size: 1.0rem;
+            padding: 0.5rem 0.7rem;
+        }
+
+        /* Ensure date and edit button stay in single row on mobile */
+        .dsr-header-container {
+            gap: 0.5rem;
+        }
+
+        /* Ensure leave and posting status stay in single row on mobile */
+        .dsr-status-container {
+            gap: 0.5rem;
+        }
+
+        .form-check-label {
+            font-size: 1.0rem;
+        }
+
+        .btn-sm {
+            font-size: 1.0rem;
+            padding: 0.35rem 0.7rem;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .card-title {
+            font-size: 1.2rem;
+        }
+
+        .form-check-label {
+            font-size: 1.0rem;
+        }
+
+        .expense-summary {
+            font-size: 1.0rem;
+        }
+
+        .btn-sm {
+            font-size: 1.0rem;
+            padding: 0.3rem 0.6rem;
+        }
+
+        .expense-item {
+            gap: 0.3rem;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .dsr-header-container {
+            gap: 0.3rem;
+        }
+
+        .dsr-status-container {
+            gap: 0.3rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+        }
+
+        .form-check-label {
+            font-size: 1.0rem;
+            margin-left: 0.3rem;
+        }
+
+        .btn-sm {
+            font-size: 1.0rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .expense-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .expense-item {
+            gap: 0.2rem;
+        }
+    }
+</style>
 
 <script>
-    window.addEventListener('DOMContentLoaded', function () {
+    // Leave toggle functionality
+    document.addEventListener('DOMContentLoaded', function () {
         const empID = document.getElementById('emp_id').value;
-        var dsrDate = null;
+        let dsrDate = null;
+        let leaveFlag = null;
+        let selectedCheckbox = null;
+
         const checkboxes = document.querySelectorAll('[id^="chk_leave_"]');
-        var leaveFlag = null;
 
         checkboxes.forEach(function (checkbox) {
             checkbox.addEventListener('change', function () {
@@ -313,7 +534,7 @@
                     dsrDate = checkbox.id.split('_')[2];
                     leaveFlag = 'L';
                     selectedCheckbox = checkbox;
-                    //showConfirmationDialog();
+
                     const confirmed = confirm('Are you sure you want to save the leave data?');
                     if (confirmed) {
                         saveLeaveData();
@@ -324,7 +545,7 @@
                     dsrDate = checkbox.id.split('_')[2];
                     leaveFlag = 'A';
                     selectedCheckbox = checkbox;
-                    //showConfirmationDialog();
+
                     const confirmed = confirm('Are you sure you want to cancel the leave?');
                     if (confirmed) {
                         saveLeaveData();
@@ -335,21 +556,16 @@
             });
         });
 
-        /*async function showConfirmationDialog() {
-            const confirmed = confirm('Are you sure you want to save the leave data?');
-            if (confirmed) {
-                saveLeaveData();
-            } else {
-                selectedCheckbox.checked = false;
-            }
-        }*/
-
         async function saveLeaveData() {
             try {
                 const response = await fetch('/dsr/save-leave-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dsr_date: dsrDate, emp_id: empID, leave_flag: leaveFlag })
+                    body: JSON.stringify({
+                        dsr_date: dsrDate,
+                        emp_id: empID,
+                        leave_flag: leaveFlag
+                    })
                 });
 
                 if (response.ok) {
@@ -361,45 +577,50 @@
                 console.error(err);
             }
         }
-    });
-</script>
 
-<script>
-    const btnMonAllow = document.getElementById('btnMonAllow');
+        // Monthly allowance update functionality
+        const btnMonAllow = document.getElementById('btnMonAllow');
 
-    btnMonAllow.addEventListener("click", async (event) => {
-        const dsrYear = document.getElementById('open_year').value;
-        const dsrMonth = document.getElementById('open_month').value;
-        const empID = document.getElementById('emp_id').value;
-        const stationaryVal = document.getElementById('Stationary').value;
-        const postageVal = document.getElementById('Postage').value;
-        const internetVal = document.getElementById('Internet').value;
-        const otherVal = document.getElementById('Other').value;
-        const remarksVal = document.getElementById('Remarks').value;
+        btnMonAllow.addEventListener("click", async (event) => {
+            const dsrYear = document.getElementById('open_year').value;
+            const dsrMonth = document.getElementById('open_month').value;
+            const empID = document.getElementById('emp_id').value;
+            const stationaryVal = document.getElementById('Stationary').value;
+            const postageVal = document.getElementById('Postage').value;
+            const internetVal = document.getElementById('Internet').value;
+            const otherVal = document.getElementById('Other').value;
+            const remarksVal = document.getElementById('Remarks').value;
 
-        try {
-            const response = await fetch('/dsr/save-mon-allow', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ dsrYear, dsrMonth, empID, stationaryVal, postageVal, internetVal, otherVal, remarksVal })
-            });
+            try {
+                const response = await fetch('/dsr/save-mon-allow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dsrYear,
+                        dsrMonth,
+                        empID,
+                        stationaryVal,
+                        postageVal,
+                        internetVal,
+                        otherVal,
+                        remarksVal
+                    })
+                });
 
-            const data = await response.json();
-            if (data.postMgFlag === 'Y') {
-                alert('Record is posted cannot change');
-                return
+                const data = await response.json();
+                if (data.postMgFlag === 'Y') {
+                    alert('Record is posted and cannot be changed');
+                    return;
+                }
+
+                if (response.ok) {
+                    alert('Monthly allowance data saved successfully');
+                } else {
+                    alert('Failed to save allowance data');
+                }
+            } catch (err) {
+                console.error(err);
             }
-
-            if (response.ok) {
-                alert('Monthly allowance data saved successfully');
-                //console.log('Montly allowance data saved successfully');
-            } else {
-                alert('Failed to save allowance data');
-                //console.error('Failed to save allowance data');
-            }
-        } catch (err) {
-            console.error(err);
-        }
+        });
     });
-
 </script>

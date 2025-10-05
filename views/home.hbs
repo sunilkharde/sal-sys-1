@@ -1,18 +1,151 @@
-<h1>Welcome to Malpani Group - Announcement Board</h1>
+<div class="landing-page">
+  <!-- Hero Section -->
+  <header class="hero-section">
+    <div class="container-fluid">
+      <div class="row align-items-center hero-content">
+        <div class="col-lg-6">
+          <h1 class="hero-title">Welcome to Malpani Portal</h1>
+          <p class="hero-subtitle">
+            A diversified business house active in Renewable Energy, FMCG Products,
+            Amusement & Water Parks, Real Estate, Hotels and more.
+          </p>
+        </div>
+        <div class="col-lg-6 text-center">
+          <img src="/images/malpani-logo-2020.webp" alt="Malpani Group Logo" class="hero-logo" loading="eager"
+            decoding="async" width="250" height="125">
+        </div>
+      </div>
+    </div>
+  </header>
 
-<p>
-  Group is well diversified business house active in Renewable energy, FMCG products, Amusement and Water Park,
-  Real estate, Hotels etc. Malpani Group’s success story is no ordinary one. Our unceasing commitment to the
-  satisfaction of our customers as well as the society by way of sharing the rewards with all has been and always will
-  be the secret to our phenomenal growth.
-  Our activities have given the small town of Sangamner as well as its surrounding areas a new modern face. Along with
-  developing the infrastructure of Sangamner, we have managed to create social awareness, encourage education as well as
-  inspire the people to dream big and aspire more without disturbing the rural roots. Malpani Group is glad to have
-  played an active role in the transformation of Sangamner and in putting it on the industrial map of the world.
-  We are committed to drawing upon the wisdom of past generations while utilising the innovation and enthusiasm of
-  present generation in scaling greater heights than ever before...
-  
-  </p>
+  <main>
+    <!-- About Section -->
+    <section class="about-section py-4">
+      <div class="container-fluid">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
+            <h2 class="section-title text-center mb-4">Our Success Story</h2>
+            <div class="about-content">
+              <p>
+                Malpani Group's success story is no ordinary one. Our unceasing commitment to
+                customer satisfaction and society through shared rewards has been the secret
+                to our phenomenal growth.
+              </p>
+              <p>
+                We have transformed Sangamner and surrounding areas with modern infrastructure
+                while creating social awareness, encouraging education, and inspiring people
+                to dream big without disturbing rural roots.
+              </p>
+              <p class="mb-0">
+                We are committed to drawing upon the wisdom of past generations while utilizing
+                present generation's innovation to scale greater heights.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
+    <!-- CTA Section -->
+    <section class="cta-section py-4 text-center">
+      <div class="container-fluid">
+        <h3 class="mb-3">Ready to Explore Our Portal?</h3>
+        <p>Access our comprehensive CRM system to manage your business operations efficiently.</p>
+      </div>
+    </section>
+  </main>
+</div>
 
+<style>
+  :root {
+    --primary-color: #2c5aa0;
+    --text-color: #495057;
+    --font-base: 'Segoe UI', system-ui, sans-serif;
+  }
 
+  .landing-page {
+    font-family: var(--font-base);
+    color: var(--text-color);
+  }
+
+  /* Hero Section */
+  .hero-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 2rem 1rem;
+  }
+
+  .hero-title {
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(0.95rem, 2vw, 1.05rem);
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+
+  .hero-logo {
+    max-height: 150px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* Section Titles */
+  .section-title {
+    font-size: clamp(1.5rem, 3.5vw, 1.85rem);
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  /* About & CTA */
+  .about-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .cta-section h3 {
+    font-size: clamp(1.35rem, 2.5vw, 1.6rem);
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .cta-section p {
+    font-size: 0.95rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+
+    .hero-title,
+    .hero-subtitle {
+      text-align: center;
+    }
+
+    .hero-logo {
+      margin-top: 1rem;
+      max-height: 120px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .hero-logo {
+      max-height: 100px;
+    }
+
+    .about-section,
+    .cta-section {
+      padding: 1.5rem 0 !important;
+    }
+  }
+
+  /* Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+</style>

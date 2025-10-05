@@ -1,136 +1,112 @@
-<div class="container mt-5">
+<div class="container mt-3">
     <div class="row justify-content-center">
-        <div class="col-lg-6 col-md-12 col-sm-12 ">   {{!-- border p-4 --}}
-            <h2 class="mb-4"><span class="page-title"> MALPANI Portal Login </span></h2>         
+        <div class="col-lg-6 col-md-8 col-sm-12">
+            <h2 class="mb-4 text-center">
+                <span class="page-title fw-bold text-primary">MALPANI Portal Login</span>
+            </h2>
 
             {{#if alert}}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
                 {{alert}}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             {{/if}}
 
-            <form action="/auth/login" method="post">
-                <div class="mb-3">
-                    <label for="email_id" class="form-label">Email Address</label>
-                    <input type="email_id" class="form-control" id="email_id" name="email_id"
-                        aria-describedby="emailHelp" placeholder="Enter your email" value="{{email_id}}">
-                    {{!-- <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
-                    --}}
-                </div>
+            {{#if error}}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{error}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {{/if}}
 
+            <form action="/auth/login" method="post" class="needs-validation" novalidate>
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Password"
-                            value="{{password}}">
-                        <button class="btn btn-outline-secondary" type="button" id="password-toggle">
-                            <i class="bi bi-eye"></i></button>
+                    <label for="email_id" class="form-label fw-semibold">Email Address</label>
+                    <input type="email" class="form-control form-control-lg" id="email_id" name="email_id"
+                        placeholder="Enter your email" value="{{email_id}}" required autocomplete="email">
+                    <div class="invalid-feedback">
+                        Please enter a valid email address.
                     </div>
                 </div>
 
-                {{!-- <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="exampleCheck1">
-                    <label class="form-check-label" for="exampleCheck1">Remember me</label>
-                </div> --}}
-
-                </b>
-                <button type="submit" class="btn btn-primary">Submit</button>
-                </b>
-                <div class="mb-3 form-check">
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control form-control-lg" id="password" name="password"
+                            placeholder="Enter your password" value="{{password}}" required
+                            autocomplete="current-password">
+                        <button class="btn btn-outline-secondary" type="button" id="password-toggle"
+                            aria-label="Toggle password visibility">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback">
+                        Please enter your password.
+                    </div>
                 </div>
 
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </button>
+                </div>
             </form>
 
-            </b>
-            <p><span class="text-muted">
-                    If not Registered ? <a href="/auth/register">Register</a>
-                </span></p>
+            <div class="text-center mt-4">
+                <p class="text-muted mb-2">
+                    Don't have an account?
+                    <a href="/auth/register" class="text-decoration-none fw-semibold">Register here</a>
+                </p>
+                <p class="text-muted">
+                    <a href="/auth/forgot-password" class="text-decoration-none">Forgot your password?</a>
+                </p>
+            </div>
 
         </div>
     </div>
 </div>
 
 <script>
-    const passwordToggle = document.getElementById('password-toggle');
-    const passwordField = document.getElementById('password');
-    passwordToggle.addEventListener('click', function () {
-        if (passwordField.type === 'password') {
-            passwordField.type = 'text';
-            passwordToggle.innerHTML = '<i class="bi bi-eye-slash"></i>';
-        } else {
-            passwordField.type = 'password';
-            passwordToggle.innerHTML = '<i class="bi bi-eye"></i>';
+    // Password toggle functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordToggle = document.getElementById('password-toggle');
+        const passwordField = document.getElementById('password');
+
+        if (passwordToggle && passwordField) {
+            passwordToggle.addEventListener('click', function () {
+                const type = passwordField.type === 'password' ? 'text' : 'password';
+                passwordField.type = type;
+
+                const icon = passwordToggle.querySelector('i');
+                icon.className = type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+
+                // Update aria-label for accessibility
+                this.setAttribute('aria-label',
+                    type === 'password' ? 'Show password' : 'Hide password');
+            });
         }
+
+        // Form validation
+        const forms = document.querySelector('.needs-validation');
+        if (forms) {
+            forms.addEventListener('submit', function (event) {
+                if (!forms.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                forms.classList.add('was-validated');
+            }, false);
+        }
+
+        // Auto-hide alerts after 5 seconds
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
     });
-</script>
-
-<script>
-    function adjustFontSize() {
-        var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-
-        var frmLabels = document.getElementsByClassName('form-label');
-        for (var i = 0; i < frmLabels.length; i++) {
-            var frmLabel = frmLabels[i];
-            if (screenWidth < 768) {
-                frmLabel.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmLabel.style.fontSize = '50px';
-            } else {
-                frmLabel.style.fontSize = '30px';
-            }
-        }
-
-        var frmControls = document.getElementsByClassName('form-control');
-        for (var i = 0; i < frmControls.length; i++) {
-            var frmControl = frmControls[i];
-            if (screenWidth < 768) {
-                frmControl.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmControl.style.fontSize = '50px';
-            } else {
-                frmControl.style.fontSize = '30px';
-            }
-        }
-
-        var frmBtns = document.getElementsByClassName('btn');
-        for (var i = 0; i < frmBtns.length; i++) {
-            var frmBtn = frmBtns[i];
-            if (screenWidth < 768) {
-                frmBtn.style.fontSize = '50px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                frmBtn.style.fontSize = '50px';
-            } else {
-                frmBtn.style.fontSize = '30px';
-            }
-        }
-
-        var txtItems = document.getElementsByClassName('text-muted');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '40px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '30px';
-            } else {
-                txtItem.style.fontSize = '20px';
-            }
-        }
-
-        var txtItems = document.getElementsByClassName('page-title');
-        for (var i = 0; i < txtItems.length; i++) {
-            var txtItem = txtItems[i];
-            if (screenWidth < 768) {
-                txtItem.style.fontSize = '60px';
-            } else if (screenWidth >= 768 && screenWidth < 1024) {
-                txtItem.style.fontSize = '60px';
-            } else {
-                txtItem.style.fontSize = '40px';
-            }
-        }
-
-    }
-
-    window.addEventListener('DOMContentLoaded', adjustFontSize);
-    window.addEventListener('resize', adjustFontSize);
 </script>

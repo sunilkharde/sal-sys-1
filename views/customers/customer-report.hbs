@@ -98,28 +98,32 @@
                             <h6 class="mb-0">Salespersons</h6>
                         </div>
                         <div class="card-body">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>Name</th>
-                                        <th>Mobile</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="salespersonsTable">
-                                    <!-- Salespersons data will be inserted here -->
-                                </tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Name</th>
+                                            <th>Mobile</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="salespersonsTable">
+                                        <!-- Salespersons data will be inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-info text-white">
-                            <h6 class="mb-0">Vehicles</h6>
-                        </div>
-                        <div class="card-body">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Vehicles</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
@@ -139,6 +143,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script>
@@ -378,24 +383,26 @@
                                 <h6 class="mb-0">Salespersons</h6>
                             </div>
                             <div class="card-body">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>Name</th>
-                                            <th>Mobile</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="salespersonsTable">
-                                        ${data.salespersons?.map(sp => `
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
                                             <tr>
-                                                <td>${sp.sp_type || '-'}</td>
-                                                <td>${sp.sp_name?.trim() || '-'}</td>
-                                                <td>${sp.sp_mobile || '-'}</td>
+                                                <th>Type</th>
+                                                <th>Name</th>
+                                                <th>Mobile</th>
                                             </tr>
-                                        `).join('') || '<tr><td colspan="3" class="text-center">No salespersons found</td></tr>'}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody id="salespersonsTable">
+                                            ${data.salespersons?.map(sp => `
+                                                <tr>
+                                                    <td>${sp.sp_type || '-'}</td>
+                                                    <td>${sp.sp_name?.trim() || '-'}</td>
+                                                    <td>${sp.sp_mobile || '-'}</td>
+                                                </tr>
+                                            `).join('') || '<tr><td colspan="3" class="text-center">No salespersons found</td></tr>'}
+                                        </tbody>
+                                    </table>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -405,31 +412,33 @@
                                 <h6 class="mb-0">Vehicles</h6>
                             </div>
                             <div class="card-body">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Reg No</th>
-                                            <th>Type</th>
-                                            <th>Insurance No</th>
-                                            <th>Expiry</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="vehiclesTable">
-                                        ${data.vehicles?.map(veh => {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Reg No</th>
+                                                <th>Type</th>
+                                                <th>Insurance No</th>
+                                                <th>Expiry</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="vehiclesTable">
+                                            ${data.vehicles?.map(veh => {
                     const insDate = veh.ins_date && veh.ins_date !== '1899-11-30'
                         ? new Date(veh.ins_date).toLocaleDateString()
                         : '-';
                     return `
-                                                <tr>
-                                                    <td>${veh.reg_no || '-'}</td>
-                                                    <td>${veh.veh_type || '-'}</td>
-                                                    <td>${veh.ins_no || '-'}</td>
-                                                    <td>${insDate}</td>
-                                                </tr>
-                                            `;
+                                                    <tr>
+                                                        <td>${veh.reg_no || '-'}</td>
+                                                        <td>${veh.veh_type || '-'}</td>
+                                                        <td>${veh.ins_no || '-'}</td>
+                                                        <td>${insDate}</td>
+                                                    </tr>
+                                                `;
                 }).join('') || '<tr><td colspan="4" class="text-center">No vehicles found</td></tr>'}
-                                    </tbody>
-                                </table>
+                                        </tbody>
+                                    </table>
+                                 </div>   
                             </div>
                         </div>
                     </div>
