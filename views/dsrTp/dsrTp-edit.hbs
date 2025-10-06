@@ -1,7 +1,6 @@
 <div class="container">
-    <form id="dsrTpForm" action="/dsrTp/update/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}"
-        method="post">
-        <!-- Header Card -->
+    <form id="dsrTpForm" action="/dsrTp/update/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}" method="post">
+        <!-- Header Card (unchanged) -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-success text-white">
                 <div class="row align-items-center">
@@ -12,7 +11,6 @@
                         </h1>
                     </div>
                     <div class="col-auto">
-                        {{!-- <span class="badge bg-light text-success fs-6">Next Month</span> --}}
                         <span class="badge bg-light {{#if isNextMonth}}text-success{{else}}text-primary{{/if}} fs-6">
                             {{#if isNextMonth}}Next Month Planning{{else}}Current Month Planning{{/if}}
                         </span>
@@ -48,7 +46,7 @@
             </div>
         </div>
 
-        <!-- Location Filter -->
+        <!-- Enhanced Location Filter -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light">
                 <h5 class="card-title mb-0">
@@ -57,31 +55,36 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8">
-                        <label for="locationFilter" class="form-label">Select District - City</label>
-                        <select class="form-select" id="locationFilter">
-                            <option value="">All Locations</option>
-                            {{#each combinedDistCityList}}
-                            <option value="{{this.dist}}|{{this.city}}">{{this.dist_city}}</option>
-                            {{/each}}
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label for="distFilter" class="form-label">District</label>
+                        <select class="form-select" id="distFilter">
+                            <option value="">Loading districts...</option>
                         </select>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <button type="button" class="btn btn-outline-secondary btn-sm w-100"
-                            onclick="clearLocationFilter()">
+                    <div class="col-md-5">
+                        <label for="cityFilter" class="form-label">City</label>
+                        <select class="form-select" id="cityFilter" disabled>
+                            <option value="">Select district first</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
                             <i class="bi bi-x-circle me-1"></i>
-                            Clear Filter
+                            Clear
                         </button>
                     </div>
                 </div>
-                <div class="row mt-2">
+                <div class="row mt-3">
                     <div class="col-12">
                         <div id="loadingRoutes" class="d-none">
                             <div class="spinner-border spinner-border-sm me-2" role="status"></div>
                             <span class="text-muted">Loading routes...</span>
                         </div>
-                        <span id="filterStatus" class="text-muted small"></span>
+                        <div id="filterStatus" class="text-muted small">
+                            <span id="routeCount">Loading routes...</span>
+                            <span id="searchInfo" class="ms-2"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,11 +92,22 @@
 
         <!-- Tour Plan Table -->
         <div class="card shadow-sm">
-            <div class="card-header bg-light">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h4 class="card-title mb-0">
                     <i class="bi bi-map me-2"></i>
                     Tour Plan Details
                 </h4>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button"
+                        id="bulkActionsDropdown" data-bs-toggle="dropdown">
+                        <i class="bi bi-gear me-1"></i>
+                        Bulk Actions
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="fillWeekdays()">Fill Weekdays</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="clearAllRoutes()">Clear All Routes</a></li>
+                    </ul>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div style="max-height: 60vh; overflow-y: auto;">
@@ -125,23 +139,29 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="row g-2">
-                                            <div class="col-12" hidden>
-                                                <input type="hidden" name="from_city[]" value="{{this.from_city}}">
-                                                <input type="hidden" name="to_city[]" value="{{this.to_city}}">
-                                            </div>
-                                            <div class="col-12">
-                                                <input type="hidden" name="tp_id[]" value="{{this.tp_id}}">
-                                                <input type="text" class="form-control form-control-sm route-display"
-                                                    name="tp_name[]" value="{{this.tp_name}}" placeholder="Select route..."
-                                                    readonly>
-                                            </div>
-                                            <div class="col-12">
-                                                <select class="form-select form-select-sm route-select"
-                                                    data-date="{{momentYMD this.dsr_date}}">
-                                                    <option value="">Select Route</option>
-                                                    <!-- Options will be loaded dynamically -->
-                                                </select>
+                                        <div class="route-select-container">
+                                            <div class="row g-2">
+                                                <div class="col-12" hidden>
+                                                    <input type="hidden" name="from_city[]" value="{{this.from_city}}">
+                                                    <input type="hidden" name="to_city[]" value="{{this.to_city}}">
+                                                </div>
+                                                <div class="col-12">
+                                                    <input type="hidden" name="tp_id[]" value="{{this.tp_id}}">
+                                                    <input type="text"
+                                                        class="form-control form-control-sm route-display"
+                                                        name="tp_name[]" value="{{this.tp_name}}"
+                                                        placeholder="Select route..." readonly>
+                                                </div>
+                                                <div class="col-12 position-relative">
+                                                    <select class="form-select form-control-sm route-select"
+                                                        data-date="{{momentYMD this.dsr_date}}">
+                                                        <option value="">Select Route</option>
+                                                        <!-- Options will be loaded dynamically -->
+                                                    </select>
+                                                    <div class="route-loading-spinner spinner-border spinner-border-sm d-none position-absolute"
+                                                        style="right: 30px; top: 50%; transform: translateY(-50%);">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -171,83 +191,185 @@
 </div>
 
 <script>
-    // Route management with lazy loading
+    // Enhanced Route Manager with better performance
+    // Enhanced Route Manager with optimized location filtering
     class RouteManager {
         constructor() {
-            this.routesCache = new Map();
-            this.currentFilter = '';
+            this.allRoutes = [];
+            this.districts = [];
+            this.cities = [];
+            this.filteredRoutes = [];
+            this.isLoading = false;
+            this.currentFilters = { dist: '', city: '' };
             this.init();
         }
 
-        init() {
+        async init() {
             // Set up event listeners
-            document.getElementById('locationFilter').addEventListener('change', (e) => {
-                this.loadRoutesByLocation(e.target.value);
+            document.getElementById('distFilter').addEventListener('change', (e) => {
+                this.currentFilters.dist = e.target.value;
+                this.loadCitiesByDistrict(e.target.value);
+                this.applyFilters();
             });
 
-            // Load initial empty state
-            this.updateAllDropdowns([]);
+            document.getElementById('cityFilter').addEventListener('change', (e) => {
+                this.currentFilters.city = e.target.value;
+                this.applyFilters();
+            });
+
+            // Load initial data
+            await Promise.all([
+                this.loadDistricts(),
+                this.loadAllRoutes()
+            ]);
         }
 
-        async loadRoutesByLocation(locationFilter) {
-            const loadingEl = document.getElementById('loadingRoutes');
-            const statusEl = document.getElementById('filterStatus');
+        async loadDistricts() {
+            try {
+                const response = await fetch('/dsrTp/get-districts');
+                const data = await response.json();
 
-            loadingEl.classList.remove('d-none');
-            statusEl.textContent = 'Loading routes...';
+                if (data.success) {
+                    this.districts = data.districts;
+                    this.updateDistrictFilter();
+                }
+            } catch (error) {
+                console.error('Error loading districts:', error);
+            }
+        }
+
+        async loadCitiesByDistrict(district) {
+            const cityFilter = document.getElementById('cityFilter');
+            cityFilter.disabled = true;
+            cityFilter.innerHTML = '<option value="">Loading cities...</option>';
 
             try {
-                let url = '/dsrTp/get-routes-by-location';
-                const params = new URLSearchParams();
-
-                if (locationFilter) {
-                    const [dist, city] = locationFilter.split('|');
-                    if (dist) params.append('dist', dist);
-                    if (city) params.append('city', city);
-                }
-
-                if (params.toString()) {
-                    url += '?' + params.toString();
-                }
+                const url = district ?
+                    `/dsrTp/get-cities?dist=${encodeURIComponent(district)}` :
+                    '/dsrTp/get-cities';
 
                 const response = await fetch(url);
                 const data = await response.json();
 
                 if (data.success) {
-                    this.routesCache.set(locationFilter, data.routes);
-                    this.updateAllDropdowns(data.routes);
+                    this.cities = data.cities;
+                    this.updateCityFilter();
+                }
+            } catch (error) {
+                console.error('Error loading cities:', error);
+                cityFilter.innerHTML = '<option value="">Error loading cities</option>';
+            } finally {
+                cityFilter.disabled = false;
+            }
+        }
 
-                    statusEl.textContent = locationFilter ?
-                        `Showing ${data.routes.length} routes` :
-                        'Showing all routes';
+        async loadAllRoutes() {
+            const loadingEl = document.getElementById('loadingRoutes');
+            const routeCountEl = document.getElementById('routeCount');
+
+            loadingEl.classList.remove('d-none');
+            this.isLoading = true;
+
+            try {
+                const response = await fetch('/dsrTp/get-all-routes');
+                const data = await response.json();
+
+                if (data.success) {
+                    this.allRoutes = data.routes;
+                    this.filteredRoutes = [...this.allRoutes];
+                    this.updateAllDropdowns();
+
+                    routeCountEl.textContent = `Loaded ${this.allRoutes.length} routes`;
+                    this.updateFilterStatus();
                 } else {
                     throw new Error(data.error);
                 }
             } catch (error) {
                 console.error('Error loading routes:', error);
-                statusEl.textContent = 'Error loading routes';
-                this.updateAllDropdowns([]);
+                routeCountEl.textContent = 'Error loading routes';
             } finally {
                 loadingEl.classList.add('d-none');
+                this.isLoading = false;
             }
         }
 
-        updateAllDropdowns(routes) {
-            const selects = document.querySelectorAll('.route-select');
+        updateDistrictFilter() {
+            const distFilter = document.getElementById('distFilter');
+            distFilter.innerHTML = '<option value="">All Districts</option>';
 
-            selects.forEach(select => {
-                const currentValue = select.value;
-                this.updateDropdown(select, routes, currentValue);
+            this.districts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district.dist;
+                option.textContent = district.dist;
+                distFilter.appendChild(option);
             });
         }
 
-        updateDropdown(select, routes, currentValue = '') {
+        updateCityFilter() {
+            const cityFilter = document.getElementById('cityFilter');
+            cityFilter.innerHTML = '<option value="">All Cities</option>';
+
+            this.cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.city;
+                option.textContent = city.city;
+                cityFilter.appendChild(option);
+            });
+
+            // Restore city selection if it exists in current cities
+            if (this.currentFilters.city) {
+                const cityExists = this.cities.some(c => c.city === this.currentFilters.city);
+                if (cityExists) {
+                    cityFilter.value = this.currentFilters.city;
+                } else {
+                    this.currentFilters.city = '';
+                }
+            }
+        }
+
+        applyFilters() {
+            this.filteredRoutes = this.allRoutes.filter(route => {
+                const districtMatch = !this.currentFilters.dist || route.dist === this.currentFilters.dist;
+                const cityMatch = !this.currentFilters.city || route.city === this.currentFilters.city;
+                return districtMatch && cityMatch;
+            });
+
+            this.updateAllDropdowns();
+            this.updateFilterStatus();
+        }
+
+        updateFilterStatus() {
+            const searchInfo = document.getElementById('searchInfo');
+            const routeCount = document.getElementById('routeCount');
+
+            routeCount.textContent = `Showing ${this.filteredRoutes.length} of ${this.allRoutes.length} routes`;
+
+            if (this.currentFilters.dist || this.currentFilters.city) {
+                const filters = [];
+                if (this.currentFilters.dist) filters.push(`District: ${this.currentFilters.dist}`);
+                if (this.currentFilters.city) filters.push(`City: ${this.currentFilters.city}`);
+                searchInfo.textContent = `Filtered by: ${filters.join(', ')}`;
+            } else {
+                searchInfo.textContent = 'Showing all routes';
+            }
+        }
+
+        updateAllDropdowns() {
+            const selects = document.querySelectorAll('.route-select');
+            selects.forEach(select => {
+                this.updateDropdown(select, this.filteredRoutes);
+            });
+        }
+
+        updateDropdown(select, routes) {
+            const currentValue = select.value;
+
             // Clear existing options except the first one
             while (select.options.length > 1) {
                 select.remove(1);
             }
 
-            // Add new options
+            // Add filtered routes
             routes.forEach(route => {
                 const option = document.createElement('option');
                 option.value = route.tp_id;
@@ -257,13 +379,12 @@
 
                 if (route.tp_id == currentValue) {
                     option.selected = true;
-                    this.updateRouteDisplay(select, route.tp_name);
                 }
 
                 select.appendChild(option);
             });
 
-            // If current value is not in new routes, clear it
+            // If current value is not in filtered routes, clear selection
             if (currentValue && !routes.find(r => r.tp_id == currentValue)) {
                 select.value = '';
                 this.updateRouteDisplay(select, '');
@@ -306,14 +427,23 @@
                 routeManager.updateRouteDisplay(this, routeName);
             });
         });
-
-        // Load initial routes (all locations)
-        routeManager.loadRoutesByLocation('');
     });
 
-    function clearLocationFilter() {
-        document.getElementById('locationFilter').value = '';
-        routeManager.loadRoutesByLocation('');
+    function clearFilters() {
+        document.getElementById('distFilter').value = '';
+        document.getElementById('cityFilter').value = '';
+        routeManager.currentFilters = { dist: '', city: '' };
+        routeManager.loadCitiesByDistrict(''); // Load all cities
+        routeManager.applyFilters();
+    }
+
+    function clearAllRoutes() {
+        if (confirm('Are you sure you want to clear all routes?')) {
+            document.querySelectorAll('.route-select').forEach(select => {
+                select.value = '';
+                select.dispatchEvent(new Event('change'));
+            });
+        }
     }
 
     function fillWeekdays() {
@@ -341,6 +471,19 @@
         } else {
             alert('No empty weekdays found to fill.');
         }
+    }
+
+    // Optional: Add search functionality
+    function setupSearch() {
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'form-control form-control-sm mt-2';
+        searchInput.placeholder = 'Search routes...';
+        searchInput.addEventListener('input', (e) => {
+            routeManager.searchRoutes(e.target.value);
+        });
+
+        document.querySelector('.card-body').appendChild(searchInput);
     }
 </script>
 
@@ -376,5 +519,13 @@
     .route-display {
         background-color: #f8f9fa;
         border: 1px solid #dee2e6;
+    }
+
+    .route-select-container {
+        position: relative;
+    }
+
+    .route-loading-spinner {
+        z-index: 5;
     }
 </style>

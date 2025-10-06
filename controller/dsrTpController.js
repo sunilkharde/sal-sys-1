@@ -443,22 +443,20 @@ class dsrTpController {
             WHERE tp_status = 'A' 
             ORDER BY dist, city`;
 
-            // Execute all queries in parallel
-            const [tpData, empData, distCityList] = await Promise.all([
+            // Remove the distCityList query and get districts separately
+            const districtsSql = `SELECT DISTINCT dist FROM tp_routes WHERE tp_status = 'A' ORDER BY dist`;
+            const [tpData, empData, districts] = await Promise.all([
                 executeQuery(sqlTp, [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id]),
                 executeQuery(sqlStr2, [emp_id]),
-                executeQuery(distCityListSql)
+                executeQuery(districtsSql)
             ]);
-
-            const initialLocations = distCityList.slice(0, 50);
 
             res.render('dsrTp/dsrTp-edit', {
                 layout: 'mobile',
                 monData: monData,
                 empData: empData[0],
                 tpData,
-                combinedDistCityList: initialLocations,
-                tp_list: [],
+                districts, // Pass only districts initially
                 isNextMonth
             });
 
@@ -505,9 +503,56 @@ class dsrTpController {
 
 
     /***** TP Routes Start */
+    static getDistinctDistricts = async (req, res) => {
+        try {
+            const sql = `SELECT DISTINCT dist FROM tp_routes WHERE tp_status = 'A' ORDER BY dist`;
+            const districts = await executeQuery(sql);
+            res.json({ success: true, districts });
+        } catch (error) {
+            console.error('Error fetching districts:', error);
+            res.status(500).json({ success: false, error: 'Failed to fetch districts' });
+        }
+    };
+
+    static getDistinctCities = async (req, res) => {
+        try {
+            const { dist } = req.query;
+            let sql = `SELECT DISTINCT city FROM tp_routes WHERE tp_status = 'A'`;
+            let params = [];
+
+            if (dist) {
+                sql += ` AND dist = ?`;
+                params.push(dist);
+            }
+
+            sql += ` ORDER BY city`;
+            const cities = await executeQuery(sql, params);
+            res.json({ success: true, cities });
+        } catch (error) {
+            console.error('Error fetching cities:', error);
+            res.status(500).json({ success: false, error: 'Failed to fetch cities' });
+        }
+    };
+
+    static getAllRoutes = async (req, res) => {
+        try {
+            const sql = `SELECT tp_id, CONCAT(\`from\`, ' To ', \`to\`) as tp_name, dist, city 
+                     FROM tp_routes 
+                     WHERE tp_status = 'A'
+                     ORDER BY \`from\`, \`to\``;
+
+            const routes = await executeQuery(sql);
+            res.json({ success: true, routes });
+        } catch (error) {
+            console.error('Error fetching all routes:', error);
+            res.status(500).json({ success: false, error: 'Failed to fetch routes' });
+        }
+    };
+
+    // Check this for delete
     static getRoutesByLocation = async (req, res) => {
         try {
-            const { dist, city, page = 1, limit = 100 } = req.query;
+            const { dist, city, page = 1, limit = 0 } = req.query; // Change default limit to 0 for no limit
             const offset = (page - 1) * limit;
 
             let sql = `SELECT tp_id, CONCAT(\`from\`, ' To ', \`to\`) as tp_name, dist, city 
@@ -527,8 +572,13 @@ class dsrTpController {
                 params = [city];
             }
 
-            sql += ` ORDER BY \`from\`, \`to\` LIMIT ? OFFSET ?`;
-            params.push(parseInt(limit), parseInt(offset));
+            sql += ` ORDER BY \`from\`, \`to\``;
+
+            // Only apply limit if explicitly requested
+            if (limit > 0) {
+                sql += ` LIMIT ? OFFSET ?`;
+                params.push(parseInt(limit), parseInt(offset));
+            }
 
             const routes = await executeQuery(sql, params);
 
@@ -538,7 +588,8 @@ class dsrTpController {
                 pagination: {
                     page: parseInt(page),
                     limit: parseInt(limit),
-                    hasMore: routes.length === parseInt(limit)
+                    total: routes.length,
+                    hasMore: limit > 0 && routes.length === parseInt(limit)
                 }
             });
         } catch (error) {
