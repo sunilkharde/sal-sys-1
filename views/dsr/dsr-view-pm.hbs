@@ -13,7 +13,8 @@
                 <h3 class="responsive-subtitle mb-0">Designation: {{data.desg_name}}</h3>
             </div>
 
-            <p class="card-text responsive-text info-text text-center mx-auto mb-3" style="max-width:700px; font-size:0.8rem; line-height: 1.2;">
+            <p class="card-text responsive-text info-text text-center mx-auto mb-3"
+                style="max-width:700px; font-size:0.8rem; line-height: 1.2;">
                 Please mark your current location and include a 'Selfie' (mandatory). Additionally, record the odometer
                 reading if using a vehicle and add your daily expenses for the month.
             </p>
@@ -235,7 +236,8 @@
         background-color: #f8f9fa;
         /* Dynamic height based on screen size */
         height: clamp(250px, 50vh, 400px);
-        aspect-ratio: 1; /* Maintain a 3:2 aspect ratio */
+        aspect-ratio: 1;
+        /* Maintain a 3:2 aspect ratio */
     }
 
     .camera-status {
@@ -610,8 +612,8 @@
 
         canvas1Captured = true;
         const context1 = canvas1.getContext('2d');
-        canvas1.width = videoElement.clientWidth / 6;
-        canvas1.height = videoElement.clientHeight / 6;
+        canvas1.width = videoElement.clientWidth / 3; //6;
+        canvas1.height = videoElement.clientHeight / 3; //6;
         context1.drawImage(videoElement, 0, 0, canvas1.width, canvas1.height);
 
         const context1x = canvas1x.getContext('2d');
@@ -631,8 +633,8 @@
 
         canvas2Captured = true;
         const context2 = canvas2.getContext('2d');
-        canvas2.width = videoElement.clientWidth / 3;
-        canvas2.height = videoElement.clientHeight / 3;
+        canvas2.width = videoElement.clientWidth / 2; //3;
+        canvas2.height = videoElement.clientHeight / 2; //3;
         context2.drawImage(videoElement, 0, 0, canvas2.width, canvas2.height);
 
         const context2x = canvas2x.getContext('2d');
@@ -893,4 +895,5 @@
             locationStatus.style.color = '#dc3545';
         }
     }
+
 </script>

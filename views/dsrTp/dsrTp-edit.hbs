@@ -1,17 +1,17 @@
 <div class="container">
     <form id="dsrTpForm" action="/dsrTp/update/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}" method="post">
-        <!-- Header Card (unchanged) -->
+        <!-- Header Card -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-success text-white">
                 <div class="row align-items-center">
                     <div class="col">
-                        <h1 class="card-title mb-0">
+                        <h1 class="card-title mb-0 h5">
                             <i class="bi bi-person-circle me-2"></i>
                             {{empData.emp_name}}
                         </h1>
                     </div>
                     <div class="col-auto">
-                        <span class="badge bg-light {{#if isNextMonth}}text-success{{else}}text-primary{{/if}} fs-6">
+                        <span class="badge bg-light {{#if isNextMonth}}text-success{{else}}text-primary{{/if}}">
                             {{#if isNextMonth}}Next Month Planning{{else}}Current Month Planning{{/if}}
                         </span>
                     </div>
@@ -20,27 +20,49 @@
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <h3 class="text-success">
+                        <h3 class="text-success h6">
                             <i class="bi bi-calendar-month me-2"></i>
                             {{monData.month_name}} {{monData.year}}
                         </h3>
                     </div>
-                    <div class="col-md-6 text-end">
-                        <button type="button" class="btn btn-outline-info btn-sm" onclick="fillWeekdays()">
-                            <i class="bi bi-magic me-1"></i>
-                            Auto Fill Weekdays
-                        </button>
-                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-4">
-                        <p class="mb-2"><strong>Designation:</strong> {{empData.desg_name}}</p>
+                        <p class="mb-2 small"><strong>Designation:</strong> {{empData.desg_name}}</p>
                     </div>
                     <div class="col-md-4">
-                        <p class="mb-2"><strong>HQ:</strong> {{empData.hq_name}}</p>
+                        <p class="mb-2 small"><strong>HQ:</strong> {{empData.hq_name}}</p>
                     </div>
                     <div class="col-md-4">
-                        <p class="mb-2"><strong>Week Off:</strong> {{empData.off_day}}</p>
+                        <p class="mb-2 small"><strong>Week Off:</strong> {{empData.off_day}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-body py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1 me-3" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                    style="width: {{routeStats.percentage}}%" aria-valuenow="{{routeStats.percentage}}"
+                                    aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                <strong>{{routeStats.filled}}/{{routeStats.total}}</strong> routes filled
+                                ({{routeStats.percentage}}%)
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <small class="text-muted">
+                            <span class="badge bg-success me-2">Filled: {{routeStats.filled}}</span>
+                            <span class="badge bg-danger">Empty: {{routeStats.empty}}</span>
+                        </small>
                     </div>
                 </div>
             </div>
@@ -49,41 +71,59 @@
         <!-- Enhanced Location Filter -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light">
-                <h5 class="card-title mb-0">
+                <h5 class="card-title mb-0 h6">
                     <i class="bi bi-funnel me-2"></i>
                     Filter Routes by Location
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row g-3">
+                <div class="row g-2">
                     <div class="col-md-5">
-                        <label for="distFilter" class="form-label">District</label>
-                        <select class="form-select" id="distFilter">
-                            <option value="">Loading districts...</option>
+                        <label for="distFilter" class="form-label small">District</label>
+                        <select class="form-select form-select-sm" id="distFilter">
+                            <option value="">All Districts</option>
                         </select>
                     </div>
                     <div class="col-md-5">
-                        <label for="cityFilter" class="form-label">City</label>
-                        <select class="form-select" id="cityFilter" disabled>
-                            <option value="">Select district first</option>
+                        <label for="cityFilter" class="form-label small">City</label>
+                        <select class="form-select form-select-sm" id="cityFilter" disabled>
+                            <option value="">All Cities</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
+                    {{!-- <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100"
+                            onclick="routeManager.clearFilters()">
                             <i class="bi bi-x-circle me-1"></i>
                             Clear
                         </button>
+                    </div> --}}
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="clearFiltersBtn"
+                            onclick="routeManager.clearFilters()">
+                            <i class="bi bi-x-circle me-1"></i>
+                            <span class="btn-text">Clear</span>
+                            <span class="btn-loading spinner-border spinner-border-sm me-1"
+                                style="display: none;"></span>
+                        </button>
                     </div>
                 </div>
-                <div class="row mt-3">
+
+                <!-- Search Box -->
+                <div class="row mt-2">
                     <div class="col-12">
-                        <div id="loadingRoutes" class="d-none">
-                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                            <span class="text-muted">Loading routes...</span>
-                        </div>
-                        <div id="filterStatus" class="text-muted small">
-                            <span id="routeCount">Loading routes...</span>
-                            <span id="searchInfo" class="ms-2"></span>
+                        <input hidden type="text" class="form-control form-control" id="routeSearch"
+                            placeholder="Search routes by name, district, or city...">
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div id="filterStatus" class="text-muted">
+                            <span id="routeCount">
+                                <span class="spinner-border spinner-border-sm text-success me-2" role="status"
+                                    id="routeLoader"></span>
+                                Loading routes...
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -92,97 +132,80 @@
 
         <!-- Tour Plan Table -->
         <div class="card shadow-sm">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">
+            <div class="card-header bg-light">
+                <h4 class="card-title mb-0 h6">
                     <i class="bi bi-map me-2"></i>
                     Tour Plan Details
                 </h4>
-                <div class="dropdown">
-                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button"
-                        id="bulkActionsDropdown" data-bs-toggle="dropdown">
-                        <i class="bi bi-gear me-1"></i>
-                        Bulk Actions
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" onclick="fillWeekdays()">Fill Weekdays</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="clearAllRoutes()">Clear All Routes</a></li>
-                    </ul>
-                </div>
             </div>
             <div class="card-body p-0">
                 <div style="max-height: 60vh; overflow-y: auto;">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="sticky-top bg-light">
-                                <tr>
-                                    <th class="col-3">Date</th>
-                                    <th class="col-2">Day</th>
-                                    <th class="col-7">Tour Route</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{#each tpData}}
-                                <tr class="{{#isEqual this.off_day this.tp_day}}table-warning{{/isEqual}}">
-                                    <td hidden>
-                                        <input type="hidden" name="dsr_date[]" value="{{momentYMD this.dsr_date}}">
-                                    </td>
-                                    <td class="align-middle">
-                                        <span class="fw-bold">{{this.tp_date}}</span>
-                                    </td>
-                                    <td class="align-middle">
-                                        <span
-                                            class="{{#isEqual this.off_day this.tp_day}}text-danger{{else}}text-muted{{/isEqual}}">
-                                            {{this.tp_day}}
-                                            {{#isEqual this.off_day this.tp_day}}
-                                            <i class="bi bi-umbrella text-danger ms-1"></i>
-                                            {{/isEqual}}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="route-select-container">
-                                            <div class="row g-2">
-                                                <div class="col-12" hidden>
-                                                    <input type="hidden" name="from_city[]" value="{{this.from_city}}">
-                                                    <input type="hidden" name="to_city[]" value="{{this.to_city}}">
-                                                </div>
-                                                <div class="col-12">
-                                                    <input type="hidden" name="tp_id[]" value="{{this.tp_id}}">
-                                                    <input type="text"
-                                                        class="form-control form-control-sm route-display"
-                                                        name="tp_name[]" value="{{this.tp_name}}"
-                                                        placeholder="Select route..." readonly>
-                                                </div>
-                                                <div class="col-12 position-relative">
-                                                    <select class="form-select form-control-sm route-select"
-                                                        data-date="{{momentYMD this.dsr_date}}">
-                                                        <option value="">Select Route</option>
-                                                        <!-- Options will be loaded dynamically -->
-                                                    </select>
-                                                    <div class="route-loading-spinner spinner-border spinner-border-sm d-none position-absolute"
-                                                        style="right: 30px; top: 50%; transform: translateY(-50%);">
-                                                    </div>
-                                                </div>
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="sticky-top bg-light">
+                            <tr>
+                                <th class="col-3">Date</th>
+                                <th class="col-2">Day</th>
+                                <th class="col-7">Tour Route</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each tpData}}
+                            <tr
+                                class="route-row {{#if this.tp_id}}route-filled{{else}}route-empty{{/if}} {{#isEqual this.off_day this.tp_day}}week-off{{/isEqual}}">
+                                <td hidden>
+                                    <input type="hidden" name="dsr_date[]" value="{{momentYMD this.dsr_date}}">
+                                </td>
+                                <td class="align-middle">
+                                    <span class="fw-bold small">{{this.tp_date}}</span>
+                                </td>
+                                <td class="align-middle">
+                                    <span
+                                        class="small {{#isEqual this.off_day this.tp_day}}text-danger{{else}}text-muted{{/isEqual}}">
+                                        {{this.tp_day}}
+                                        {{#isEqual this.off_day this.tp_day}}
+                                        <i class="bi bi-umbrella text-danger ms-1"></i>
+                                        {{/isEqual}}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="route-select-container">
+                                        <div class="row g-1">
+                                            <div class="col-12" hidden>
+                                                <input type="hidden" name="from_city[]" value="{{this.from_city}}">
+                                                <input type="hidden" name="to_city[]" value="{{this.to_city}}">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="hidden" name="tp_id[]" value="{{this.tp_id}}">
+                                                <input type="text" class="form-control form-control-sm route-display"
+                                                    name="tp_name[]" value="{{this.tp_name}}"
+                                                    placeholder="Select route..." readonly>
+                                            </div>
+                                            <div class="col-12">
+                                                <select class="form-select form-select-sm route-select"
+                                                    data-date="{{momentYMD this.dsr_date}}" value="{{this.tp_id}}">
+                                                    <option value="">Select Route</option>
+                                                </select>
                                             </div>
                                         </div>
-                                    </td>
-                                </tr>
-                                {{/each}}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="row mt-4">
+        <div class="row mt-3">
             <div class="col-12 text-center">
-                <button type="submit" class="btn btn-success btn-lg me-3">
-                    <i class="bi bi-check-circle me-2"></i>
+                <button type="submit" class="btn btn-success btn-sm me-2">
+                    <i class="bi bi-check-circle me-1"></i>
                     Save Tour Plan
                 </button>
-                <a href="/dsrTp/view-pm" class="btn btn-outline-secondary btn-lg">
-                    <i class="bi bi-x-circle me-2"></i>
+                <a href="/dsrTp/view-pm" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle me-1"></i>
                     Cancel
                 </a>
             </div>
@@ -191,21 +214,58 @@
 </div>
 
 <script>
-    // Enhanced Route Manager with better performance
-    // Enhanced Route Manager with optimized location filtering
     class RouteManager {
         constructor() {
             this.allRoutes = [];
-            this.districts = [];
-            this.cities = [];
             this.filteredRoutes = [];
-            this.isLoading = false;
             this.currentFilters = { dist: '', city: '' };
+            this.existingSelections = new Map();
+            this.isInitialized = false;
+
             this.init();
         }
 
         async init() {
-            // Set up event listeners
+            try {
+                // Capture existing selections first
+                this.captureExistingSelections();
+
+                // Set up event listeners
+                this.setupEventListeners();
+
+                // Load initial data
+                await this.loadInitialData();
+
+                // Restore selections and apply styles
+                this.restoreExistingSelections();
+                this.applyVisualStyles();
+
+                this.isInitialized = true;
+
+            } catch (error) {
+                console.error('Error initializing RouteManager:', error);
+                this.showError('Failed to initialize page. Please refresh.');
+            }
+        }
+
+        captureExistingSelections() {
+            document.querySelectorAll('.route-select').forEach(select => {
+                const date = select.getAttribute('data-date');
+                const currentValue = select.value;
+                const displayInput = select.closest('.route-row').querySelector('.route-display');
+                const displayValue = displayInput ? displayInput.value : '';
+
+                if (currentValue || displayValue) {
+                    this.existingSelections.set(date, {
+                        tp_id: currentValue,
+                        tp_name: displayValue
+                    });
+                }
+            });
+        }
+
+        setupEventListeners() {
+            // Filter event listeners
             document.getElementById('distFilter').addEventListener('change', (e) => {
                 this.currentFilters.dist = e.target.value;
                 this.loadCitiesByDistrict(e.target.value);
@@ -217,31 +277,56 @@
                 this.applyFilters();
             });
 
-            // Load initial data
-            await Promise.all([
-                this.loadDistricts(),
-                this.loadAllRoutes()
-            ]);
+            document.getElementById('routeSearch').addEventListener('input', (e) => {
+                this.searchRoutes(e.target.value);
+            });
+
+            // Route select change handlers
+            document.querySelectorAll('.route-select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    this.handleRouteChange(e.target);
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'f') {
+                    e.preventDefault();
+                    document.getElementById('routeSearch').focus();
+                }
+            });
+        }
+
+        async loadInitialData() {
+            try {
+                await Promise.all([
+                    this.loadDistricts(),
+                    this.loadAllRoutes()
+                ]);
+            } catch (error) {
+                throw new Error('Failed to load initial data: ' + error.message);
+            }
         }
 
         async loadDistricts() {
             try {
                 const response = await fetch('/dsrTp/get-districts');
-                const data = await response.json();
+                if (!response.ok) throw new Error('Network response was not ok');
 
+                const data = await response.json();
                 if (data.success) {
-                    this.districts = data.districts;
-                    this.updateDistrictFilter();
+                    this.updateDistrictFilter(data.districts);
+                } else {
+                    throw new Error(data.error);
                 }
             } catch (error) {
                 console.error('Error loading districts:', error);
+                this.showError('Failed to load districts');
             }
         }
 
         async loadCitiesByDistrict(district) {
             const cityFilter = document.getElementById('cityFilter');
-            cityFilter.disabled = true;
-            cityFilter.innerHTML = '<option value="">Loading cities...</option>';
 
             try {
                 const url = district ?
@@ -249,55 +334,47 @@
                     '/dsrTp/get-cities';
 
                 const response = await fetch(url);
-                const data = await response.json();
+                if (!response.ok) throw new Error('Network response was not ok');
 
+                const data = await response.json();
                 if (data.success) {
-                    this.cities = data.cities;
-                    this.updateCityFilter();
+                    this.updateCityFilter(data.cities);
+                    cityFilter.disabled = false;
+                } else {
+                    throw new Error(data.error);
                 }
             } catch (error) {
                 console.error('Error loading cities:', error);
                 cityFilter.innerHTML = '<option value="">Error loading cities</option>';
-            } finally {
                 cityFilter.disabled = false;
             }
         }
 
         async loadAllRoutes() {
-            const loadingEl = document.getElementById('loadingRoutes');
-            const routeCountEl = document.getElementById('routeCount');
-
-            loadingEl.classList.remove('d-none');
-            this.isLoading = true;
-
             try {
                 const response = await fetch('/dsrTp/get-all-routes');
-                const data = await response.json();
+                if (!response.ok) throw new Error('Network response was not ok');
 
+                const data = await response.json();
                 if (data.success) {
                     this.allRoutes = data.routes;
                     this.filteredRoutes = [...this.allRoutes];
                     this.updateAllDropdowns();
-
-                    routeCountEl.textContent = `Loaded ${this.allRoutes.length} routes`;
                     this.updateFilterStatus();
                 } else {
                     throw new Error(data.error);
                 }
             } catch (error) {
                 console.error('Error loading routes:', error);
-                routeCountEl.textContent = 'Error loading routes';
-            } finally {
-                loadingEl.classList.add('d-none');
-                this.isLoading = false;
+                this.showError('Failed to load routes');
             }
         }
 
-        updateDistrictFilter() {
+        updateDistrictFilter(districts) {
             const distFilter = document.getElementById('distFilter');
             distFilter.innerHTML = '<option value="">All Districts</option>';
 
-            this.districts.forEach(district => {
+            districts.forEach(district => {
                 const option = document.createElement('option');
                 option.value = district.dist;
                 option.textContent = district.dist;
@@ -305,26 +382,16 @@
             });
         }
 
-        updateCityFilter() {
+        updateCityFilter(cities) {
             const cityFilter = document.getElementById('cityFilter');
             cityFilter.innerHTML = '<option value="">All Cities</option>';
 
-            this.cities.forEach(city => {
+            cities.forEach(city => {
                 const option = document.createElement('option');
                 option.value = city.city;
                 option.textContent = city.city;
                 cityFilter.appendChild(option);
             });
-
-            // Restore city selection if it exists in current cities
-            if (this.currentFilters.city) {
-                const cityExists = this.cities.some(c => c.city === this.currentFilters.city);
-                if (cityExists) {
-                    cityFilter.value = this.currentFilters.city;
-                } else {
-                    this.currentFilters.city = '';
-                }
-            }
         }
 
         applyFilters() {
@@ -338,67 +405,92 @@
             this.updateFilterStatus();
         }
 
-        updateFilterStatus() {
-            const searchInfo = document.getElementById('searchInfo');
-            const routeCount = document.getElementById('routeCount');
-
-            routeCount.textContent = `Showing ${this.filteredRoutes.length} of ${this.allRoutes.length} routes`;
-
-            if (this.currentFilters.dist || this.currentFilters.city) {
-                const filters = [];
-                if (this.currentFilters.dist) filters.push(`District: ${this.currentFilters.dist}`);
-                if (this.currentFilters.city) filters.push(`City: ${this.currentFilters.city}`);
-                searchInfo.textContent = `Filtered by: ${filters.join(', ')}`;
-            } else {
-                searchInfo.textContent = 'Showing all routes';
-            }
-        }
-
         updateAllDropdowns() {
-            const selects = document.querySelectorAll('.route-select');
-            selects.forEach(select => {
-                this.updateDropdown(select, this.filteredRoutes);
+            document.querySelectorAll('.route-select').forEach(select => {
+                this.updateDropdownOptions(select);
             });
         }
 
-        updateDropdown(select, routes) {
+        updateDropdownOptions(select) {
+            const date = select.getAttribute('data-date');
+            const existingSelection = this.existingSelections.get(date);
             const currentValue = select.value;
 
-            // Clear existing options except the first one
-            while (select.options.length > 1) {
-                select.remove(1);
-            }
+            // Clear and rebuild options
+            select.innerHTML = '<option value="">Select Route</option>';
 
-            // Add filtered routes
-            routes.forEach(route => {
-                const option = document.createElement('option');
-                option.value = route.tp_id;
-                option.textContent = route.tp_name;
-                option.setAttribute('data-dist', route.dist);
-                option.setAttribute('data-city', route.city);
+            if (this.filteredRoutes.length > 0) {
+                this.filteredRoutes.forEach(route => {
+                    const option = document.createElement('option');
+                    option.value = route.tp_id;
+                    option.textContent = route.tp_name;
+                    option.setAttribute('data-dist', route.dist);
+                    option.setAttribute('data-city', route.city);
+                    select.appendChild(option);
+                });
 
-                if (route.tp_id == currentValue) {
-                    option.selected = true;
+                // Restore selection if it exists in filtered results
+                if (existingSelection && existingSelection.tp_id) {
+                    const optionExists = Array.from(select.options).some(opt =>
+                        opt.value === existingSelection.tp_id
+                    );
+
+                    if (optionExists) {
+                        select.value = existingSelection.tp_id;
+                        this.updateRouteDisplay(select, existingSelection.tp_name);
+                    }
+                } else if (currentValue) {
+                    select.value = currentValue;
+                    const selectedOption = select.options[select.selectedIndex];
+                    if (selectedOption) {
+                        this.updateRouteDisplay(select, selectedOption.textContent);
+                    }
                 }
-
-                select.appendChild(option);
-            });
-
-            // If current value is not in filtered routes, clear selection
-            if (currentValue && !routes.find(r => r.tp_id == currentValue)) {
-                select.value = '';
-                this.updateRouteDisplay(select, '');
             }
+        }
+
+        restoreExistingSelections() {
+            document.querySelectorAll('.route-select').forEach(select => {
+                const date = select.getAttribute('data-date');
+                const existingSelection = this.existingSelections.get(date);
+
+                if (existingSelection && existingSelection.tp_id) {
+                    select.value = existingSelection.tp_id;
+                    this.updateRouteDisplay(select, existingSelection.tp_name);
+                }
+            });
+        }
+
+        handleRouteChange(selectElement) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const routeName = selectedOption ? selectedOption.textContent : '';
+
+            this.updateRouteDisplay(selectElement, routeName);
+            this.applyVisualStyles();
         }
 
         updateRouteDisplay(selectElement, routeName) {
-            const row = selectElement.closest('tr');
+            const row = selectElement.closest('.route-row');
             const displayInput = row.querySelector('.route-display');
             const tpIdInput = row.querySelector('input[name="tp_id[]"]');
             const fromCityInput = row.querySelector('input[name="from_city[]"]');
             const toCityInput = row.querySelector('input[name="to_city[]"]');
 
-            if (displayInput) displayInput.value = routeName;
+            if (displayInput) {
+                displayInput.value = routeName;
+
+                // Update visual state
+                if (routeName && routeName.trim() !== '') {
+                    row.classList.add('route-filled');
+                    row.classList.remove('route-empty');
+                    displayInput.classList.add('is-valid');
+                } else {
+                    row.classList.add('route-empty');
+                    row.classList.remove('route-filled');
+                    displayInput.classList.remove('is-valid');
+                }
+            }
+
             if (tpIdInput) tpIdInput.value = selectElement.value;
 
             // Parse route for from/to cities
@@ -406,126 +498,231 @@
                 const cities = routeName.split(' To ');
                 if (fromCityInput) fromCityInput.value = cities[0].trim();
                 if (toCityInput) toCityInput.value = cities[1].trim();
-            } else {
-                if (fromCityInput) fromCityInput.value = '';
-                if (toCityInput) toCityInput.value = '';
             }
+        }
+
+        applyVisualStyles() {
+            let filledCount = 0;
+            const totalCount = document.querySelectorAll('.route-display').length;
+
+            document.querySelectorAll('.route-display').forEach(display => {
+                if (display.value && display.value.trim() !== '') {
+                    filledCount++;
+                }
+            });
+
+            // Update progress in header if needed
+            this.updateProgressIndicator(filledCount, totalCount);
+        }
+
+        updateProgressIndicator(filled, total) {
+            // This can be enhanced to update the progress bar dynamically
+            console.log(`Progress: ${filled}/${total} (${Math.round((filled / total) * 100)}%)`);
+        }
+
+        searchRoutes(query) {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                const searchLower = query.toLowerCase();
+                this.filteredRoutes = this.allRoutes.filter(route =>
+                    route.tp_name.toLowerCase().includes(searchLower) ||
+                    (route.dist && route.dist.toLowerCase().includes(searchLower)) ||
+                    (route.city && route.city.toLowerCase().includes(searchLower))
+                );
+
+                this.updateAllDropdowns();
+                this.updateFilterStatus(`Search: "${query}" - ${this.filteredRoutes.length} results`);
+            }, 300);
+        }
+
+        updateFilterStatus(message = '') {
+            const routeCount = document.getElementById('routeCount');
+            routeCount.textContent = `Showing ${this.filteredRoutes.length} of ${this.allRoutes.length} routes${message ? ` - ${message}` : ''}`;
+        }
+
+        clearFilters() {
+            const clearBtn = document.getElementById('clearFiltersBtn');
+
+            // Show loading state
+            this.setButtonLoadingState(clearBtn, true, 'Clearing...');
+
+            // Use setTimeout to allow UI to update before processing
+            setTimeout(() => {
+                try {
+                    // Clear filter values
+                    document.getElementById('distFilter').value = '';
+                    document.getElementById('cityFilter').value = '';
+                    document.getElementById('routeSearch').value = '';
+
+                    // Reset filters
+                    this.currentFilters = { dist: '', city: '' };
+                    this.filteredRoutes = [...this.allRoutes];
+
+                    // Update UI
+                    this.updateAllDropdowns();
+                    this.updateFilterStatus();
+                    this.loadCitiesByDistrict(''); // Reset cities
+
+                    // Show success feedback
+                    this.showTemporarySuccess('Filters cleared successfully');
+
+                } catch (error) {
+                    console.error('Error clearing filters:', error);
+                    this.showError('Failed to clear filters');
+                } finally {
+                    // Remove loading state
+                    this.setButtonLoadingState(clearBtn, false, 'Clear');
+                }
+            }, 300); // Small delay for better UX
+        }
+
+        setButtonLoadingState(button, isLoading, text = '') {
+            if (isLoading) {
+                button.classList.add('btn-processing', 'btn-disabled');
+                const btnText = button.querySelector('.btn-text');
+                if (btnText && text) {
+                    btnText.textContent = text;
+                }
+            } else {
+                button.classList.remove('btn-processing', 'btn-disabled');
+                const btnText = button.querySelector('.btn-text');
+                if (btnText) {
+                    btnText.textContent = text || 'Clear';
+                }
+            }
+        }
+
+        showTemporarySuccess(message) {
+            // Remove existing success alerts
+            document.querySelectorAll('.alert-success').forEach(alert => alert.remove());
+
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+            successDiv.innerHTML = `
+            <i class="bi bi-check-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+
+            document.querySelector('.container').insertBefore(successDiv, document.querySelector('.card'));
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.remove();
+                }
+            }, 3000);
+        }
+
+        /*clearFilters() {
+            document.getElementById('distFilter').value = '';
+            document.getElementById('cityFilter').value = '';
+            document.getElementById('routeSearch').value = '';
+
+            this.currentFilters = { dist: '', city: '' };
+            this.filteredRoutes = [...this.allRoutes];
+            this.updateAllDropdowns();
+            this.updateFilterStatus();
+            this.loadCitiesByDistrict(''); // Reset cities
+        }*/
+
+        showError(message) {
+            // Remove existing alerts
+            document.querySelectorAll('.alert-danger').forEach(alert => alert.remove());
+
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            errorDiv.innerHTML = `
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+
+            document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.card'));
         }
     }
 
-    // Initialize route manager
+    // Initialize route manager when DOM is loaded
     let routeManager;
 
     document.addEventListener('DOMContentLoaded', function () {
         routeManager = new RouteManager();
-
-        // Set up change handlers for all route selects
-        document.querySelectorAll('.route-select').forEach(select => {
-            select.addEventListener('change', function () {
-                const selectedOption = this.options[this.selectedIndex];
-                const routeName = selectedOption ? selectedOption.textContent : '';
-                routeManager.updateRouteDisplay(this, routeName);
-            });
-        });
     });
-
-    function clearFilters() {
-        document.getElementById('distFilter').value = '';
-        document.getElementById('cityFilter').value = '';
-        routeManager.currentFilters = { dist: '', city: '' };
-        routeManager.loadCitiesByDistrict(''); // Load all cities
-        routeManager.applyFilters();
-    }
-
-    function clearAllRoutes() {
-        if (confirm('Are you sure you want to clear all routes?')) {
-            document.querySelectorAll('.route-select').forEach(select => {
-                select.value = '';
-                select.dispatchEvent(new Event('change'));
-            });
-        }
-    }
-
-    function fillWeekdays() {
-        const rows = document.querySelectorAll('tbody tr');
-        let filledCount = 0;
-
-        rows.forEach(row => {
-            const dayCell = row.querySelector('td:nth-child(2)');
-            const select = row.querySelector('.route-select');
-            const dayText = dayCell.textContent.trim();
-
-            // Skip weekends and week off days
-            if (!['Sat', 'Sun'].includes(dayText) && !row.classList.contains('table-warning')) {
-                if (select && select.value === '' && select.options.length > 1) {
-                    // Select first available route
-                    select.selectedIndex = 1;
-                    select.dispatchEvent(new Event('change'));
-                    filledCount++;
-                }
-            }
-        });
-
-        if (filledCount > 0) {
-            alert(`Successfully filled ${filledCount} weekdays with routes!`);
-        } else {
-            alert('No empty weekdays found to fill.');
-        }
-    }
-
-    // Optional: Add search functionality
-    function setupSearch() {
-        const searchInput = document.createElement('input');
-        searchInput.type = 'text';
-        searchInput.className = 'form-control form-control-sm mt-2';
-        searchInput.placeholder = 'Search routes...';
-        searchInput.addEventListener('input', (e) => {
-            routeManager.searchRoutes(e.target.value);
-        });
-
-        document.querySelector('.card-body').appendChild(searchInput);
-    }
 </script>
 
 <style>
-    .card {
-        border-radius: 12px;
+    .route-filled {
+        background-color: #f8fff8 !important;
+        border-left: 4px solid #198754;
     }
 
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        background-color: #f8f9fa;
+    .route-empty {
+        background-color: #fff8f8 !important;
+        border-left: 4px solid #dc3545;
     }
 
-    .sticky-top {
-        z-index: 10;
+    .week-off {
+        background-color: #fff3cd !important;
     }
 
-    .btn {
-        border-radius: 8px;
-        font-weight: 500;
-    }
-
-    .form-control,
-    .form-select {
-        border-radius: 6px;
+    .route-display.is-valid {
+        border-color: #198754;
+        background-color: #f8fff8;
     }
 
     .table-hover tbody tr:hover {
-        background-color: rgba(0, 123, 255, 0.05);
+        background-color: rgba(0, 0, 0, 0.04);
     }
 
-    .route-display {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
+    .card {
+        border-radius: 8px;
     }
 
-    .route-select-container {
-        position: relative;
+    .form-select-sm,
+    .form-control-sm {
+        border-radius: 4px;
     }
 
-    .route-loading-spinner {
-        z-index: 5;
+    .progress {
+        border-radius: 4px;
+    }
+
+
+    /* Loading state styles */
+    .btn-loading {
+        display: none;
+    }
+
+    .btn-disabled {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .btn-processing .btn-text {
+        opacity: 0.7;
+    }
+
+    .btn-processing .btn-loading {
+        display: inline-block;
+    }
+
+
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 10px;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .table {
+            font-size: 0.8rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            /*0.775rem;*/
+        }
     }
 </style>

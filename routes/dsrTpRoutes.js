@@ -28,12 +28,10 @@ router.get('/atten-export-csv', dsrTpController.attenExportCSV);
 
 router.get('/get-fix-route', dsrTpController.getFixRoutes);
 
-// Keep your existing route for filtered routes
-router.get('/get-routes-by-location', dsrTpController.getRoutesByLocation);
-
 // Add these new routes for optimized location filtering
 router.get('/get-districts', dsrTpController.getDistinctDistricts);
 router.get('/get-cities', dsrTpController.getDistinctCities);
 router.get('/get-all-routes', dsrTpController.getAllRoutes);
+
 
 export default router;

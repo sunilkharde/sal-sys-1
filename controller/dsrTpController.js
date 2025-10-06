@@ -18,6 +18,7 @@ const titleCase = (str) => {
         .join(' ');
 };
 
+
 class dsrTpController {
 
     static getData = async (req, user) => {
@@ -279,7 +280,7 @@ class dsrTpController {
     };
 
 
-    /***** DSR Start for Open/Post Month */
+    /***** TP Routes Start */
     static viewPM = async (req, res) => {
         try {
             const { next_month } = req.query; // Flag to indicate next month view
@@ -358,12 +359,70 @@ class dsrTpController {
         }
     }
 
+    // Cache for frequently accessed data
+    static cache = new Map();
+
+    static CACHE_TTL = 300000; // 5 minutes
+
+    static getCacheKey(prefix, params = '') {
+        return `${prefix}_${JSON.stringify(params)}`;
+    }
+
+    static async getCachedData(key, fetchFunction) {
+        const cached = this.cache.get(key);
+        if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+            return cached.data;
+        }
+
+        const data = await fetchFunction();
+        this.cache.set(key, { data, timestamp: Date.now() });
+        return data;
+    }
+
+    static clearCache() {
+        this.cache.clear();
+    };
+
+    static async createEmptyRecords(emp_id, from_date, to_date, user) {
+        const numDays = to_date.diff(from_date, 'days');
+        const c_by = user?.user_id || 0;
+
+        const insertValues = [];
+        const currentDate = from_date.clone();
+
+        for (let i = 0; i <= numDays; i++) {
+            insertValues.push([emp_id, currentDate.format('YYYY-MM-DD'), c_by]);
+            currentDate.add(1, 'day');
+        }
+
+        if (insertValues.length > 0) {
+            const placeholders = insertValues.map(() => '(?, ?, CURRENT_TIMESTAMP(), ?)').join(',');
+            const bulkInsertSql = `INSERT INTO dsr_1 (emp_id, dsr_date, c_at, c_by) VALUES ${placeholders}`;
+            const flattenedValues = insertValues.flat();
+            await executeQuery(bulkInsertSql, flattenedValues);
+        }
+
+    };
+
+    static calculateRouteStats(tpData) {
+        const total = tpData.length;
+        const filled = tpData.filter(route => route.tp_id && route.tp_name).length;
+        const empty = total - filled;
+        const percentage = total > 0 ? Math.round((filled / total) * 100) : 0;
+
+        return { total, filled, empty, percentage };
+    };
+
     static edit = async (req, res) => {
         const { emp_id, year, month } = req.params;
         const { next_month } = req.query;
 
         try {
-            // Fix: Zero-pad the month to ensure proper format
+            // Validate parameters
+            if (!emp_id || !year || !month) {
+                return res.status(400).send('Missing required parameters');
+            }
+
             const paddedMonth = month.toString().padStart(2, '0');
             const month_date = moment(`${year}-${paddedMonth}-01`).format('YYYY-MM-DD');
             const month_name = moment(month_date).format('MMMM');
@@ -371,100 +430,94 @@ class dsrTpController {
             const monData = {
                 year: parseInt(year),
                 month: parseInt(month),
-                month_name: month_name,
-                month_date: month_date
+                month_name,
+                month_date
             };
 
-            // Rest of your code remains the same...
             const from_date = moment(monData.month_date);
             const to_date = from_date.clone().endOf('month');
             const isNextMonth = next_month === 'true';
 
-            // Check if records exist
-            const checkSql = "SELECT COUNT(*) as count FROM dsr_1 WHERE emp_id=? AND dsr_date BETWEEN ? AND ?";
-            const checkParams = [emp_id, from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD')];
-            const countResult = await executeQuery(checkSql, checkParams);
+            // Execute all database queries in parallel
+            const [
+                countResult,
+                empData,
+                districts,
+                tpData
+            ] = await Promise.all([
+                // Check existing records
+                executeQuery(
+                    "SELECT COUNT(*) as count FROM dsr_1 WHERE emp_id=? AND dsr_date BETWEEN ? AND ?",
+                    [emp_id, from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD')]
+                ),
+                // Get employee details
+                executeQuery(
+                    `SELECT 
+                        a.emp_id, 
+                        CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name,
+                        a.desg_id, b.desg_name, a.hq_id, c.hq_name, a.off_day,
+                        a.boss_id, 
+                        CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name
+                    FROM employees as a 
+                    JOIN designations as b ON a.desg_id=b.desg_id 
+                    JOIN hqs as c ON a.hq_id=c.hq_id 
+                    JOIN employees as d ON a.boss_id=d.emp_id 
+                    WHERE a.status='A' AND a.emp_id=?`,
+                    [emp_id]
+                ),
+                // Get districts from cache
+                this.getCachedData(
+                    this.getCacheKey('districts'),
+                    () => executeQuery("SELECT DISTINCT dist FROM tp_routes WHERE tp_status = 'A' ORDER BY dist")
+                ),
+                // Get TP data
+                executeQuery(
+                    `SELECT 
+                        a.emp_id, a.dsr_date, a.post_mg, a.tp_1 as tp_id,
+                        COALESCE(d.from, IF(a.tp_route IS NULL, c.hq_name, a.from_city)) AS from_city,
+                        COALESCE(d.to, a.to_city) AS to_city,
+                        DATE_FORMAT(a.dsr_date, '%a') AS tp_day,
+                        DATE_FORMAT(a.dsr_date, '%d') AS tp_date,
+                        b.off_day, c.hq_name,
+                        CONCAT(COALESCE(d.from, ''), ' To ', COALESCE(d.to, '')) as tp_name
+                    FROM dsr_1 AS a 
+                    JOIN employees AS b ON a.emp_id = b.emp_id 
+                    JOIN hqs AS c ON b.hq_id = c.hq_id 
+                    LEFT JOIN tp_routes AS d ON a.tp_1 = d.tp_id 
+                    WHERE a.dsr_date BETWEEN ? AND ? AND a.emp_id = ? 
+                    ORDER BY a.dsr_date`,
+                    [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id]
+                )
+            ]);
+
+            // Validate data
+            if (empData.length === 0) {
+                return res.status(404).send('Employee not found');
+            }
 
             // Create records only if they don't exist (for next month planning)
             if (countResult[0].count === 0 && isNextMonth) {
-                const numDays = to_date.diff(from_date, 'days');
-                const c_by = res.locals.user?.user_id || 0;
-
-                const insertValues = [];
-                const currentDate = from_date.clone();
-
-                for (let i = 0; i <= numDays; i++) {
-                    insertValues.push([emp_id, currentDate.format('YYYY-MM-DD'), c_by]);
-                    currentDate.add(1, 'day');
-                }
-
-                if (insertValues.length > 0) {
-                    const placeholders = insertValues.map(() => '(?, ?, CURRENT_TIMESTAMP(), ?)').join(',');
-                    const bulkInsertSql = `INSERT INTO dsr_1 (emp_id, dsr_date, c_at, c_by) VALUES ${placeholders}`;
-                    const flattenedValues = insertValues.flat();
-                    await executeQuery(bulkInsertSql, flattenedValues);
-                }
+                await this.createEmptyRecords(emp_id, from_date, to_date, res.locals.user);
             }
 
-            // Get TP data with optimized query
-            const sqlTp = `SELECT 
-            a.emp_id, a.dsr_date, a.post_mg,
-            COALESCE(d.from, IF(a.tp_route IS NULL, c.hq_name, a.from_city)) AS from_city,
-            COALESCE(d.to, a.to_city) AS to_city,
-            DATE_FORMAT(a.dsr_date, '%a') AS tp_day,
-            DATE_FORMAT(a.dsr_date, '%d') AS tp_date,
-            b.off_day, c.hq_name, 
-            a.tp_1 as tp_id,
-            CONCAT(COALESCE(d.from, ''), ' To ', COALESCE(d.to, '')) as tp_name
-            FROM dsr_1 AS a 
-            JOIN employees AS b ON a.emp_id = b.emp_id 
-            JOIN hqs AS c ON b.hq_id = c.hq_id 
-            LEFT JOIN tp_routes AS d ON a.tp_1 = d.tp_id 
-            WHERE a.dsr_date BETWEEN ? AND ? AND a.emp_id = ? 
-            ORDER BY a.dsr_date`;
-
-            // Get employee details
-            const sqlStr2 = `SELECT 
-            a.emp_id, 
-            CONCAT(a.last_name,' ',a.first_name,' ',a.middle_name) as emp_name,
-            a.desg_id, b.desg_name, a.hq_id, c.hq_name, a.off_day,
-            a.boss_id, 
-            CONCAT(d.last_name,' ',d.first_name,' ',d.middle_name) as boss_name
-            FROM employees as a 
-            JOIN designations as b ON a.desg_id=b.desg_id 
-            JOIN hqs as c ON a.hq_id=c.hq_id 
-            JOIN employees as d ON a.boss_id=d.emp_id 
-            WHERE a.status='A' AND a.emp_id=?`;
-
-            // Get location data for filter
-            const distCityListSql = `SELECT DISTINCT dist, city, 
-            CONCAT(dist, ' - ', city) as dist_city 
-            FROM tp_routes 
-            WHERE tp_status = 'A' 
-            ORDER BY dist, city`;
-
-            // Remove the distCityList query and get districts separately
-            const districtsSql = `SELECT DISTINCT dist FROM tp_routes WHERE tp_status = 'A' ORDER BY dist`;
-            const [tpData, empData, districts] = await Promise.all([
-                executeQuery(sqlTp, [from_date.format('YYYY-MM-DD'), to_date.format('YYYY-MM-DD'), emp_id]),
-                executeQuery(sqlStr2, [emp_id]),
-                executeQuery(districtsSql)
-            ]);
+            // Calculate route statistics
+            const routeStats = this.calculateRouteStats(tpData);
 
             res.render('dsrTp/dsrTp-edit', {
                 layout: 'mobile',
-                monData: monData,
+                monData,
                 empData: empData[0],
                 tpData,
-                districts, // Pass only districts initially
-                isNextMonth
+                districts,
+                isNextMonth,
+                routeStats
             });
 
         } catch (error) {
             console.error('Error in edit:', error);
             res.status(500).send('Internal Server Error');
         }
-    }
+    };
 
     static update = async (req, res) => {
         const { emp_id, year, month } = req.params;
@@ -472,41 +525,50 @@ class dsrTpController {
         const { dsr_date, from_city, to_city, tp_id } = req.body;
 
         try {
-            var u_by = res.locals.user !== null && res.locals.user !== undefined ? res.locals.user.user_id : 0;
+            const u_by = res.locals.user?.user_id || 0;
 
+            // Convert to arrays if single values
             const dsr_date_val = Array.isArray(dsr_date) ? dsr_date : [dsr_date];
             const from_city_val = Array.isArray(from_city) ? from_city : [from_city];
             const to_city_val = Array.isArray(to_city) ? to_city : [to_city];
             const tp_id_val = Array.isArray(tp_id) ? tp_id : [tp_id];
 
-            for (let i = 0; i < dsr_date_val.length; i++) {
-                const from_city_title = from_city_val[i] ? titleCase(from_city_val[i]) : null;
-                const to_city_title = to_city_val[i] ? titleCase(to_city_val[i]) : null;
+            // Process updates in batches for better performance
+            const updatePromises = dsr_date_val.map((date, index) => {
+                const from_city_title = from_city_val[index] ? titleCase(from_city_val[index]) : null;
+                const to_city_title = to_city_val[index] ? titleCase(to_city_val[index]) : null;
 
-                const sqlStrDt = "UPDATE dsr_1 Set tp_route=?, from_city=?, to_city=?, tp_1=?, tp_2=?, u_at=CURRENT_TIMESTAMP,u_by=? Where dsr_date=? and emp_id=?"
-                const paramsDt = [to_city_title, from_city_title, to_city_title, tp_id_val[i], tp_id_val[i], u_by, dsr_date_val[i], emp_id];
-                await executeQuery(sqlStrDt, paramsDt);
-            }
+                return executeQuery(
+                    "UPDATE dsr_1 SET tp_route=?, from_city=?, to_city=?, tp_1=?, tp_2=?, u_at=CURRENT_TIMESTAMP, u_by=? WHERE dsr_date=? AND emp_id=?",
+                    [to_city_title, from_city_title, to_city_title, tp_id_val[index], tp_id_val[index], u_by, date, emp_id]
+                );
+            });
 
-            // Redirect based on context
-            const redirectPath = next_month === 'true' ? '/dsrTp/view-pm?next_month=true&alert=Update+Records+successfully'
+            await Promise.all(updatePromises);
+
+            // Clear cache to ensure fresh data
+            this.clearCache();
+
+            const redirectPath = next_month === 'true'
+                ? '/dsrTp/view-pm?next_month=true&alert=Update+Records+successfully'
                 : '/dsrTp/view-pm?alert=Update+Records+successfully';
+
             res.redirect(redirectPath);
 
         } catch (err) {
-            console.error(err);
-            return res.render('dsr/dsr-view', { alert: `Internal server error` });
+            console.error('Error in update:', err);
+            res.status(500).send('Internal Server Error');
         }
     };
 
-    /***** DSR End for Open/Post Month*/
-
-
-    /***** TP Routes Start */
     static getDistinctDistricts = async (req, res) => {
         try {
-            const sql = `SELECT DISTINCT dist FROM tp_routes WHERE tp_status = 'A' ORDER BY dist`;
-            const districts = await executeQuery(sql);
+            const districts = await this.getCachedData(
+                this.getCacheKey('districts'),
+                () => executeQuery("SELECT DISTINCT dist FROM tp_routes WHERE tp_status = 'A' ORDER BY dist")
+            );
+
+            res.set('Cache-Control', 'public, max-age=300');
             res.json({ success: true, districts });
         } catch (error) {
             console.error('Error fetching districts:', error);
@@ -517,16 +579,22 @@ class dsrTpController {
     static getDistinctCities = async (req, res) => {
         try {
             const { dist } = req.query;
-            let sql = `SELECT DISTINCT city FROM tp_routes WHERE tp_status = 'A'`;
-            let params = [];
+            const cacheKey = this.getCacheKey('cities', dist);
 
-            if (dist) {
-                sql += ` AND dist = ?`;
-                params.push(dist);
-            }
+            const cities = await this.getCachedData(cacheKey, async () => {
+                let sql = `SELECT DISTINCT city FROM tp_routes WHERE tp_status = 'A'`;
+                const params = [];
 
-            sql += ` ORDER BY city`;
-            const cities = await executeQuery(sql, params);
+                if (dist) {
+                    sql += ` AND dist = ?`;
+                    params.push(dist);
+                }
+
+                sql += ` ORDER BY city`;
+                return await executeQuery(sql, params);
+            });
+
+            res.set('Cache-Control', 'public, max-age=300');
             res.json({ success: true, cities });
         } catch (error) {
             console.error('Error fetching cities:', error);
@@ -536,67 +604,27 @@ class dsrTpController {
 
     static getAllRoutes = async (req, res) => {
         try {
-            const sql = `SELECT tp_id, CONCAT(\`from\`, ' To ', \`to\`) as tp_name, dist, city 
-                     FROM tp_routes 
-                     WHERE tp_status = 'A'
-                     ORDER BY \`from\`, \`to\``;
+            const routes = await this.getCachedData(
+                this.getCacheKey('all_routes'),
+                () => executeQuery(`
+                    SELECT tp_id, \`from\`, \`to\`, 
+                           CONCAT(\`from\`, ' To ', \`to\`) as tp_name, 
+                           dist, city 
+                    FROM tp_routes 
+                    WHERE tp_status = 'A'
+                    ORDER BY \`from\`, \`to\`
+                `)
+            );
 
-            const routes = await executeQuery(sql);
+            res.set('Cache-Control', 'public, max-age=300');
             res.json({ success: true, routes });
         } catch (error) {
             console.error('Error fetching all routes:', error);
             res.status(500).json({ success: false, error: 'Failed to fetch routes' });
         }
     };
+    /***** TP Routes End */
 
-    // Check this for delete
-    static getRoutesByLocation = async (req, res) => {
-        try {
-            const { dist, city, page = 1, limit = 0 } = req.query; // Change default limit to 0 for no limit
-            const offset = (page - 1) * limit;
-
-            let sql = `SELECT tp_id, CONCAT(\`from\`, ' To ', \`to\`) as tp_name, dist, city 
-                   FROM tp_routes 
-                   WHERE tp_status = 'A'`;
-
-            let params = [];
-
-            if (dist && city) {
-                sql += ` AND dist = ? AND city = ?`;
-                params = [dist, city];
-            } else if (dist) {
-                sql += ` AND dist = ?`;
-                params = [dist];
-            } else if (city) {
-                sql += ` AND city = ?`;
-                params = [city];
-            }
-
-            sql += ` ORDER BY \`from\`, \`to\``;
-
-            // Only apply limit if explicitly requested
-            if (limit > 0) {
-                sql += ` LIMIT ? OFFSET ?`;
-                params.push(parseInt(limit), parseInt(offset));
-            }
-
-            const routes = await executeQuery(sql, params);
-
-            res.json({
-                success: true,
-                routes,
-                pagination: {
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    total: routes.length,
-                    hasMore: limit > 0 && routes.length === parseInt(limit)
-                }
-            });
-        } catch (error) {
-            console.error('Error fetching routes:', error);
-            res.status(500).json({ success: false, error: 'Failed to fetch routes' });
-        }
-    };
 
     static getFixRoutes = async (req, res) => {
         const { dist, city } = req.query;
@@ -695,8 +723,6 @@ class dsrTpController {
             res.status(500).send('Internal Server Error');
         }
     };
-    /***** TP Routes End */
-
 
     static postPM = async (req, res) => {
         try {
