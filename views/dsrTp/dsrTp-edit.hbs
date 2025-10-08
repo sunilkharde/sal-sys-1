@@ -90,13 +90,6 @@
                             <option value="">All Cities</option>
                         </select>
                     </div>
-                    {{!-- <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-outline-secondary btn-sm w-100"
-                            onclick="routeManager.clearFilters()">
-                            <i class="bi bi-x-circle me-1"></i>
-                            Clear
-                        </button>
-                    </div> --}}
                     <div class="col-md-2 d-flex align-items-end">
                         <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="clearFiltersBtn"
                             onclick="routeManager.clearFilters()">
@@ -108,11 +101,16 @@
                     </div>
                 </div>
 
-                <!-- Search Box -->
+                <!-- Search Box with Button -->
                 <div class="row mt-2">
                     <div class="col-12">
-                        <input hidden type="text" class="form-control form-control" id="routeSearch"
-                            placeholder="Search routes by name, district, or city...">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="routeSearch"
+                                placeholder="Search routes by name, district, or city...">
+                            <button class="btn btn-outline-success" type="button" id="searchBtn">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -133,10 +131,30 @@
         <!-- Tour Plan Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-light">
-                <h4 class="card-title mb-0 h6">
-                    <i class="bi bi-map me-2"></i>
-                    Tour Plan Details
-                </h4>
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h4 class="card-title mb-0 h6">
+                            <i class="bi bi-map me-2"></i>
+                            Tour Plan
+                        </h4>
+                    </div>
+                    <div class="col-auto">
+                        <!-- Copy Previous Month TP Button -->
+                        {{#if tpData}}
+                        <button type="button" class="btn btn-outline-success btn-sm"
+                            onclick="routeManager.copyPreviousMonthTP()">
+                            <i class="bi bi-copy me-1"></i>
+                            Copy Last Month's TP
+                        </button>
+                        {{else}}
+                        <button type="button" class="btn btn-outline-success btn-sm"
+                            onclick="window.location.href='/dsrTp/update/{{monData.year}}/{{monData.month}}/{{empData.emp_id}}'">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Refresh
+                        </button>
+                        {{/if}}
+                    </div>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div style="max-height: 60vh; overflow-y: auto;">
@@ -270,15 +288,31 @@
                 this.currentFilters.dist = e.target.value;
                 this.loadCitiesByDistrict(e.target.value);
                 this.applyFilters();
+                document.getElementById('routeSearch').value = '';
             });
 
             document.getElementById('cityFilter').addEventListener('change', (e) => {
                 this.currentFilters.city = e.target.value;
                 this.applyFilters();
+                document.getElementById('routeSearch').value = '';
             });
 
-            document.getElementById('routeSearch').addEventListener('input', (e) => {
+            /*document.getElementById('routeSearch').addEventListener('input', (e) => {
                 this.searchRoutes(e.target.value);
+            });*/
+
+            // Search button event listener
+            document.getElementById('searchBtn').addEventListener('click', () => {
+                const searchQuery = document.getElementById('routeSearch').value;
+                this.searchRoutes(searchQuery);
+            });
+
+            // Enter key in search box
+            document.getElementById('routeSearch').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.searchRoutes(e.target.value);
+                }
             });
 
             // Route select change handlers
@@ -576,6 +610,77 @@
             }, 300); // Small delay for better UX
         }
 
+        // New method to copy previous month's TP
+        async copyPreviousMonthTP() {
+            const copyButton = document.querySelector('button[onclick*="copyPreviousMonthTP"]');
+            const originalText = copyButton.innerHTML;
+
+            if (!confirm('Are you sure you want to copy the previous month\'s tour plan? This will overwrite any existing routes for this month.')) {
+                return;
+            }
+
+            try {
+                // Show loading state on button
+                copyButton.classList.add('btn-copy-loading');
+                copyButton.disabled = true;
+                copyButton.innerHTML = '<span class="btn-text">Copying...</span>';
+
+                // Show loading state
+                this.showTemporarySuccess('Copying previous month\'s tour plan...');
+
+                // Get current month and employee data from the page
+                const currentYear = '{{monData.year}}';
+                const currentMonth = '{{monData.month}}';
+                const empId = '{{empData.emp_id}}';
+                const isNextMonth = '{{isNextMonth}}' === 'true';
+
+                // Validate required data
+                if (!currentYear || !currentMonth || !empId) {
+                    throw new Error('Missing required data for copying tour plan');
+                }
+
+                // Make AJAX call to copy TP
+                const response = await fetch(`/dsrTp/copy-previous-month`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        year: currentYear,
+                        month: currentMonth,
+                        emp_id: empId,
+                        next_month: isNextMonth
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || `HTTP error! status: ${response.status}`);
+                }
+
+                if (result.success) {
+                    this.showTemporarySuccess(`Tour plan copied successfully! ${result.message} Refreshing...`);
+
+                    // Refresh the page after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    throw new Error(result.message || 'Failed to copy tour plan');
+                }
+
+            } catch (error) {
+                console.error('Error copying tour plan:', error);
+                this.showError('Failed to copy previous month\'s tour plan: ' + error.message);
+            } finally {
+                // Restore button state
+                copyButton.classList.remove('btn-copy-loading');
+                copyButton.disabled = false;
+                copyButton.innerHTML = originalText;
+            }
+        }
+
         setButtonLoadingState(button, isLoading, text = '') {
             if (isLoading) {
                 button.classList.add('btn-processing', 'btn-disabled');
@@ -598,12 +703,11 @@
 
             const successDiv = document.createElement('div');
             successDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
-            successDiv.innerHTML = `
-            <i class="bi bi-check-circle me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            successDiv.innerHTML = `<i class="bi bi-check-circle me-2"></i>${message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
 
-            document.querySelector('.container').insertBefore(successDiv, document.querySelector('.card'));
+            // Find a safe place to insert the alert
+            this.insertAlertSafe(successDiv);
 
             // Auto-remove after 3 seconds
             setTimeout(() => {
@@ -613,31 +717,36 @@
             }, 3000);
         }
 
-        /*clearFilters() {
-            document.getElementById('distFilter').value = '';
-            document.getElementById('cityFilter').value = '';
-            document.getElementById('routeSearch').value = '';
-
-            this.currentFilters = { dist: '', city: '' };
-            this.filteredRoutes = [...this.allRoutes];
-            this.updateAllDropdowns();
-            this.updateFilterStatus();
-            this.loadCitiesByDistrict(''); // Reset cities
-        }*/
-
         showError(message) {
-            // Remove existing alerts
+            // Remove existing error alerts
             document.querySelectorAll('.alert-danger').forEach(alert => alert.remove());
 
             const errorDiv = document.createElement('div');
             errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
-            errorDiv.innerHTML = `
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>${message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
 
-            document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.card'));
+            // Find a safe place to insert the alert
+            this.insertAlertSafe(errorDiv);
         }
+
+        insertAlertSafe(alertElement) {
+            const container = document.querySelector('.container');
+            if (!container) {
+                console.warn('Container not found for alert');
+                return;
+            }
+
+            // Find the first element in container to insert before
+            const firstChild = container.firstElementChild;
+            if (firstChild) {
+                container.insertBefore(alertElement, firstChild);
+            } else {
+                // If no children, just append to container
+                container.appendChild(alertElement);
+            }
+        }
+
     }
 
     // Initialize route manager when DOM is loaded
@@ -685,6 +794,16 @@
         border-radius: 4px;
     }
 
+    /* Search input group styling */
+    .input-group-sm .form-control {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .input-group-sm .btn {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
 
     /* Loading state styles */
     .btn-loading {
@@ -704,7 +823,6 @@
         display: inline-block;
     }
 
-
     /* Responsive improvements */
     @media (max-width: 768px) {
         .container {
@@ -722,7 +840,53 @@
         .btn-sm {
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
-            /*0.775rem;*/
+        }
+    }
+
+    /* Alert positioning and styling */
+    .alert {
+        position: relative;
+        z-index: 1000;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+    }
+
+    /* Ensure container has proper positioning */
+    .container {
+        position: relative;
+    }
+
+    /* Loading state for the copy button */
+    .btn-copy-loading {
+        position: relative;
+    }
+
+    .btn-copy-loading .btn-text {
+        visibility: hidden;
+    }
+
+    .btn-copy-loading::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-left: -8px;
+        margin-top: -8px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
         }
     }
 </style>

@@ -1,94 +1,100 @@
-<div class="container py-3">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h4 style=" margin-bottom: 20px;">List of Purchase orders</h4>
-        <a href="/po/create" class="btn btn-success">Create New</a>
+<div class="container py-1">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h4 class="m-0">List of Purchase Orders</h4>
+        <a href="/po/create" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i> Create New
+        </a>
     </div>
 
-    <form id="form1" action="/po/view" method="GET">
-        <div class="col-lg-9"> {{!-- border p-4 --}}
-            <div class="form-group row mb-3">
-                <label for="from_date" class="col-sm-2 col-form-label text-end">PO Date From</label>
-                <div class="col-sm-3">
-                    <input type="date" class="form-control" id="from_date" name="from_date"
-                        value="{{momentYMD data.from_date}}">
-                </div>
-                <label for="to_date" class="col-sm-2 col-form-label text-end">Date To</label>
-                <div class="col-sm-3">
-                    <input type="date" class="form-control" id="to_date" name="to_date"
-                        value="{{momentYMD data.to_date}}">
-                </div>
-                <div class="col-md-2 item-align-start">
-                    <button type="submit" id="btnRefresh" class="btn btn-success">Refresh Data</button>
-                </div>
+    <form id="form1" action="/po/view" method="GET" class="mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3 col-sm-6">
+                <label for="from_date" class="form-label">PO Date From</label>
+                <input type="date" class="form-control" id="from_date" name="from_date"
+                    value="{{momentYMD data.from_date}}">
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label for="to_date" class="form-label">Date To</label>
+                <input type="date" class="form-control" id="to_date" name="to_date" value="{{momentYMD data.to_date}}">
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <button type="submit" id="btnRefresh" class="btn btn-success w-100">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
+                </button>
             </div>
         </div>
+    </form>
 
-        <div class="table-responsive">
-            <table class="table table-striped table-hover" id="poTable">
-                <thead>
-                    <tr>
-                        <th hidden>Order Date1</th>
-                        <th>Order Date</th>
-                        <th>Order No</th>
-                        <th>Dealer Name</th>
-                        <th>Delivery Date</th>
-                        <th>Business Unit</th>
-                        {{!-- <th>Post</th> --}}
-                        <th>Sync Date</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each po}}
-                    <tr>
-                        <td hidden>{{momentYMD this.po_date}}</td>
-                        <td>{{momentDMY this.po_date}}</td>
-                        <td>{{this.po_no_new}}</td>
-                        <td>{{this.customer_name}}</td>
-                        <td>{{momentDMY this.exp_date}}</td>
-                        <td>{{this.bu_name}}</td>
-                        {{!-- <td>{{this.posted}}</td> --}}
-                        <td>{{#if this.ftp_date}}{{momentDMYHm this.ftp_date}}{{else}}Syncing....{{/if}}</td>
-                        <td>
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-striped table-hover align-middle mb-0" id="poTable">
+            <thead class="table-success">
+                <tr>
+                    <th hidden>Order Date1</th>
+                    <th>Order Date</th>
+                    <th>Order No</th>
+                    <th>Dealer Name</th>
+                    <th>Delivery Date</th>
+                    <th>Business Unit</th>
+                    <th>Sync Date</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each po}}
+                <tr>
+                    <td hidden>{{momentYMD this.po_date}}</td>
+                    <td>{{momentDMY this.po_date}}</td>
+                    <td>{{this.po_no_new}}</td>
+                    <td>{{this.customer_name}}</td>
+                    <td>{{momentDMY this.exp_date}}</td>
+                    <td>{{this.bu_name}}</td>
+                    <td>
+                        {{#if this.ftp_date}}
+                        {{momentDMYHm this.ftp_date}}
+                        {{else}}
+                        <span class="text-muted fst-italic">Syncing...</span>
+                        {{/if}}
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm" role="group">
                             <a href="/po/update/{{momentYMD this.po_date}}/{{this.po_no}}"
-                                class="btn btn-primary btn-sm">
+                                class="btn btn-outline-primary" title="View">
                                 <i class="bi bi-eye"></i>
                             </a>
+
                             {{#if this.ftp_date}}
-                            <a href="#" class="btn btn-secondary btn-sm" style="pointer-events:none;">
+                            <button class="btn btn-outline-secondary" disabled title="Locked">
                                 <i class="bi bi-pencil"></i>
-                            </a>
+                            </button>
                             {{else}}
                             <a href="/po/update/{{momentYMD this.po_date}}/{{this.po_no}}"
-                                class="btn btn-primary btn-sm"
+                                class="btn btn-outline-primary" title="Edit"
                                 onclick="return confirm('This will modify your previously saved data. Are you sure?')">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             {{/if}}
 
                             {{#isEqual ../user.user_role "Admin"}}
-                            <a href="/po/delete/{{momentYMD this.po_date}}/{{this.po_no}}" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Are you sure?')">
+                            <a href="/po/delete/{{momentYMD this.po_date}}/{{this.po_no}}"
+                                class="btn btn-outline-danger" title="Delete" onclick="return confirm('Are you sure?')">
                                 <i class="bi bi-trash"></i>
                             </a>
                             {{/isEqual}}
-                        </td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </div>
-
-        <script>
-            $(document).ready(function () {
-                $('#poTable').dataTable({
-                    pageLength: 10,
-                    "order": [[0, "desc"], [2, "desc"]],
-                    responsive: true,
-                    autoWidth: true,
-                });
-            });
-        </script>
-
-
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+        $('#poTable').DataTable({
+            pageLength: 10,
+            order: [[0, 'desc'], [2, 'desc']],
+            responsive: true
+        });
+    });
+</script>

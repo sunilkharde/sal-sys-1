@@ -623,6 +623,121 @@ class dsrTpController {
             res.status(500).json({ success: false, error: 'Failed to fetch routes' });
         }
     };
+
+    static copyPreviousMonth = async (req, res) => {
+        try {
+            const { year, month, emp_id, next_month } = req.body;
+
+            if (!year || !month || !emp_id) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required parameters'
+                });
+            }
+
+            // Calculate previous month
+            const currentMonth = moment(`${year}-${month.padStart(2, '0')}-01`);
+            const prevMonth = currentMonth.clone().subtract(1, 'month');
+
+            const prevYear = prevMonth.year();
+            const prevMonthNum = prevMonth.month() + 1; // moment months are 0-indexed
+
+            // Get previous month's TP data
+            const fromDate = prevMonth.clone().startOf('month');
+            const toDate = prevMonth.clone().endOf('month');
+
+            const sqlStr = `
+            SELECT dsr_date, tp_1, tp_2, tp_route, from_city, to_city 
+            FROM dsr_1 
+            WHERE emp_id = ? 
+            AND dsr_date BETWEEN ? AND ?
+            AND (tp_1 IS NOT NULL OR tp_route IS NOT NULL)
+        `;
+
+            const prevMonthData = await executeQuery(sqlStr, [
+                emp_id,
+                fromDate.format('YYYY-MM-DD'),
+                toDate.format('YYYY-MM-DD')
+            ]);
+
+            if (prevMonthData.length === 0) {
+                return res.json({
+                    success: false,
+                    message: 'No tour plan found for previous month'
+                });
+            }
+
+            // Get current month date range
+            const currentFromDate = currentMonth.clone().startOf('month');
+            const currentToDate = currentMonth.clone().endOf('month');
+
+            // Check if records exist for current month
+            const checkSql = `
+            SELECT COUNT(*) as count 
+            FROM dsr_1 
+            WHERE emp_id = ? 
+            AND dsr_date BETWEEN ? AND ?
+        `;
+
+            const countResult = await executeQuery(checkSql, [
+                emp_id,
+                currentFromDate.format('YYYY-MM-DD'),
+                currentToDate.format('YYYY-MM-DD')
+            ]);
+
+            // Create records if they don't exist
+            if (countResult[0].count === 0) {
+                await this.createEmptyRecords(emp_id, currentFromDate, currentToDate, res.locals.user);
+            }
+
+            // Copy TP data
+            const u_by = res.locals.user?.user_id || 0;
+            let updatedCount = 0;
+
+            for (const record of prevMonthData) {
+                const currentDate = currentMonth.clone().date(moment(record.dsr_date).date());
+
+                // Only update if the date exists in current month
+                if (currentDate.month() === currentMonth.month()) {
+                    const updateSql = `
+                    UPDATE dsr_1 
+                    SET tp_1 = ?, tp_2 = ?, tp_route = ?, from_city = ?, to_city = ?,
+                        u_at = CURRENT_TIMESTAMP, u_by = ?
+                    WHERE emp_id = ? AND dsr_date = ?
+                `;
+
+                    await executeQuery(updateSql, [
+                        record.tp_1,
+                        record.tp_2,
+                        record.tp_route,
+                        record.from_city,
+                        record.to_city,
+                        u_by,
+                        emp_id,
+                        currentDate.format('YYYY-MM-DD')
+                    ]);
+
+                    updatedCount++;
+                }
+            }
+
+            // Clear cache
+            this.clearCache();
+
+            res.json({
+                success: true,
+                message: `Successfully copied ${updatedCount} tour plan entries from previous month`,
+                count: updatedCount
+            });
+
+        } catch (error) {
+            console.error('Error in copyPreviousMonth:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error while copying tour plan'
+            });
+        }
+    };
     /***** TP Routes End */
 
 

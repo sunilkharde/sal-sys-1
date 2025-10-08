@@ -1,11 +1,10 @@
-{{!-- views/partials/navbar.hbs --}}
-
+{{!-- views/partials/navbar.hbs - OPTIMIZED --}}
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">
             <div class="navbar-image-wrapper">
                 <img id="imgLogo" src="/images/Saleswift_logo.webp" alt="Malpani Group Logo"
-                    class="d-inline-block align-top img-fluid mt-0.2">
+                    class="d-inline-block align-top img-fluid">
                 {{!-- <span class="navbar-brand-text ms-2 d-none d-md-inline">Malpani Group</span> --}}
             </div>
         </a>
@@ -27,14 +26,13 @@
                 {{/if}}
 
                 {{!-- User Area - Admin/Read/Dealer --}}
-                {{#isEqual user.user_role "Admin" "Read" "Dealer"}}
+                {{#isEqual user.user_role "Admin" "Read"}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-people me-1"></i>User Area
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown1">
-                        {{#isEqual user.user_role "Admin" "Read"}}
                         <li><a class="dropdown-item" href="/auth/register">
                                 <i class="bi bi-person-plus me-2"></i>Register
                             </a></li>
@@ -50,7 +48,6 @@
                         <li><a class="dropdown-item" href="/emp/view">
                                 <i class="bi bi-person-badge me-2"></i>Employees
                             </a></li>
-                        {{/isEqual}}
                     </ul>
                 </li>
                 {{/isEqual}}
@@ -63,7 +60,6 @@
                         <i class="bi bi-grid-3x3-gap me-1"></i>Masters
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown2">
-                        {{#isEqual user.user_role "Admin" "Read" "Support"}}
                         <li><a class="dropdown-item" href="/product/view">
                                 <i class="bi bi-box-seam me-2"></i>Products
                             </a></li>
@@ -99,15 +95,7 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li><a class="dropdown-item" href="/sap-data/import">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-database-add" viewBox="0 0 16 16">
-                                    <path
-                                        d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0" />
-                                    <path
-                                        d="M12.096 6.223A5 5 0 0 0 13 5.698V7c0 .289-.213.654-.753 1.007a4.5 4.5 0 0 1 1.753.25V4c0-1.007-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1s-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4v9c0 1.007.875 1.755 1.904 2.223C4.978 15.71 6.427 16 8 16c.536 0 1.058-.034 1.555-.097a4.5 4.5 0 0 1-.813-.927Q8.378 15 8 15c-1.464 0-2.766-.27-3.682-.687C3.356 13.875 3 13.373 3 13v-1.302c.271.202.58.378.904.525C4.978 12.71 6.427 13 8 13h.027a4.6 4.6 0 0 1 0-1H8c-1.464 0-2.766-.27-3.682-.687C3.356 10.875 3 10.373 3 10V8.698c.271.202.58.378.904.525C4.978 9.71 6.427 10 8 10q.393 0 .774-.024a4.5 4.5 0 0 1 1.102-1.132C9.298 8.944 8.666 9 8 9c-1.464 0-2.766-.27-3.682-.687C3.356 7.875 3 7.373 3 7V5.698c.271.202.58.378.904.525C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777M3 4c0-.374.356-.875 1.318-1.313C5.234 2.271 6.536 2 8 2s2.766.27 3.682.687C12.644 3.125 13 3.627 13 4c0 .374-.356.875-1.318 1.313C10.766 5.729 9.464 6 8 6s-2.766-.27-3.682-.687C3.356 4.875 3 4.373 3 4" />
-                                </svg>
-                                {{!-- <i class="bi bi-database-add me-2"></i> --}}
-                                Import SAP Data
+                                <i class="bi bi-database-add me-2"></i>Import SAP Data
                             </a></li>
                         <li><a class="dropdown-item" href="/sap-group/view-group">
                                 <i class="bi bi-collection me-2"></i>SAP Groups
@@ -115,7 +103,6 @@
                         <li><a class="dropdown-item" href="/customer/grouping">
                                 <i class="bi bi-diagram-3 me-2"></i>Customers Groups
                             </a></li>
-                        {{/isEqual}}
                         {{/isEqual}}
                     </ul>
                 </li>
@@ -139,19 +126,9 @@
                                 <i class="bi bi-wallet2 me-2"></i>Dealer Balance
                             </a></li>
                         <li><a class="dropdown-item" href="/custTarget/view-stock">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-boxes" viewBox="0 0 16 16">
-                                    <path
-                                        d="M7.752.066a.5.5 0 0 1 .496 0l3.75 2.143a.5.5 0 0 1 .252.434v3.995l3.498 2A.5.5 0 0 1 16 9.07v4.286a.5.5 0 0 1-.252.434l-3.75 2.143a.5.5 0 0 1-.496 0l-3.502-2-3.502 2.001a.5.5 0 0 1-.496 0l-3.75-2.143A.5.5 0 0 1 0 13.357V9.071a.5.5 0 0 1 .252-.434L3.75 6.638V2.643a.5.5 0 0 1 .252-.434zM4.25 7.504 1.508 9.071l2.742 1.567 2.742-1.567zM7.5 9.933l-2.75 1.571v3.134l2.75-1.571zm1 3.134 2.75 1.571v-3.134L8.5 9.933zm.508-3.996 2.742 1.567 2.742-1.567-2.742-1.567zm2.242-2.433V3.504L8.5 5.076V8.21zM7.5 8.21V5.076L4.75 3.504v3.134zM5.258 2.643 8 4.21l2.742-1.567L8 1.076zM15 9.933l-2.75 1.571v3.134L15 13.067zM3.75 14.638v-3.134L1 9.933v3.134z" />
-                                </svg>
                                 <i class="bi bi-boxes me-2"></i>Dealer Stock
                             </a></li>
                         <li><a class="dropdown-item" href="/custTarget/view-sale">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-graph-up-arrow" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd"
-                                        d="M0 0h1v15h15v1H0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5" />
-                                </svg>
                                 <i class="bi bi-graph-up-arrow me-2"></i>Dealer Sale
                             </a></li>
                     </ul>
@@ -177,13 +154,6 @@
                                 <i class="bi bi-pencil-square me-2"></i>Work Entry
                             </a></li>
                         <li><a class="dropdown-item" href="/dsr/post-pm">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-send-check" viewBox="0 0 16 16">
-                                    <path
-                                        d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855a.75.75 0 0 0-.124 1.329l4.995 3.178 1.531 2.406a.5.5 0 0 0 .844-.536L6.637 10.07l7.494-7.494-1.895 4.738a.5.5 0 1 0 .928.372zm-2.54 1.183L5.93 9.363 1.591 6.602z" />
-                                    <path
-                                        d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0m-1.993-1.679a.5.5 0 0 0-.686.172l-1.17 1.95-.547-.547a.5.5 0 0 0-.708.708l.774.773a.75.75 0 0 0 1.174-.144l1.335-2.226a.5.5 0 0 0-.172-.686" />
-                                </svg>
                                 <i class="bi bi-send-check me-2"></i>Posting
                             </a></li>
                         <li><a class="dropdown-item" href="/dsr/report">
@@ -225,13 +195,6 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li><a class="dropdown-item" href="/dsrAc/view">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-send-check" viewBox="0 0 16 16">
-                                    <path
-                                        d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855a.75.75 0 0 0-.124 1.329l4.995 3.178 1.531 2.406a.5.5 0 0 0 .844-.536L6.637 10.07l7.494-7.494-1.895 4.738a.5.5 0 1 0 .928.372zm-2.54 1.183L5.93 9.363 1.591 6.602z" />
-                                    <path
-                                        d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0m-1.993-1.679a.5.5 0 0 0-.686.172l-1.17 1.95-.547-.547a.5.5 0 0 0-.708.708l.774.773a.75.75 0 0 0 1.174-.144l1.335-2.226a.5.5 0 0 0-.172-.686" />
-                                </svg>
                                 <i class="bi bi-cash-coin me-2"></i>Expenses Posting
                             </a></li>
                         {{/isEqual}}
@@ -249,11 +212,6 @@
                     <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="navbarDropdown4">
                         {{#isEqual user.user_role "Admin" "Read" "Support" "Audit" "Bank"}}
                         <li><a class="dropdown-item" href="/dealerPay/view">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-currency-rupee" viewBox="0 0 16 16">
-                                    <path
-                                        d="M4 3.06h2.726c1.22 0 2.12.575 2.325 1.724H4v1.051h5.051C8.855 7.001 8 7.558 6.788 7.558H4v1.317L8.437 14h2.11L6.095 8.884h.855c2.316-.018 3.465-1.476 3.688-3.049H12V4.784h-1.345c-.08-.778-.357-1.335-.793-1.732H12V2H4z" />
-                                </svg>
                                 <i class="bi bi-currency-rupee me-2"></i>Dealer Payment
                             </a></li>
                         {{/isEqual}}
@@ -300,8 +258,7 @@
                         {{/if}}
                     </span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end profile-dropdown-menu"
-                    aria-labelledby="navbarDropdownProfile">
+                <ul class="dropdown-menu dropdown-menu-end profile-dropdown-menu" aria-labelledby="navbarDropdownProfile">
                     {{#if user}}
                     <li><a class="dropdown-item d-flex align-items-center" href="/auth/reset-pwd">
                             <i class="bi bi-key me-2"></i>Reset Password
@@ -336,83 +293,3 @@
         </div>
     </div>
 </nav>
-
-<style>
-    /* Additional navbar styles for Malpani branding */
-    .navbar-brand-text {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: white;
-    }
-
-    /* Enhanced logo styling for Malpani logo */
-    #imgLogo {
-        background-color: #ffffff;
-        padding: 4px;
-        border-radius: 6px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-        max-height: 45px;
-        width: auto;
-    }
-
-    #imgLogo:hover {
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        transform: scale(1.05);
-    }
-
-    #imgLogo:active {
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-        transform: scale(0.98);
-    }
-
-    /* Improved dropdown menu styling */
-    .dropdown-menu {
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-    }
-
-    .dropdown-item {
-        transition: all 0.2s ease;
-    }
-
-    .dropdown-item:hover {
-        background-color: var(--primary-color);
-        color: white;
-    }
-
-    /* Mobile responsive improvements */
-    @media (max-width: 767px) {
-        .navbar-brand-text {
-            display: inline !important;
-            font-size: 1.1rem;
-        }
-
-        .nav-link {
-            padding: 0.75rem 1rem !important;
-        }
-
-        .dropdown-item {
-            padding: 0.75rem 1.25rem !important;
-        }
-    }
-
-    /* Tablet adjustments */
-    @media (min-width: 768px) and (max-width: 1023px) {
-        .navbar-brand-text {
-            font-size: 1.1rem;
-        }
-
-        .nav-link {
-            font-size: 0.95rem;
-            padding: 0.6rem 0.8rem;
-        }
-    }
-
-    /* Icon spacing improvements */
-    .nav-link i,
-    .dropdown-item i {
-        width: 20px;
-        text-align: center;
-    }
-</style>

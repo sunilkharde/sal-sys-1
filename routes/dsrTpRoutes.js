@@ -32,6 +32,7 @@ router.get('/get-fix-route', dsrTpController.getFixRoutes);
 router.get('/get-districts', dsrTpController.getDistinctDistricts);
 router.get('/get-cities', dsrTpController.getDistinctCities);
 router.get('/get-all-routes', dsrTpController.getAllRoutes);
+router.post('/copy-previous-month', dsrTpController.copyPreviousMonth);
 
 
 export default router;

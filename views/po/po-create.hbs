@@ -1,129 +1,315 @@
-<div class="container">
+<div class="container py-1">
     <div class="row justify-content-center">
-        <div class="col-lg-10 border p-4"> {{!-- border-secondary --}}
-            <h4 class="mb-3">Create Purchase Order</h4>
+        <div class="col-12 col-lg-10 border rounded-3 p-2 shadow-sm bg-white">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                <h4 class="mb-2 mb-md-0 fw-semibold text-primary">Create Purchase Order</h4>
+                <a href="/po/view" class="btn btn-outline-secondary btn-sm d-flex align-items-center">
+                    <i class="bi bi-arrow-left me-1"></i> Back</a>
+            </div>
+
             <form id="poForm" action="/po/create" method="post">
-                <div class="form-group row mb-3">
-                    <label for="po_date" class="col-sm-2 col-form-label">PO Date</label>
-                    <div class="col-sm-4">
+                <!-- Row 1 -->
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6 col-md-4">
+                        <label for="po_date" class="form-label">PO Date</label>
                         <input readonly type="text" class="form-control" id="po_date" name="po_date"
                             value="{{momentDMY data.po_date}}">
                     </div>
-                    <label for="po_no" class="col-sm-2 col-form-label">PO No</label>
-                    <div class="col-sm-4">
-                        <input readonly type="po_no" class="form-control" id="po_no" name="po_no"
-                            value="{{data.po_no}}">
+                    <div class="col-sm-6 col-md-4">
+                        <label for="po_no" class="form-label">PO No</label>
+                        <input readonly type="text" class="form-control" id="po_no" name="po_no" value="{{data.po_no}}">
                     </div>
                 </div>
 
-                <div class="row mb-3">
-                    <label for="customer_id" class="col-sm-2 col-form-label">Dealer Name<span
-                            style="color: red;">*</span></label>
-                    <div class="col-sm-10">
-                        <div class="input-group">
-                            <input hidden type="text" class="form-control" id="customer_id" name="customer_id"
-                                value="{{data.customer_id}}">
-                            <input readonly type="text" class="form-control" id="customer_name" name="customer_name"
-                                value="{{data.customer_name}}">
-                            <button class="btn btn-outline-info" type="button" id="btnCustomer" data-bs-toggle="modal"
-                                data-bs-target="#customersModal">
-                                <i class="bi bi-list"></i></button>
-                        </div>
+                <!-- Dealer -->
+                <div class="mb-3">
+                    <label for="customer_id" class="form-label">Dealer Name <span class="text-danger">*</span></label>
+                    <div class="input-group input-group">
+                        <input type="hidden" id="customer_id" name="customer_id" value="{{data.customer_id}}">
+                        <input readonly type="text" class="form-control" id="customer_name" name="customer_name"
+                            value="{{data.customer_name}}">
+                        <button class="btn btn-outline-info" type="button" id="btnCustomer" data-bs-toggle="modal"
+                            data-bs-target="#customersModal" title="Select Customer">
+                            <i class="bi bi-list"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div class="form-group row mb-3">
-                    <label for="bu_id" class="col-sm-2 col-form-label">Business Unit<span
-                            style="color: red;">*</span></label>
-                    <div class="col-sm-4">
-                        <input hidden type="text" class="form-control" id="bu_id_hdn" name="bu_id_hdn"
-                            value="{{data.bu_id_hdn}}">
+                <!-- Business Unit and Expected Delivery -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-md-4">
+                        <label for="bu_id" class="form-label">Business Unit <span class="text-danger">*</span></label>
+                        <input type="hidden" id="bu_id_hdn" name="bu_id_hdn" value="{{data.bu_id_hdn}}">
                         <input readonly type="text" class="form-control" id="bu_name" name="bu_name"
                             value="{{data.bu_name}}">
-
-                        {{!-- <select class="form-select" id="bu_id" name="bu_id" aria-label=".form-select-sm example">
-                            <option value="" selected>Select Business Unit</option>
-                            {{#each bu_list}}
-                            <option value="{{bu_id}}" {{#isEqual ../data.bu_id bu_id }}selected{{/isEqual}}>
-                                {{bu_name}}
-                            </option>
-                            {{/each}}
-                        </select> --}}
                     </div>
 
-                    <label for="exp_date" class="col-sm-2 col-form-label">Expected Delivery<span
-                            style="color: red;">*</span></label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6 col-md-4">
+                        <label for="exp_date" class="form-label">Expected Delivery <span
+                                class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="exp_date" name="exp_date"
                             value="{{momentYMD data.exp_date}}" min="{{momentYMD data.minDate}}"
                             max="{{momentYMD data.maxDate}}" required>
                     </div>
                 </div>
 
-                <div class="mb-3 border p-4">
-                    <label for="orderItems" class="form-label"><strong>Order Items</strong></label>
-                    <div class="table-responsive">
-                    <table class="table" id="po_dtTable">
-                        <thead>
-                            <tr>
-                                <th class="col-1">Sr</th>
-                                <th class="col-8">Product</th>
-                                <th>Qty</th>
-                                <th hidden>Rate</th>
-                                <th hidden>Amount</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orderItemsBody">
-                            <tr>
-                                <td><input readonly type="text" class="form-control text-end" id="sr_no" name="sr_no[]"
-                                        required value="10"></td>
-                                <td><select class="form-select" id="product_id" name="product_id[]"> {{!-- disabled --}}
-                                        {{!-- <option value="">(Select a value)</option> --}}
-                                </td>
-                                <td><input type="number" class="form-control text-end" id="qty" name="qty[]" min="1"
-                                        step="1" value="1" required>
-                                </td>
-                                <td hidden><input type="number" class="form-control text-end" id="rate" name="rate[]"
-                                        min="0" step="1" value="1" required></td>
-                                <td hidden><input readonly type="number" class="form-control text-end" id="amount"
-                                        name="amount[]" min="0" step="1" required></td>
-                                <td>
-                                    <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
-                                        class="btn btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Order Items -->
+                <div class="border rounded-3 p-2 p-md-3 mb-4 bg-light">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+                        <label class="form-label fw-bold mb-0 text-success">Order Items</label>
+                        {{!-- <button type="button" id="addItemBtn" class="btn btn-success btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> Add Item
+                        </button> --}}
                     </div>
 
-                    <div class="form-group row">
-                        <div class="col-sm-8">
-                            <button type="button" id="addItemBtn" class="btn btn-success">Add Item</button>
-                        </div>
-                        <div class="col-sm-4">
-                            <div class="form-group row">
-                                <label for="totalAmount" class="col-sm-6 col-form-label text-end">Total: </label>
-                                <div class="col-sm-6">
-                                    <input readonly type="text" class="form-control text-end" id="totalAmount">
-                                </div>
+                    <div class="table-responsive po-table">
+                        <table class="table table-sm table-bordered align-middle mb-0" id="po_dtTable">
+                            <thead class="table-success text-center">
+                                <tr>
+                                    <th class="col-sr">Sr</th>
+                                    <th class="col-product">Product</th>
+                                    <th class="col-qty">Qty</th>
+                                    <th hidden class="col-rate">Rate</th>
+                                    <th hidden class="col-amount">Amount</th>
+                                    <th class="col-action">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderItemsBody">
+                                <tr>
+                                    <td>
+                                        <input readonly type="text" class="form-control text-end fw-semibold" id="sr_no"
+                                            name="sr_no[]" value="10" required>
+                                    </td>
+                                    <td>
+                                        <select class="form-select" id="product_id" name="product_id[]"></select>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control text-end" id="qty" name="qty[]" min="1"
+                                            step="1" value="1" required>
+                                    </td>
+                                    <td hidden>
+                                        <input type="number" class="form-control text-end" id="rate" name="rate[]"
+                                            min="0" step="1" value="1">
+                                    </td>
+                                    <td hidden>
+                                        <input readonly type="number" class="form-control text-end" id="amount"
+                                            name="amount[]" min="0" step="1">
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" id="removeItemBtn" onclick="removeSelectedItem(this)"
+                                            class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Add Button Left + Total Right (Responsive, Single Line) -->
+                    <div class="border-top pt-2 mt-2">
+                        <div class="d-flex align-items-center justify-content-between flex-nowrap gap-2">
+                            <!-- Add Item Button (Left) -->
+                            <button type="button" id="addItemBtn"
+                                class="btn btn-success btn-sm d-flex align-items-center flex-shrink-0">
+                                <i class="bi bi-plus-lg me-1"></i> Add Item
+                            </button>
+
+                            <!-- Total Field (Right) -->
+                            <div class="input-group input-group-sm total-box flex-shrink-0">
+                                <span class="input-group-text fw-semibold bg-success text-white">Total</span>
+                                <input readonly type="text" class="form-control text-end fw-bold" id="totalAmount">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-3"> {{!--d-flex justify-content-between"> --}}
-                    <button {{#isEqual user.user_role "Read" }} disabled {{/isEqual}} type="submit" id="submitBtn" class="btn btn-primary mx-1">Submit</button>
-                    <button type="button" class="btn btn-secondary mx-1"
-                        onclick="window.location.href='/po/view'">Cancel</button>
+                <!-- Buttons -->
+                <div class="d-flex justify-content-start gap-2 flex-wrap">
+                    <button {{#isEqual user.user_role "Read" }}disabled{{/isEqual}} type="submit" id="submitBtn"
+                        class="btn btn-primary btn-sm d-flex align-items-center">
+                        <i class="bi bi-check2-circle me-1"></i> Submit
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm d-flex align-items-center"
+                        onclick="window.location.href='/po/view'">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
                 </div>
-
             </form>
         </div>
     </div>
 </div>
+
+<!-- Customer Modal -->
+{{> _lov-customers}}
+
+<style>
+    /* Make table header sticky with internal scroll */
+    .po-table {
+        max-height: calc(100vh - 380px);
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+    /* Keep the header sticky within scrollable area */
+    #po_dtTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: #d1e7dd;
+        /* match your design */
+    }
+
+    /* Responsive fixed-width table */
+    #po_dtTable {
+        table-layout: fixed;
+        width: 100%;
+        min-width: 600px;
+        /* Base minimum width */
+    }
+
+    /* Keep table scrollable on smaller screens */
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    /* Text handling */
+    #po_dtTable th,
+    #po_dtTable td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    /* Default widths (for mobile) */
+    #po_dtTable .col-sr {
+        width: 50px;
+    }
+
+    #po_dtTable .col-product {
+        width: 200px;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    #po_dtTable .col-qty {
+        width: 70px;
+    }
+
+    #po_dtTable .col-rate,
+    #po_dtTable .col-amount {
+        width: 80px;
+    }
+
+    #po_dtTable .col-action {
+        width: 60px;
+    }
+
+    #po_dtTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: #d1e7dd;
+        /* Bootstrap success-light */
+    }
+
+    /* Medium screens (≥576px) */
+    @media (min-width: 576px) {
+        #po_dtTable .col-sr {
+            width: 60px;
+        }
+
+        #po_dtTable .col-product {
+            width: 250px;
+        }
+
+        #po_dtTable .col-qty {
+            width: 80px;
+        }
+
+        #po_dtTable .col-action {
+            width: 60px;
+        }
+    }
+
+    /* Large screens (≥992px) */
+    @media (min-width: 992px) {
+        #po_dtTable {
+            min-width: 800px;
+        }
+
+        #po_dtTable .col-sr {
+            width: 70px;
+        }
+
+        #po_dtTable .col-product {
+            width: 400px;
+        }
+
+        #po_dtTable .col-qty {
+            width: 100px;
+        }
+
+        #po_dtTable .col-rate {
+            width: 120px;
+        }
+
+        #po_dtTable .col-amount {
+            width: 120px;
+        }
+
+        #po_dtTable .col-action {
+            width: 60px;
+        }
+    }
+
+    /* Optional: Better look for scroll on small devices */
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+
+    #addItemBtn i {
+        font-size: 0.9rem;
+    }
+
+    #totalAmount {
+        min-width: 100px;
+    }
+
+    /* Add + Total layout: keep them on one line for all devices */
+    .total-box {
+        width: 200px;
+        /* fixed width for total field */
+        min-width: 160px;
+    }
+
+    @media (max-width: 575.98px) {
+        .total-box {
+            width: 160px;
+            /* slightly narrower on very small screens */
+        }
+    }
+
+    /* Optional: light yellow background for total field for emphasis */
+    #totalAmount {
+        background-color: #fffbea;
+        font-weight: 600;
+        min-width: 100px;
+    }
+
+    /* Ensure both sides stay horizontally aligned */
+    .d-flex.flex-nowrap {
+        white-space: nowrap;
+    }
+</style>
+
 
 <script>
     const dropdownProductID = document.getElementById('product_id');
@@ -133,9 +319,8 @@
         if (!isDropdownFilled) {
             await fillDropdownList(dropdownProductID);
             isDropdownFilled = true;
-
             btnCustomer.disabled = true;
-            btnCustomer.className = "btn btn-outline-secondary";
+            btnCustomer.className = "btn btn-outline-secondary btn-sm";
         }
     });
 
@@ -145,9 +330,7 @@
             const response = await fetch(`/po/products-list?bu_id=${bu_id.value}`);
             const data = await response.json();
             const items = data.products_list;
-            if (!Array.isArray(items)) {
-                throw new Error('Unexpected response format');
-            }
+            if (!Array.isArray(items)) throw new Error('Unexpected response format');
             dropdownList.innerHTML = '';
             items.forEach(item => {
                 const option = document.createElement('option');
@@ -159,86 +342,56 @@
             console.error(error);
         }
     }
-</script>
 
-<script>
     const btnCustomer = document.getElementById("btnCustomer");
     const orderItemsBody = document.getElementById("orderItemsBody");
     const addItemBtn = document.getElementById("addItemBtn");
 
-    // Add an event listener to the button to handle clicks
-    addItemBtn.addEventListener("click", function () {
+    function updateTotal() {
+        const amountInputs = orderItemsBody.querySelectorAll("#amount");
+        let totalAmount = 0;
+        amountInputs.forEach(input => totalAmount += parseFloat(input.value) || 0);
+        document.getElementById("totalAmount").value = totalAmount.toFixed(2);
+    }
 
+    addItemBtn.addEventListener("click", function () {
         if (dropdownProductID.options.length < 1) {
-            alert("There are no available products in the list. Please select firs row product fist.");
+            alert("There are no available products in the list. Please select the first-row product first.");
             return;
         }
-
         btnCustomer.disabled = true;
-        btnCustomer.className = "btn btn-outline-secondary";
+        btnCustomer.className = "btn btn-outline-secondary btn-sm";
 
-        // Get the last row in the table body
         const lastRow = orderItemsBody.lastElementChild;
-        // Clone the last row
         const newRow = lastRow.cloneNode(true);
-        // Clear the input fields in the new row
-        const inputs = newRow.querySelectorAll("input");
-        inputs.forEach(input => {
-            input.value = "";
-        });
-        // Increment the serial number in the new row
+        newRow.querySelectorAll("input").forEach(input => input.value = "");
         const srNoValue = parseInt(lastRow.querySelector("#sr_no").value);
-        const srNoInput = newRow.querySelector("#sr_no");
-        //const srNoValue = parseInt(srNoInput.value);
-        srNoInput.value = srNoValue + 10;
-
-        // Get the newly added rate field
-        const rateInpute = newRow.querySelector('#rate');
-        rateInpute.value = 1;
-
-        // Append the new row to the table body
+        newRow.querySelector("#sr_no").value = srNoValue + 10;
+        newRow.querySelector('#rate').value = 1;
         orderItemsBody.appendChild(newRow);
+        updateTotal();
     });
 
-    // Add a change event listener to the Qty and Rate inputs
     orderItemsBody.addEventListener("change", (event) => {
         const target = event.target;
         if (target.matches("#qty, #rate")) {
-            // Calculate the Amount
             const row = target.closest("tr");
-            const qty = parseFloat(row.querySelector("#qty").value);
-            const rate = parseFloat(row.querySelector("#rate").value);
-            const amount = qty * rate;
-            row.querySelector("#amount").value = amount.toFixed(2);
-
-            // Calculate the total Amount
-            const amountInputs = orderItemsBody.querySelectorAll("#amount");
-            let totalAmount = 0;
-            amountInputs.forEach((input) => {
-                totalAmount += parseFloat(input.value);
-            });
-            document.getElementById("totalAmount").value = totalAmount.toFixed(2);
+            const qty = parseFloat(row.querySelector("#qty").value) || 0;
+            const rate = parseFloat(row.querySelector("#rate").value) || 0;
+            row.querySelector("#amount").value = (qty * rate).toFixed(2);
+            updateTotal();
         }
     });
 
     function removeSelectedItem(element) {
-
-        // Remove the row from the table
         const row = element.closest("tr");
-        if (row.rowIndex === 1) {
-            alert("First row can't be delete!");
+        if (orderItemsBody.rows.length === 1) {
+            alert("At least one row must remain!");
             return;
         }
         row.remove();
-        // Recalculate the total Amount
-        const amountInputs = orderItemsBody.querySelectorAll("#amount");
-        let totalAmount = 0;
-        amountInputs.forEach((input) => {
-            totalAmount += parseFloat(input.value);
-        });
-        document.getElementById("totalAmount").value = totalAmount.toFixed(2);
+        updateTotal();
     }
 
+    document.addEventListener("DOMContentLoaded", updateTotal);
 </script>
-
-{{> _lov-customers}}
