@@ -223,6 +223,12 @@
     }
 
     /* --- Camera --- */
+    canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+    }
+
     .camera-section {
         margin-bottom: 0.75rem;
     }
@@ -297,10 +303,12 @@
     .camera-view {
         width: 100%;
         height: 100%;
-        border: 1px solid green;
+        border: 1px solid #28a745;
         border-radius: 0.5rem;
         display: block;
         object-fit: cover;
+        background-color: #000;
+        image-rendering: auto;
     }
 
     .capture-previews {
@@ -324,17 +332,21 @@
         position: relative;
         margin-bottom: 0.4rem;
         width: 100%;
+        border-radius: 0.4rem;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
     .preview-canvas {
-        border: 1px solid #aaa;
+        border: 1px solid #ddd;
         border-radius: 0.4rem;
         width: 100%;
-        /* Increased height for better visibility */
-        height: clamp(70px, 12vw, 90px);
+        height: clamp(80px, 14vw, 100px);
         background-color: #fafafa;
         display: block;
         object-fit: cover;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        image-rendering: high-quality;
     }
 
     .preview-status {
@@ -547,6 +559,36 @@
     let canvas2Captured = false;
     let canvas3Captured = false;
 
+    // Enhanced quality settings with iterative compression
+    const qualitySettings = {
+        context1: {
+            targetSizeKB: 50,
+            maxWidth: 1200,
+            maxHeight: 900,
+            initialQuality: 0.92,
+            minQuality: 0.75
+        },
+        context2: {
+            targetSizeKB: 100,
+            maxWidth: 1600,
+            maxHeight: 1200,
+            initialQuality: 0.94,
+            minQuality: 0.80
+        },
+        context3: {
+            targetSizeKB: 150,
+            maxWidth: 1920,
+            maxHeight: 1440,
+            initialQuality: 0.96,
+            minQuality: 0.85
+        }
+    };
+
+    // Store captured data URLs
+    let capturedDataURL1 = null;
+    let capturedDataURL2 = null;
+    let capturedDataURL3 = null;
+
     window.addEventListener('DOMContentLoaded', function () {
         async function initializeCamera() {
             try {
@@ -558,29 +600,39 @@
                 cameraStatus.style.display = 'flex';
                 cameraError.classList.add('d-none');
 
-                stream = await navigator.mediaDevices.getUserMedia({
+                // Request higher resolution for better quality
+                const constraints = {
                     video: {
                         facingMode: selectedCamera,
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        width: { ideal: 1920, min: 1280 },
+                        height: { ideal: 1080, min: 720 },
+                        frameRate: { ideal: 30 }
                     }
-                });
+                };
+
+                // For back camera, request even higher resolution if available
+                if (selectedCamera === 'environment') {
+                    constraints.video.width = { ideal: 3840, min: 1920 };
+                    constraints.video.height = { ideal: 2160, min: 1080 };
+                }
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
 
                 videoElement.srcObject = stream;
                 videoElement.style.display = 'block';
 
-                // Set appropriate size based on camera type
-                if (selectedCamera === 'user') {
-                    videoElement.style.maxWidth = '450px';
-                } else {
-                    videoElement.style.maxWidth = '700px';
-                }
+                // Wait for video to load metadata
+                await new Promise((resolve) => {
+                    videoElement.addEventListener('loadedmetadata', resolve, { once: true });
+                });
 
-                captureButton1.style.display = 'inline-block';
-                captureButton2.style.display = 'inline-block';
-                captureButton3.style.display = 'inline-block';
+                console.log('Actual video dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
 
-                // Hide error if shown
+                // Enable capture buttons
+                captureButton1.disabled = false;
+                captureButton2.disabled = false;
+                captureButton3.disabled = false;
+
                 cameraError.classList.add('d-none');
             } catch (error) {
                 console.error('Error accessing camera:', error);
@@ -604,25 +656,128 @@
         });
     });
 
+    // Function to compress image to target size with quality optimization
+    function compressToTargetSize(canvas, settings, maxIterations = 5) {
+        let quality = settings.initialQuality;
+        let dataURL;
+        let fileSizeKB;
+
+        for (let i = 0; i < maxIterations; i++) {
+            // Capture at current quality
+            dataURL = canvas.toDataURL('image/jpeg', quality);
+            fileSizeKB = getImageSizeKB(dataURL);
+
+            console.log(`Iteration ${i + 1}: Quality ${quality.toFixed(2)}, Size: ${fileSizeKB} KB`);
+
+            // Check if we're within acceptable range (±10%)
+            if (fileSizeKB <= settings.targetSizeKB * 1.1) {
+                break;
+            }
+
+            // Reduce quality for next iteration
+            quality = Math.max(
+                settings.minQuality,
+                quality * Math.sqrt(settings.targetSizeKB / fileSizeKB)
+            );
+
+            // If we hit minimum quality, break
+            if (quality <= settings.minQuality) {
+                dataURL = canvas.toDataURL('image/jpeg', settings.minQuality);
+                fileSizeKB = getImageSizeKB(dataURL);
+                break;
+            }
+        }
+
+        return { dataURL, fileSizeKB, finalQuality: quality };
+    }
+
+    // Function to optimize image capture with size control
+    function optimizeImageCapture(sourceCanvas, targetContext, settings, previewCanvas = null) {
+        const videoWidth = videoElement.videoWidth;
+        const videoHeight = videoElement.videoHeight;
+        const videoAspectRatio = videoWidth / videoHeight;
+
+        // Calculate optimal dimensions while maintaining aspect ratio
+        let captureWidth, captureHeight;
+
+        if (videoAspectRatio > 1) {
+            // Landscape orientation
+            captureWidth = Math.min(videoWidth, settings.maxWidth);
+            captureHeight = captureWidth / videoAspectRatio;
+        } else {
+            // Portrait orientation
+            captureHeight = Math.min(videoHeight, settings.maxHeight);
+            captureWidth = captureHeight * videoAspectRatio;
+        }
+
+        // Ensure dimensions are integers
+        captureWidth = Math.floor(captureWidth);
+        captureHeight = Math.floor(captureHeight);
+
+        // Set canvas dimensions
+        sourceCanvas.width = captureWidth;
+        sourceCanvas.height = captureHeight;
+
+        // Enable high-quality rendering
+        targetContext.imageSmoothingEnabled = true;
+        targetContext.imageSmoothingQuality = 'high';
+
+        // Draw image with high quality
+        targetContext.drawImage(
+            videoElement,
+            0, 0, videoWidth, videoHeight,  // source dimensions
+            0, 0, captureWidth, captureHeight // destination dimensions
+        );
+
+        // Create high-quality preview
+        if (previewCanvas) {
+            const previewContext = previewCanvas.getContext('2d');
+            previewCanvas.width = 280; // Higher resolution preview
+            previewCanvas.height = 210;
+
+            previewContext.imageSmoothingEnabled = true;
+            previewContext.imageSmoothingQuality = 'high';
+            previewContext.drawImage(
+                sourceCanvas,
+                0, 0, captureWidth, captureHeight,
+                0, 0, previewCanvas.width, previewCanvas.height
+            );
+        }
+
+        // Compress to target size with iterative quality adjustment
+        return compressToTargetSize(sourceCanvas, settings);
+    }
+
+    // Function to get approximate file size
+    function getImageSizeKB(dataURL) {
+        if (!dataURL) return 0;
+        const base64 = dataURL.split(',')[1];
+        const binary = atob(base64);
+        return Math.round(binary.length / 1024);
+    }
+
+    // Enhanced capture functions with quality feedback
     captureButton1.addEventListener('click', () => {
         if (!stream) {
             alert('Camera is not available. Please check camera permissions.');
             return;
         }
 
-        canvas1Captured = true;
         const context1 = canvas1.getContext('2d');
-        canvas1.width = videoElement.clientWidth / 3; //6;
-        canvas1.height = videoElement.clientHeight / 3; //6;
-        context1.drawImage(videoElement, 0, 0, canvas1.width, canvas1.height);
 
-        const context1x = canvas1x.getContext('2d');
-        canvas1x.width = 80;
-        canvas1x.height = 70;
-        context1x.drawImage(videoElement, 0, 0, canvas1x.width, canvas1x.height);
+        // Capture with optimized settings for context1
+        const result = optimizeImageCapture(canvas1, context1, qualitySettings.context1, canvas1x);
 
-        previewStatus1.textContent = 'Captured';
+        canvas1Captured = true;
+        capturedDataURL1 = result.dataURL;
+
+        console.log(`Context1 - Final: ${result.fileSizeKB} KB, Quality: ${result.finalQuality.toFixed(2)}`);
+
+        previewStatus1.textContent = `✅ ${result.fileSizeKB} KB`;
         previewStatus1.style.backgroundColor = 'rgba(40, 167, 69, 0.8)';
+
+        // Show quality feedback
+        showQualityFeedback(1, result.fileSizeKB, qualitySettings.context1.targetSizeKB);
     });
 
     captureButton2.addEventListener('click', () => {
@@ -631,19 +786,20 @@
             return;
         }
 
-        canvas2Captured = true;
         const context2 = canvas2.getContext('2d');
-        canvas2.width = videoElement.clientWidth / 2; //3;
-        canvas2.height = videoElement.clientHeight / 2; //3;
-        context2.drawImage(videoElement, 0, 0, canvas2.width, canvas2.height);
 
-        const context2x = canvas2x.getContext('2d');
-        canvas2x.width = 80;
-        canvas2x.height = 70;
-        context2x.drawImage(videoElement, 0, 0, canvas2x.width, canvas2x.height);
+        // Capture with optimized settings for context2
+        const result = optimizeImageCapture(canvas2, context2, qualitySettings.context2, canvas2x);
 
-        previewStatus2.textContent = 'Captured';
+        canvas2Captured = true;
+        capturedDataURL2 = result.dataURL;
+
+        console.log(`Context2 - Final: ${result.fileSizeKB} KB, Quality: ${result.finalQuality.toFixed(2)}`);
+
+        previewStatus2.textContent = `✅ ${result.fileSizeKB} KB`;
         previewStatus2.style.backgroundColor = 'rgba(40, 167, 69, 0.8)';
+
+        showQualityFeedback(2, result.fileSizeKB, qualitySettings.context2.targetSizeKB);
     });
 
     captureButton3.addEventListener('click', () => {
@@ -652,20 +808,34 @@
             return;
         }
 
-        canvas3Captured = true;
         const context3 = canvas3.getContext('2d');
-        canvas3.width = videoElement.clientWidth;
-        canvas3.height = videoElement.clientHeight;
-        context3.drawImage(videoElement, 0, 0, canvas3.width, canvas3.height);
 
-        const context3x = canvas3x.getContext('2d');
-        canvas3x.width = 80;
-        canvas3x.height = 70;
-        context3x.drawImage(videoElement, 0, 0, canvas3x.width, canvas3x.height);
+        // Capture with optimized settings for context3
+        const result = optimizeImageCapture(canvas3, context3, qualitySettings.context3, canvas3x);
 
-        previewStatus3.textContent = 'Captured';
+        canvas3Captured = true;
+        capturedDataURL3 = result.dataURL;
+
+        console.log(`Context3 - Final: ${result.fileSizeKB} KB, Quality: ${result.finalQuality.toFixed(2)}`);
+
+        previewStatus3.textContent = `✅ ${result.fileSizeKB} KB`;
         previewStatus3.style.backgroundColor = 'rgba(40, 167, 69, 0.8)';
+
+        showQualityFeedback(3, result.fileSizeKB, qualitySettings.context3.targetSizeKB);
     });
+
+    // Function to show quality feedback to user
+    function showQualityFeedback(contextNumber, actualSize, targetSize) {
+        const deviation = ((actualSize - targetSize) / targetSize) * 100;
+
+        if (Math.abs(deviation) <= 15) {
+            console.log(`Context${contextNumber}: Excellent quality within target range`);
+        } else if (deviation > 15) {
+            console.log(`Context${contextNumber}: High quality (${deviation.toFixed(1)}% over target)`);
+        } else {
+            console.log(`Context${contextNumber}: Good quality (${Math.abs(deviation).toFixed(1)}% under target)`);
+        }
+    }
 
     // Location functionality with enhanced error handling
     let locLat = "";
@@ -834,18 +1004,33 @@
         });
     }
 
-    async function saveLocationData(dataURL1, dataURL2, dataURL3) {
+    // Update the saveLocationData function to use stored high-quality images
+    async function saveLocationData() {
         const empID = document.getElementById('emp_id').value;
         const locationStatus = document.getElementById('location-status');
 
         try {
-            // Show saving state
             locationStatus.textContent = 'Saving location data...';
+
+            // Use the pre-captured high-quality images
+            const dataURL1 = canvas1Captured ? capturedDataURL1 : null;
+            const dataURL2 = canvas2Captured ? capturedDataURL2 : null;
+            const dataURL3 = canvas3Captured ? capturedDataURL3 : null;
 
             const response = await fetch('/dsr/save-location', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ empID, locLat, locLng, locName, locAdd, saveLocFlag, dataURL1, dataURL2, dataURL3 })
+                body: JSON.stringify({
+                    empID,
+                    locLat,
+                    locLng,
+                    locName,
+                    locAdd,
+                    saveLocFlag,
+                    dataURL1: dataURL1,
+                    dataURL2: dataURL2,
+                    dataURL3: dataURL3
+                })
             });
 
             if (response.ok) {
@@ -854,32 +1039,8 @@
                 document.getElementById("emp_route").textContent = locNameList;
                 document.getElementById("toDate").value = locNames.toDate;
 
-                // Clear canvases
-                const context1 = canvas1.getContext('2d');
-                const context2 = canvas2.getContext('2d');
-                const context3 = canvas3.getContext('2d');
-                context1.clearRect(0, 0, canvas1.width, canvas1.height);
-                context2.clearRect(0, 0, canvas2.width, canvas2.height);
-                context3.clearRect(0, 0, canvas3.width, canvas3.height);
-
-                const context1x = canvas1x.getContext('2d');
-                const context2x = canvas2x.getContext('2d');
-                const context3x = canvas3x.getContext('2d');
-                context1x.clearRect(0, 0, canvas1x.width, canvas1x.height);
-                context2x.clearRect(0, 0, canvas2x.width, canvas2x.height);
-                context3x.clearRect(0, 0, canvas3x.width, canvas3x.height);
-
-                // Reset preview status
-                previewStatus1.textContent = 'Not Captured';
-                previewStatus1.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                previewStatus2.textContent = 'Not Captured';
-                previewStatus2.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                previewStatus3.textContent = 'Not Captured';
-                previewStatus3.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-
-                canvas1Captured = false;
-                canvas2Captured = false;
-                canvas3Captured = false;
+                // Reset all captured data
+                resetCaptureData();
 
                 locationStatus.textContent = 'Location data saved successfully';
                 locationStatus.style.color = '#198754';
@@ -894,6 +1055,25 @@
             locationStatus.textContent = 'Network error occurred';
             locationStatus.style.color = '#dc3545';
         }
+    }
+
+    // Function to reset all capture data
+    function resetCaptureData() {
+        // Clear canvases
+        [canvas1, canvas2, canvas3, canvas1x, canvas2x, canvas3x].forEach(canvas => {
+            const context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // Reset preview status
+        [previewStatus1, previewStatus2, previewStatus3].forEach(status => {
+            status.textContent = 'Not Captured';
+            status.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        });
+
+        // Reset flags and stored data
+        canvas1Captured = canvas2Captured = canvas3Captured = false;
+        capturedDataURL1 = capturedDataURL2 = capturedDataURL3 = null;
     }
 
 </script>
