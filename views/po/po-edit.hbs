@@ -387,8 +387,8 @@
         orderItemsBody.addEventListener("input", (e) => {
             if (e.target.matches('[name="qty[]"], [name="rate[]"]')) {
                 const row = e.target.closest("tr");
-                const qty = parseFloat(row.querySelector('[name="qty[]"]').value) || 0;
-                const rate = parseFloat(row.querySelector('[name="rate[]"]').value) || 0;
+                const qty = parseFloat(row.querySelector('[name="qty[]"]').value) || 1;
+                const rate = parseFloat(row.querySelector('[name="rate[]"]').value) || 1;
                 row.querySelector('[name="amount[]"]').value = (qty * rate).toFixed(2);
                 calculateTotal();
             }
