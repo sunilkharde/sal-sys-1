@@ -376,8 +376,8 @@
         const target = event.target;
         if (target.matches("#qty, #rate")) {
             const row = target.closest("tr");
-            const qty = parseFloat(row.querySelector("#qty").value) || 0;
-            const rate = parseFloat(row.querySelector("#rate").value) || 0;
+            const qty = parseFloat(row.querySelector("#qty").value) || 1;
+            const rate = parseFloat(row.querySelector("#rate").value) || 1;
             row.querySelector("#amount").value = (qty * rate).toFixed(2);
             updateTotal();
         }
