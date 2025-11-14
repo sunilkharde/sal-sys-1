@@ -185,6 +185,13 @@ const momentAddHBS = function (date, amount, unit, format) {
   }
   return modifiedDate.format('YYYY-MM-DD'); // Default format
 };
+const isStockDateHBS = function (options) {
+    const today = new Date().getDate();
+    if ((today >= 1 && today <= 5) || today === 30 || today === 31) {
+        return options.fn(this);   // show block
+    }
+    return options.inverse(this);  // show else block
+};
 //end-define custome helpers
 
 // view engine setup
@@ -227,6 +234,7 @@ app.engine('hbs', exphbs.engine({
     momentDDDD: momentDDDD_HBS,
     momentDDD: momentDDD_HBS,
     momentAdd: momentAddHBS,
+    isStockDate: isStockDateHBS,
 
     // Math operations
     add: addHBS,
@@ -456,6 +464,7 @@ const uploadToFTP = async (csvData) => {
     }
   }
 };
+
 // const uploadToFTP = async (csvData) => {
 //   const client = new ftp.Client();
 //   client.ftp.verbose = true;
@@ -483,6 +492,7 @@ const uploadToFTP = async (csvData) => {
 //     client.close();
 //   }
 // };
+
 const convertToCsv = (data) => {
   const header = Object.keys(data[0]).join(',');
   const rows = data.map((row) => Object.values(row).join(','));

@@ -272,8 +272,8 @@ class productController {
                 }
             }
 
-            res.redirect('/product/view');
-            // res.redirect('/product/view?alert=Update+product+successfully');
+            //res.redirect('/product/view');
+            res.redirect('/product/view?alert=Update+product+successfully');
 
         } catch (err) {
             console.error(err);
