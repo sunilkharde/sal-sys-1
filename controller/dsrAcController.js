@@ -195,13 +195,13 @@ class dsrAcController {
             var sqlStr = ""
             if (exportCSV_type === 'All') {
                 sqlStr = "SELECT a.year,a.month,a.emp_id,CONCAT(c.last_name,' ',c.first_name,' ',c.middle_name) as emp_name," +
-                    " d.desg_name,e.hq_name,CONCAT(f.last_name,' ',f.first_name,' ',f.middle_name) as boss_name,a.post_ac,a.da,a.lodge,a.fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,0 as total_amount,a.remarks,DATE_FORMAT(a.u_at,'%d/%m/%Y %H:%i:%s') as post_date" +
+                    " d.desg_name,e.hq_name,CONCAT(f.last_name,' ',f.first_name,' ',f.middle_name) as boss_name,a.post_ac,a.da,a.lodge,a.fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,0 as total_amount,a.remarks,DATE_FORMAT(a.u_at,'%d/%m/%Y %H:%i:%s') as post_date, c.card_no" +
                     " FROM dsr_ac as a, employees as c, designations as d, hqs as e, employees as f" +
                     " WHERE a.emp_id=c.emp_id and a.year=? and a.month=?" +
                     " and c.desg_id=d.desg_id and c.hq_id=e.hq_id and c.boss_id=f.emp_id" +
                     " UNION" +
                     " SELECT a.year,a.month,a.emp_id,CONCAT(c.last_name,' ',c.first_name,' ',c.middle_name) as emp_name," +
-                    " d.desg_name,e.hq_name,CONCAT(f.last_name,' ',f.first_name,' ',f.middle_name) as boss_name,a.post_ac,Sum(b.total_allow) as da,Sum(b.total_lodge) as lodge,Sum(b.total_exp) as fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,0 as total_amount,a.remarks,'' as post_date" +
+                    " d.desg_name,e.hq_name,CONCAT(f.last_name,' ',f.first_name,' ',f.middle_name) as boss_name,a.post_ac,Sum(b.total_allow) as da,Sum(b.total_lodge) as lodge,Sum(b.total_exp) as fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,0 as total_amount,a.remarks,'' as post_date, c.card_no" +
                     " FROM dsr_0 as a, dsr_1 as b, employees as c, designations as d, hqs as e, employees as f" +
                     " WHERE a.year=Year(b.dsr_date) and a.month=Month(b.dsr_date) and a.emp_id=b.emp_id and a.emp_id=c.emp_id" +
                     " and a.post_mg='Y' and a.year=? and a.month=?" +
@@ -210,13 +210,13 @@ class dsrAcController {
                     " GROUP BY a.year,a.month,a.emp_id,CONCAT(c.last_name,' ',c.first_name,' ',c.middle_name),a.post_ac,a.stationary_val,a.postage_val,a.internet_val,a.other_val,a.remarks"
             } else if (exportCSV_type === 'Posted') {
                 sqlStr = "SELECT a.year,a.month,a.emp_id,CONCAT(c.last_name,' ',c.first_name,' ',c.middle_name) as emp_name," +
-                    " d.desg_name,e.hq_name,CONCAT(f.last_name,' ',f.first_name,' ',f.middle_name) as boss_name,a.post_ac,a.da,a.lodge,a.fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,0 as total_amount,a.remarks,DATE_FORMAT(a.u_at,'%d/%m/%Y %H:%i:%s') as post_date" +
+                    " d.desg_name,e.hq_name,CONCAT(f.last_name,' ',f.first_name,' ',f.middle_name) as boss_name,a.post_ac,a.da,a.lodge,a.fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,0 as total_amount,a.remarks,DATE_FORMAT(a.u_at,'%d/%m/%Y %H:%i:%s') as post_date, c.card_no" +
                     " FROM dsr_ac as a, employees as c, designations as d, hqs as e, employees as f" +
                     " WHERE a.emp_id=c.emp_id and a.year=? and a.month=?" +
                     " and c.desg_id=d.desg_id and c.hq_id=e.hq_id and c.boss_id=f.emp_id"
             } else if (exportCSV_type === 'Not-Posted') {
                 sqlStr = "SELECT a.year,a.month,a.emp_id,CONCAT(c.last_name,' ',c.first_name,' ',c.middle_name) as emp_name," +
-                    " d.desg_name,e.hq_name,CONCAT(f.last_name,' ',f.first_name,' ',f.middle_name) as boss_name,a.post_ac,Sum(b.total_allow) as da,Sum(b.total_lodge) as lodge,Sum(b.total_exp) as fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,0 as total_amount,a.remarks,'' as post_date" +
+                    " d.desg_name,e.hq_name,CONCAT(f.last_name,' ',f.first_name,' ',f.middle_name) as boss_name,a.post_ac,Sum(b.total_allow) as da,Sum(b.total_lodge) as lodge,Sum(b.total_exp) as fare,a.stationary_val,a.postage_val,a.internet_val,a.other_val,0 as total_amount,a.remarks,'' as post_date, c.card_no" +
                     " FROM dsr_0 as a, dsr_1 as b, employees as c, designations as d, hqs as e, employees as f" +
                     " WHERE a.year=Year(b.dsr_date) and a.month=Month(b.dsr_date) and a.emp_id=b.emp_id and a.emp_id=c.emp_id" +
                     " and a.post_mg='Y' and a.year=? and a.month=?" +
@@ -396,12 +396,10 @@ class dsrAcController {
                 SUM(a.da + a.lodge + a.fare + a.stationary_val + a.postage_val + a.internet_val + a.other_val) as total_expenses
             FROM 
                 dsr_ac a
-            JOIN 
-                employees b ON a.emp_id = b.emp_id
             WHERE 
                 STR_TO_DATE(CONCAT(a.year, '-', a.month, '-01'), '%Y-%m-%d') BETWEEN ? AND ?
             GROUP BY 
-                a.emp_id, emp_name
+                a.emp_id, emp_name, b.ext_code
             ORDER BY 
                 total_expenses ${orderDirection}
             LIMIT 20
