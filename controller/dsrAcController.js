@@ -265,7 +265,6 @@ class dsrAcController {
         }
     };
 
-
     // Update the viewSummary method to include summary data
     static viewSummary = async (req, res) => {
         const { from_date, to_date, expense_type } = req.query;
@@ -323,7 +322,7 @@ class dsrAcController {
                 minDate: minDate.format('YYYY-MM-DD'),
                 maxDate: maxDate.format('YYYY-MM-DD'),
                 summaryData,
-                reportData 
+                reportData
             });
 
         } catch (error) {
@@ -366,7 +365,7 @@ class dsrAcController {
             throw error;
         }
     }
-    
+
     // Add CSV export method
     static exportSummaryCSV = async (req, res) => {
         const { from_date, to_date, expense_type } = req.query;
@@ -396,10 +395,12 @@ class dsrAcController {
                 SUM(a.da + a.lodge + a.fare + a.stationary_val + a.postage_val + a.internet_val + a.other_val) as total_expenses
             FROM 
                 dsr_ac a
+            JOIN 
+                employees b ON a.emp_id = b.emp_id
             WHERE 
                 STR_TO_DATE(CONCAT(a.year, '-', a.month, '-01'), '%Y-%m-%d') BETWEEN ? AND ?
             GROUP BY 
-                a.emp_id, emp_name, b.ext_code
+                a.emp_id, emp_name
             ORDER BY 
                 total_expenses ${orderDirection}
             LIMIT 20

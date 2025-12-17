@@ -168,7 +168,6 @@ class apiController {
         }
     }
 
-
     static verifyApiToken = (req, res, next) => {
         const token = req.headers['authorization'];
         if (!token) {
@@ -323,6 +322,19 @@ class apiController {
             const custStockData = await executeQuery(sqlStr, params);
             // ", customers as d, customers as e and b.mg_id=d.emp_id and b.se_id=e.emp_id" +
             res.status(200).json({ custStockData });
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    static employeeData = async (req, res) => {
+        try {
+
+            let sqlStr = `SELECT * FROM employee_details as a ORDER BY a.emp_id;`;
+            const empData = await executeQuery(sqlStr);
+            res.status(200).json({ empData });
 
         } catch (err) {
             console.error(err);

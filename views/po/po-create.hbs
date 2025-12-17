@@ -86,7 +86,7 @@
                                     </td>
                                     <td>
                                         <input type="number" class="form-control text-end" id="qty" name="qty[]" min="1"
-                                            step="1" value="1" required>
+                                            step="1" value="0" required>
                                     </td>
                                     <td hidden>
                                         <input type="number" class="form-control text-end" id="rate" name="rate[]"
@@ -119,7 +119,7 @@
                             <!-- Total Field (Right) -->
                             <div class="input-group input-group-sm total-box flex-shrink-0">
                                 <span class="input-group-text fw-semibold bg-success text-white">Total</span>
-                                <input readonly type="text" class="form-control text-end fw-bold" id="totalAmount">
+                                <input readonly type="text" class="form-control text-end fw-bold" value="1" id="totalAmount">
                             </div>
                         </div>
                     </div>
@@ -367,8 +367,10 @@
         newRow.querySelectorAll("input").forEach(input => input.value = "");
         const srNoValue = parseInt(lastRow.querySelector("#sr_no").value);
         newRow.querySelector("#sr_no").value = srNoValue + 10;
+        newRow.querySelector('#qty').value = 0;
         newRow.querySelector('#rate').value = 1;
         orderItemsBody.appendChild(newRow);
+        //newRow.querySelector('#amount').value = 1; //added on 12-Dec-2025
         updateTotal();
     });
 

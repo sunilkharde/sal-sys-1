@@ -145,7 +145,11 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons d-flex flex-wrap justify-content-center gap-2">
+                {{#if (eq data.desg_name 'Driver')}}
+                <a href="#" class="btn btn-secondary px-3">Continue...</a>
+                {{else}}
                 <a href="/dsr/view" class="btn btn-primary px-3">Continue...</a>
+                {{/if}}
                 <a href="/" class="btn btn-secondary px-3">Cancel</a>
             </div>
         </div>

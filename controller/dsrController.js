@@ -215,7 +215,7 @@ class dsrController {
             const sqlStr3 = "Select * From dsr_1 Where emp_id=? and dsr_date=?"
             const params3 = [results[0].emp_id, results2[0].month_date];
             const results3 = await executeQuery(sqlStr3, params3);
-            if (results3.length === 0) {
+            if (results3.length === 0 && results[0].desg_name !== 'Driver') {
                 const from_date = moment(results2[0].month_date);
                 const to_date = from_date.clone().endOf('month');
 
@@ -238,7 +238,7 @@ class dsrController {
             const sqlStr4 = "Select * From dsr_0 Where emp_id=? and year=? and month=?"
             const params4 = [results[0].emp_id, year, month];
             const results4 = await executeQuery(sqlStr4, params4);
-            if (results4.length === 0) {
+            if (results4.length === 0 && results[0].desg_name !=='Driver') {
                 //Get monthly allowance pricelist 
                 let monAllow = { monPost: 'N', stationaryRate: 0, postageRate: 0, internetRate: 0, otherRate: 0 };
                 if (results.length > 0) {

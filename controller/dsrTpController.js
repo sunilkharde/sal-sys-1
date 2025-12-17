@@ -496,7 +496,8 @@ class dsrTpController {
             }
 
             // Create records only if they don't exist (for next month planning)
-            if (countResult[0].count === 0 && isNextMonth) {
+            // if (countResult[0].count === 0 && isNextMonth) {
+            if (countResult[0].count === 0 ) {  // This needs to restart PM2 service for take effect
                 await this.createEmptyRecords(emp_id, from_date, to_date, res.locals.user);
             }
 

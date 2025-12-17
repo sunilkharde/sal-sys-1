@@ -14,6 +14,8 @@ router.get('/employee-location', apiController.employeeLocation);
 router.get('/employee-route', apiController.employeeRoute);
 router.get('/route-master', apiController.routeMaster);
 router.get('/customer-stock', apiController.customerStock);
+router.get('/employee-data', apiController.employeeData);
+
 
 router.get('/view-report-cust/:cust_id', customerController.viewInfoReportApp); // for flutter app json data
 
