@@ -514,7 +514,7 @@
                         } else {
                             rowData.push($(this).text().trim());
                         }
-                    } else if (index === 16) { // Remarks column
+                    } else if (index === 15) { // Remarks column
                         rowData.push($(this).text().trim());
                     } else { // Numeric amount columns (DA, Lodge, Fare, etc.)
                         // Get the numeric value from data-value attribute
@@ -528,7 +528,7 @@
                                 rowData.push(value);
                             }
                         } else {
-                            rowData.push(0); // Default to 0 if no value
+                            rowData.push(0); // Default to 0 if no value                            
                         }
                     }
                 });
