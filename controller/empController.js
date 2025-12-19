@@ -1,4 +1,5 @@
 import { executeQuery } from '../db.js';
+import moment from 'moment';
 
 
 class EmployeeController {
@@ -367,6 +368,181 @@ class EmployeeController {
             res.redirect('/emp/view?alert=Error deleting employee');
         }
     }
+
+    static travelReport = async (req, res) => {
+        try {
+            // Get filter parameters from query string
+            const { mon_date, emp_id, hq_id } = req.query;
+
+            // Parse month_date (format: YYYY-MM)
+            let reportYear, reportMonth;
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1;
+
+            if (mon_date) {
+                const [year, month] = mon_date.split('-');
+                reportYear = parseInt(year);
+                reportMonth = parseInt(month);
+            } else {
+                // Default to current month
+                reportYear = currentYear;
+                reportMonth = currentMonth;
+            }
+
+            // Calculate min and max dates for the month picker (last 2 years to current month)
+            const minDate = `${currentYear - 2}-01`;
+            const maxDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+
+            // Format current month for display
+            const curMon = `${reportYear}-${String(reportMonth).padStart(2, '0')}`;
+
+            // Build WHERE clause dynamically
+            let whereClause = `WHERE a.year = ?`;
+            const params = [reportYear];
+
+            whereClause += ` AND a.month = ?`;
+            params.push(reportMonth);
+
+            if (emp_id && emp_id !== 'all') {
+                whereClause += ` AND a.emp_id = ?`;
+                params.push(emp_id);
+            }
+
+            if (hq_id && hq_id !== 'all') {
+                whereClause += ` AND e.hq_id = ?`;
+                params.push(hq_id);
+            }
+
+            // SQL query with dynamic WHERE clause
+            const sqlStr = `
+            SELECT
+                a.year,
+                a.month,
+                a.emp_id,
+                CONCAT(c.last_name, ' ', c.first_name, ' ', c.middle_name) AS emp_name,
+                d.desg_name,
+                e.hq_name,
+                CONCAT(f.last_name, ' ', f.first_name, ' ', f.middle_name) AS boss_name,
+                a.post_ac,
+                a.da,
+                a.lodge,
+                a.fare,
+                a.stationary_val,
+                a.postage_val,
+                a.internet_val,
+                a.other_val,
+                (a.da + a.lodge + a.fare + a.stationary_val + a.postage_val + a.internet_val + a.other_val) AS total_amount,
+                a.remarks,
+                DATE_FORMAT(a.u_at, '%d/%m/%Y %H:%i:%s') AS post_date,
+                c.card_no,
+
+                /* -------- Travel KM Added -------- */
+                IFNULL(t.travel_km, 0) AS travel_km,
+
+                /* -------- Calls Made Added -------- */
+                IFNULL(x.total_calls, 0) AS total_calls
+
+            FROM dsr_ac a
+            JOIN employees c ON a.emp_id = c.emp_id
+            JOIN designations d ON c.desg_id = d.desg_id
+            JOIN hqs e ON c.hq_id = e.hq_id
+            JOIN employees f ON c.boss_id = f.emp_id
+
+            /* ----------------- Travel KM Monthly Summary ------------------- */
+            LEFT JOIN (
+                SELECT 
+                    emp_id,
+                    YEAR(dsr_date) AS yr,
+                    MONTH(dsr_date) AS mn,
+                    SUM(to_km - from_km) AS travel_km
+                FROM dsr_2
+                GROUP BY emp_id, YEAR(dsr_date), MONTH(dsr_date)
+            ) AS t 
+            ON t.emp_id = a.emp_id AND t.yr = a.year AND t.mn = a.month
+
+            /* ------------------ Calls Monthly Summary ----------------------- */
+            LEFT JOIN (
+                SELECT
+                    emp_id,
+                    YEAR(loc_date) AS yr,
+                    MONTH(loc_date) AS mn,
+                    COUNT(*) AS total_calls
+                FROM dsr_loc
+                GROUP BY emp_id, YEAR(loc_date), MONTH(loc_date)
+            ) AS x 
+            ON x.emp_id = a.emp_id AND x.yr = a.year AND x.mn = a.month
+
+            ${whereClause}
+            ORDER BY a.emp_id
+        `;
+
+            // Execute query
+            const results = await executeQuery(sqlStr, params);
+
+            // Get filter data
+            const employees = await executeQuery("SELECT emp_id, CONCAT(last_name, ' ', first_name, ' ', middle_name) as emp_name FROM employees WHERE status='A' ORDER BY last_name");
+            const hqs = await executeQuery("SELECT hq_id, hq_name FROM hqs WHERE status='A' ORDER BY hq_name");
+
+            // Calculate totals
+            const totals = results.reduce((acc, row) => {
+                acc.da += parseFloat(row.da) || 0;
+                acc.lodge += parseFloat(row.lodge) || 0;
+                acc.fare += parseFloat(row.fare) || 0;
+                acc.stationary_val += parseFloat(row.stationary_val) || 0;
+                acc.postage_val += parseFloat(row.postage_val) || 0;
+                acc.internet_val += parseFloat(row.internet_val) || 0;
+                acc.other_val += parseFloat(row.other_val) || 0;
+                acc.total_amount += parseFloat(row.total_amount) || 0;
+                acc.travel_km += parseInt(row.travel_km) || 0;
+                acc.total_calls += parseInt(row.total_calls) || 0;
+                return acc;
+            }, {
+                da: 0,
+                lodge: 0,
+                fare: 0,
+                stationary_val: 0,
+                postage_val: 0,
+                internet_val: 0,
+                other_val: 0,
+                total_amount: 0,
+                travel_km: 0,
+                total_calls: 0
+            });
+
+            // Get month name using moment
+            const monthName = moment(`${reportYear}-${String(reportMonth).padStart(2, '0')}-01`).format('MMMM');
+
+            // Render the report
+            res.render('emp/travel-report', {
+                reportData: results,
+                employees,
+                hqs,
+                filters: {
+                    mon_date: curMon,
+                    emp_id: emp_id || 'all',
+                    hq_id: hq_id || 'all'
+                },
+                totals,
+                currentYear: currentYear,
+                currentMonth: currentMonth,
+                minDate: minDate,
+                maxDate: maxDate,
+                curMon: curMon,
+                monthName: monthName,
+                reportYear: reportYear,
+                reportMonth: reportMonth
+            });
+
+        } catch (error) {
+            console.error('Error generating travel report:', error);
+            res.status(500).render('error', {
+                error: 'Failed to generate travel report'
+            });
+        }
+    };
+
+
 };
 
 export default EmployeeController;

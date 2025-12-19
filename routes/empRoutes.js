@@ -9,4 +9,6 @@ router.get('/update/:emp_id', empController.edit); // Edit form (now uses emp-fo
 router.post('/update/:emp_id', empController.update); // Update action
 router.get('/delete/:emp_id', empController.delete);
 
+router.get('/travel-report', empController.travelReport);
+
 export default router;

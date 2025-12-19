@@ -313,7 +313,8 @@ class apiController {
                 toDate = fromDate.clone().endOf('month');
             } else {
                 fromDate = moment(fromDate, 'YYYY-MM-DD');
-                toDate = fromDate.clone().endOf('month');
+                // toDate = fromDate.clone().endOf('month');
+                toDate = moment(toDate, 'YYYY-MM-DD');
             }
 
             let sqlStr = "SELECT a.* FROM cust_stock_det as a" +

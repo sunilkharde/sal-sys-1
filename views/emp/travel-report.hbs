@@ -1,0 +1,605 @@
+<style>
+    .report-container {
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .report-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .report-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .report-subtitle {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+    }
+
+    .filter-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .filter-title {
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #3b82f6;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .amount-cell {
+        text-align: right;
+        font-family: 'Courier New', monospace;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .total-row {
+        background: #f0f9ff !important;
+        font-weight: 600;
+        color: #0369a1;
+    }
+
+    .total-row td {
+        border-top: 2px solid #0ea5e9;
+        border-bottom: 2px solid #0ea5e9;
+    }
+
+    .month-badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 4px;
+        font-weight: 500;
+        background: #dbeafe;
+        color: #1e40af;
+        white-space: nowrap;
+    }
+
+    .metric-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 3px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .metric-km {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .metric-calls {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .btn-export {
+        background: #10b981;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        color: white;
+        white-space: nowrap;
+    }
+
+    .btn-export:hover {
+        background: #059669;
+        color: white;
+    }
+
+    .summary-card {
+        height: 100%;
+        border: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-card .card-body {
+        padding: 1rem;
+    }
+
+    .summary-card .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .summary-card .card-subtitle {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    /* Fixed columns for DataTable */
+    .DTFC_LeftWrapper {
+        background: #f8f9fa;
+        box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .DTFC_LeftHeadWrapper,
+    .DTFC_LeftBodyWrapper {
+        background: #f8f9fa;
+    }
+
+    .DTFC_LeftBodyWrapper table tbody tr {
+        background: #f8f9fa !important;
+    }
+
+    @media (max-width: 768px) {
+        .report-container {
+            padding: 0.75rem;
+        }
+
+        .report-header {
+            padding: 1rem;
+        }
+
+        .filter-card {
+            padding: 1rem;
+        }
+
+        .btn-export {
+            padding: 0.4rem 1rem;
+            font-size: 0.875rem;
+        }
+    }
+</style>
+
+
+<div class="report-container">
+    <div class="report-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="report-title">Employee Travel Report</h1>
+                <p class="report-subtitle">Detailed travel expenses and activities for
+                    <strong>{{monthName}} {{reportYear}}</strong>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="exportToExcel()" class="btn btn-export">
+                    <i class="bi bi-download me-2"></i>Export to Excel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filter-card">
+        <h5 class="filter-title">Report Filters</h5>
+        <form method="get" action="/emp/travel-report" class="row g-3">
+            <div class="row mb-3 mt-2 align-items-end">
+                <label for="mon_date" class="col-sm-2 col-form-label">Month&nbsp;<span
+                        style="color: red;">*</span></label>
+                <div class="col-sm-3">
+                    <input type="month" class="form-control form-control-sm" id="mon_date" name="mon_date"
+                        value="{{filters.mon_date}}" min="{{minDate}}" max="{{maxDate}}">
+                </div>
+                <div class="col-sm-2">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label for="emp_id" class="form-label">Employee</label>
+                <select class="form-select form-control-sm" id="emp_id" name="emp_id">
+                    <option value="all">All Employees</option>
+                    {{#each employees}}
+                    <option value="{{this.emp_id}}" {{#eq ../filters.emp_id this.emp_id}}selected{{/eq}}>
+                        {{this.emp_name}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="hq_id" class="form-label">Headquarter</label>
+                <select class="form-select form-control-sm" id="hq_id" name="hq_id">
+                    <option value="all">All Headquarters</option>
+                    {{#each hqs}}
+                    <option value="{{this.hq_id}}" {{#eq ../filters.hq_id this.hq_id}}selected{{/eq}}>
+                        {{this.hq_name}}
+                    </option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                        <i class="bi bi-filter me-1"></i>Apply Filters
+                    </button>
+                    <a href="/emp/travel-report" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-x-circle me-1"></i>Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {{#if reportData.length}}
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card summary-card border-primary">
+                <div class="card-body text-center">
+                    <h6 class="card-subtitle mb-2">Total Employees</h6>
+                    <h3 class="card-title text-primary">{{count reportData}}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card summary-card border-success">
+                <div class="card-body text-center">
+                    <h6 class="card-subtitle mb-2">Total Amount</h6>
+                    <h3 class="card-title text-success">₹{{formatNumber totals.total_amount}}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card summary-card border-info">
+                <div class="card-body text-center">
+                    <h6 class="card-subtitle mb-2">Total Travel KM</h6>
+                    <h3 class="card-title text-info">{{formatNumber totals.travel_km}}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card summary-card border-warning">
+                <div class="card-body text-center">
+                    <h6 class="card-subtitle mb-2">Total Calls</h6>
+                    <h3 class="card-title text-warning">{{formatNumber totals.total_calls}}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0" id="travelReportTable" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Emp ID</th>
+                            <th>Employee Name</th>
+                            <th>Designation</th>
+                            <th>HQ</th>
+                            <th>Manager</th>
+                            <th class="text-center">Travel KM</th>
+                            <th class="text-center">Calls</th>
+                            <th class="text-end">DA</th>
+                            <th class="text-end">Lodge</th>
+                            <th class="text-end">Fare</th>
+                            <th class="text-end">Stationary</th>
+                            <th class="text-end">Postage</th>
+                            <th class="text-end">Internet</th>
+                            <th class="text-end">Other</th>
+                            <th class="text-end">Total</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each reportData}}
+                        <tr data-emp-id="{{this.emp_id}}">
+                            <td class="fw-bold">{{this.emp_id}}</td>
+                            <td class="fw-medium">{{this.emp_name}}</td>
+                            <td><span class="badge bg-light text-dark border">{{this.desg_name}}</span></td>
+                            <td>{{this.hq_name}}</td>
+                            <td class="text-sm">{{this.boss_name}}</td>
+                            <td class="text-center">
+                                {{#if (gt this.travel_km 0)}}
+                                <span class="metric-badge metric-km">
+                                    <i class="bi bi-speedometer2 me-1"></i>{{this.travel_km}} KM
+                                </span>
+                                {{else}}
+                                <span class="text-muted">-</span>
+                                {{/if}}
+                            </td>
+                            <td class="text-center">
+                                {{#if (gt this.total_calls 0)}}
+                                <span class="metric-badge metric-calls">
+                                    <i class="bi bi-telephone me-1"></i>{{this.total_calls}}
+                                </span>
+                                {{else}}
+                                <span class="text-muted">-</span>
+                                {{/if}}
+                            </td>
+                            <td class="amount-cell" data-value="{{this.da}}">{{fixed this.da 2}}</td>
+                            <td class="amount-cell" data-value="{{this.lodge}}">{{fixed this.lodge 2}}</td>
+                            <td class="amount-cell" data-value="{{this.fare}}">{{fixed this.fare 2}}</td>
+                            <td class="amount-cell" data-value="{{this.stationary_val}}">{{fixed this.stationary_val 2}}</td>
+                            <td class="amount-cell" data-value="{{this.postage_val}}">{{fixed this.postage_val 2}}</td>
+                            <td class="amount-cell" data-value="{{this.internet_val}}">{{fixed this.internet_val 2}}</td>
+                            <td class="amount-cell" data-value="{{this.other_val}}">{{fixed this.other_val 2}}</td>
+                            <td class="amount-cell fw-bold text-primary" data-value="{{this.total_amount}}">{{fixed this.total_amount 2}}</td>
+                            <td class="text-sm" title="{{this.remarks}}">
+                                {{#if this.remarks}}
+                                {{#if (gt (count this.remarks) 30)}}
+                                {{substring this.remarks 0 30}}...
+                                {{else}}
+                                {{this.remarks}}
+                                {{/if}}
+                                {{else}}
+                                -
+                                {{/if}}
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="7" class="fw-bold">GRAND TOTAL</td>
+                            <td class="amount-cell fw-bold" data-value="{{totals.da}}">{{fixed totals.da 2}}</td>
+                            <td class="amount-cell fw-bold" data-value="{{totals.lodge}}">{{fixed totals.lodge 2}}</td>
+                            <td class="amount-cell fw-bold" data-value="{{totals.fare}}">{{fixed totals.fare 2}}</td>
+                            <td class="amount-cell fw-bold" data-value="{{totals.stationary_val}}">{{fixed totals.stationary_val 2}}</td>
+                            <td class="amount-cell fw-bold" data-value="{{totals.postage_val}}">{{fixed totals.postage_val 2}}</td>
+                            <td class="amount-cell fw-bold" data-value="{{totals.internet_val}}">{{fixed totals.internet_val 2}}</td>
+                            <td class="amount-cell fw-bold" data-value="{{totals.other_val}}">{{fixed totals.other_val 2}}</td>
+                            <td class="amount-cell fw-bold" data-value="{{totals.total_amount}}">{{fixed totals.total_amount 2}}</td>
+                            <td>
+                                <span class="metric-badge metric-km me-1">
+                                    Total KM: {{totals.travel_km}}
+                                </span>
+                                <span class="metric-badge metric-calls">
+                                    Total Calls: {{totals.total_calls}}
+                                </span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {{else}}
+    <div class="alert alert-info mt-3">
+        <i class="bi bi-info-circle me-2"></i>No travel data found for the selected filters.
+    </div>
+    {{/if}}
+
+</div>
+
+<!-- Store data in JavaScript variable -->
+<script>
+    // Store report data in JavaScript variable
+    const hasReportData = {{#if reportData.length}}true{{else}}false{{/if}};
+    const reportYear = "{{reportYear}}";
+    const reportMonth = "{{reportMonth}}";
+    const monthName = "{{monthName}}";
+    const filterEmpId = "{{filters.emp_id}}";
+    const filterHqId = "{{filters.hq_id}}";
+
+    $(document).ready(function () {
+        // Initialize DataTable only if there's data
+        if (hasReportData) {
+            var table = $('#travelReportTable').DataTable({
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                order: [[0, 'asc']],
+                responsive: true,
+                scrollX: true,
+                scrollY: "500px",
+                scrollCollapse: true,
+                fixedColumns: {
+                    leftColumns: 5,
+                    rightColumns: 0
+                },
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search report...",
+                    lengthMenu: "Show _MENU_ records",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                }
+            });
+
+            // Adjust table height on window resize
+            $(window).on('resize', function () {
+                table.columns.adjust().draw();
+            });
+        }
+
+        // Set default month picker value if not set
+        if (!$('#mon_date').val()) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            $('#mon_date').val(`${year}-${month}`);
+        }
+    });
+
+    function exportToExcel() {
+        console.log('Exporting to Excel...');
+
+        if (!hasReportData) {
+            alert('No data available to export');
+            return;
+        }
+
+        // Check if XLSX library is loaded
+        if (typeof XLSX === 'undefined') {
+            alert('Excel export library not loaded. Please refresh the page.');
+            return;
+        }
+
+        // Get table element
+        const table = document.getElementById('travelReportTable');
+        if (!table) {
+            alert('No data to export');
+            return;
+        }
+
+        try {
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+
+            // Get all data including header and footer
+            const wsData = [];
+
+            // Add report info at the top
+            const filterText = (filterEmpId === 'all' ? 'All Employees' : 'Selected Employee') +
+                ', ' +
+                (filterHqId === 'all' ? 'All HQs' : 'Selected HQ');
+
+            const reportInfo = [
+                ['Employee Travel Report'],
+                ['Report Period:', monthName + ' ' + reportYear],
+                ['Generated on:', new Date().toLocaleString()],
+                ['Filters:', filterText],
+                [], // Empty row
+            ];
+
+            // Add headers
+            const headers = [];
+            $(table).find('thead th').each(function () {
+                headers.push($(this).text().trim());
+            });
+            
+            wsData.push(...reportInfo);
+            wsData.push([]); // Empty row before headers
+            wsData.push(headers);
+
+            // Add data rows
+            const tableApi = $('#travelReportTable').DataTable();
+            tableApi.rows({ search: 'applied' }).every(function () {
+                const node = this.node();
+                const rowData = [];
+
+                // Add non-numeric columns
+                $(node).find('td').each(function (index) {
+                    // Skip numeric columns (they will be added separately with proper formatting)
+                    if (index < 5) { // First 5 columns: Emp ID, Name, Designation, HQ, Manager
+                        if ($(this).find('.badge').length > 0) {
+                            rowData.push($(this).find('.badge').text().trim());
+                        } else {
+                            rowData.push($(this).text().trim());
+                        }
+                    } else if (index === 5 || index === 6) { // Travel KM and Calls
+                        if ($(this).find('.metric-badge').length > 0) {
+                            const text = $(this).find('.metric-badge').text().trim();
+                            // Extract numeric value from metric badges
+                            const numMatch = text.match(/(\d+)/);
+                            if (numMatch) {
+                                rowData.push(parseInt(numMatch[0]) || 0);
+                            } else {
+                                rowData.push(text);
+                            }
+                        } else {
+                            rowData.push($(this).text().trim());
+                        }
+                    } else if (index === 16) { // Remarks column
+                        rowData.push($(this).text().trim());
+                    } else { // Numeric amount columns (DA, Lodge, Fare, etc.)
+                        // Get the numeric value from data-value attribute
+                        const value = $(this).data('value');
+                        if (value !== undefined && value !== null && value !== '') {
+                            // Convert to number for Excel
+                            const numValue = parseFloat(value);
+                            if (!isNaN(numValue)) {
+                                rowData.push(numValue);
+                            } else {
+                                rowData.push(value);
+                            }
+                        } else {
+                            rowData.push(0); // Default to 0 if no value
+                        }
+                    }
+                });
+                wsData.push(rowData);
+            });
+
+            // Add footer row (totals) - ensure numbers are numeric
+            const footerRow = ['GRAND TOTAL', '', '', '', '', '', ''];
+            // Add numeric totals
+            footerRow.push(parseFloat("{{totals.da}}") || 0);
+            footerRow.push(parseFloat("{{totals.lodge}}") || 0);
+            footerRow.push(parseFloat("{{totals.fare}}") || 0);
+            footerRow.push(parseFloat("{{totals.stationary_val}}") || 0);
+            footerRow.push(parseFloat("{{totals.postage_val}}") || 0);
+            footerRow.push(parseFloat("{{totals.internet_val}}") || 0);
+            footerRow.push(parseFloat("{{totals.other_val}}") || 0);
+            footerRow.push(parseFloat("{{totals.total_amount}}") || 0);
+            footerRow.push(`Total KM: {{totals.travel_km}}, Total Calls: {{totals.total_calls}}`);
+            
+            wsData.push(footerRow);
+
+            // Create worksheet from data
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Define which columns should be formatted as numbers
+            // Columns: H (8) to O (15) are numeric (0-indexed)
+            const numericColumns = [7, 8, 9, 10, 11, 12, 13, 14]; // H to O (0-indexed)
+            
+            // Get the range of the worksheet
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            
+            // Apply number formatting to numeric columns
+            for (let R = range.s.r + reportInfo.length + 3; R <= range.e.r; ++R) {
+                numericColumns.forEach(C => {
+                    const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+                    if (ws[cellAddress]) {
+                        // Format as number with 2 decimal places
+                        ws[cellAddress].z = '#,##0.00';
+                        // Ensure the value is numeric
+                        if (typeof ws[cellAddress].v === 'string') {
+                            const numValue = parseFloat(ws[cellAddress].v);
+                            if (!isNaN(numValue)) {
+                                ws[cellAddress].v = numValue;
+                                ws[cellAddress].t = 'n'; // n for number type
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Adjust column widths
+            const colWidths = headers.map((header, index) => {
+                if (index < 5) return { wch: 15 }; // Text columns
+                if (index === 16) return { wch: 30 }; // Remarks column
+                return { wch: 12 }; // Numeric columns
+            });
+            ws['!cols'] = colWidths;
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Travel Report');
+
+            // Generate filename
+            const fileName = `travel-report-${reportYear}-${reportMonth}.xlsx`;
+
+            // Save file
+            XLSX.writeFile(wb, fileName);
+            console.log('Excel file exported successfully');
+
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            alert('Error exporting to Excel: ' + error.message);
+        }
+    }
+</script>

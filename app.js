@@ -192,6 +192,10 @@ const isStockDateHBS = function (options) {
     }
     return options.inverse(this);  // show else block
 };
+const substringHBS = function (str, start, end) {
+    if (!str) return '';
+    return str.substring(start, end);
+};
 //end-define custome helpers
 
 // view engine setup
@@ -241,6 +245,7 @@ app.engine('hbs', exphbs.engine({
     subtract: subtractHBS,
     multiply: multiplyHBS,
     divide: divideHBS,
+    substring: substringHBS,
 
     // Number formatting
     formatNumber: function (value) {
